@@ -1,6 +1,6 @@
 import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase copy';
+import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
     percent: {

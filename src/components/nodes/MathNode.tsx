@@ -3,7 +3,7 @@ import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type MathOp } from '../OpIcons copy';
-import { defineHandles, NodeBase } from './NodeBase copy';
+import { defineHandles, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
 

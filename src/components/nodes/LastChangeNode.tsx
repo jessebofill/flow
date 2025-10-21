@@ -1,6 +1,6 @@
 import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
-import { defineHandles, NodeBase, type InputHandleId, type TransformId } from './NodeBase copy';
+import { defineHandles, NodeBase, type InputHandleId, type TransformId } from './NodeBase';
 
 const handles = defineHandles({
 

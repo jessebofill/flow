@@ -1,5 +1,5 @@
 import { registerNodeType } from '../../const/nodeTypes';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase copy';
+import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
 import { outputHandleId } from '../../const/const';
 const handles = defineHandles({
     max: {

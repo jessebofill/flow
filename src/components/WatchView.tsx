@@ -1,6 +1,6 @@
 import { useContext, type ReactNode } from 'react';
 import { WatchViewContext } from '../contexts/WatchViewContext';
-import { nodeInstanceRegistry } from './nodes/NodeBase copy';
+import { nodeInstanceRegistry } from './nodes/NodeBase';
 import { outputHandleId } from '../const/const';
 
 export const WatchView = () => {

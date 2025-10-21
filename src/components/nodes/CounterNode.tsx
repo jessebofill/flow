@@ -4,7 +4,7 @@ import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type CountOp } from '../OpIcons copy';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase copy';
+import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
 import type { JSX } from 'react/jsx-runtime';
 
 const handles = defineHandles({

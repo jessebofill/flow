@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { NodeBase } from '../components/nodes/NodeBase copy';
+import type { NodeBase } from '../components/nodes/NodeBase';
 import type { outputHandleId } from '../const/const';
 import type { nodeTypeNames } from '../const/nodeDefines';
 

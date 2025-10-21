@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FC, type ReactNode } from 'react';
 import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, NodeBase } from './NodeBase copy';
+import { defineHandles, NodeBase } from './NodeBase';
 import { AndIcon, DivideIcon, MinusIcon, MultiplyIcon, OrIcon, PlusIcon } from '../OpIcons';
 import { Operator, opMap, type BooleanOp, type OpEntry } from '../OpIcons copy';
 import { OperationSelector } from '../OperationSelector';

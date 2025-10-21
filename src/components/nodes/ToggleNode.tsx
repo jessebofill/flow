@@ -1,7 +1,7 @@
 import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase copy';
+import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
     [outputHandleId]: {
