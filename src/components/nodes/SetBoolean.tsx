@@ -1,37 +1,34 @@
 import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
+import { DataTypeNames } from '../../types/types';
 import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase copy';
 
 const handles = defineHandles({
-    percent: {
-        id: 'percent',
-        dataType: 'number',
-        label: '% Chance'
+    in: {
+        dataType: DataTypeNames.Boolean,
     },
     [outputHandleId]: {
-        dataType: 'boolean'
+        dataType: DataTypeNames.Boolean
     }
 });
 
 @registerNodeType
-export class ChanceSuccessPercent extends NodeBase<typeof handles> {
-    static defNodeName = 'Chance Percent';
+export class SetBooleanNode extends NodeBase<typeof handles> {
+    static defNodeName = 'Set Boolean';
     protected handleDefs = handles;
     protected isBangable = true;
-
     protected setDefaults(): void {
         this.state = {
-            percent: 50
+            in: false,
+            [outputHandleId]: false
         };
     }
 
     protected transform(id: string) {
         if (isBangOutHandleId(id)) {
-            const max = 100;
-            const min = 0;
-            const thresh = this.state.percent;
-            if (thresh === undefined) return;
-            return Math.floor(Math.random() * (max - min + 1)) + min >= thresh;
+            return this.state.in;
         }
-    };
+        return null;
+    }
 }
+

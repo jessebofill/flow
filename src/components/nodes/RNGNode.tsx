@@ -1,6 +1,6 @@
 import { registerNodeType } from '../../const/nodeTypes';
-import { defineHandles, NodeBase } from './NodeBase copy';
-import { ouputHandleId } from '../../const/const';
+import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase copy';
+import { outputHandleId } from '../../const/const';
 const handles = defineHandles({
     max: {
         dataType: 'number',
@@ -10,7 +10,7 @@ const handles = defineHandles({
         dataType: 'number',
         label: 'Min'
     },
-    [ouputHandleId]: {
+    [outputHandleId]: {
         dataType: 'number'
 
     }
@@ -28,13 +28,13 @@ export class RNGNode extends NodeBase<typeof handles> {
         };
     }
 
-    protected transform(isBang: boolean) {
-        if (isBang) {
+    protected transform(id: string) {
+        if (isBangOutHandleId(id)) {
             const max = this.state.max;
             const min = this.state.min;
             if (min === undefined || max === undefined) return;
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
-        return null
+        return null;
     };
 }

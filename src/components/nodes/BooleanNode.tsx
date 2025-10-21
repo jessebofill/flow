@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FC, type ReactNode } from 'react';
-import { ouputHandleId } from '../../const/const';
+import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { defineHandles, NodeBase } from './NodeBase copy';
@@ -28,16 +28,12 @@ const handles = defineHandles({
         dataType: DataTypeNames.Boolean,
         label: 'Invert'
     },
-    [ouputHandleId]: {
+    [outputHandleId]: {
         dataType: DataTypeNames.Boolean
     },
     bangOnTrue: {
         dataType: DataTypeNames.Bang,
-        label: <div>
-            Run if
-            <br />
-            true
-        </div>
+        label: 'Run if true'
     }
 });
 
@@ -54,7 +50,7 @@ export class BooleanNode extends NodeBase<typeof handles> {
     }
 
     protected onOutputChange(prevValue: boolean | undefined, nextValue: boolean | undefined): void {
-        if (prevValue !== nextValue && nextValue) {
+        if (nextValue) {
             this.bangThroughHandleId(this.handleDefToId(this.handleDefs.bangOnTrue)!);
         }
     }

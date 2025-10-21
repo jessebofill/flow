@@ -1,4 +1,4 @@
-import { ouputHandleId } from '../../const/const';
+import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { defineHandles, NodeBase } from './NodeBase copy';
 
@@ -18,7 +18,7 @@ const handles = defineHandles({
         dataType: 'number',
         label: 'Pass'
     },
-    [ouputHandleId]: {
+    [outputHandleId]: {
         dataType: 'boolean'
     }
 });
@@ -28,8 +28,9 @@ export class ChanceSuccessThresh extends NodeBase<typeof handles> {
     static defNodeName = 'Chance Threshold';
     protected handleDefs = handles;
     protected isBangable = true;
-    protected transform(isBang: boolean) {
-        if (isBang) {
+
+    protected transform(id: string) {
+        if (this.isBangOutputHandle(id)) {
             const max = this.state.max;
             const min = this.state.min;
             const thresh = this.state.pass;

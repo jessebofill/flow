@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import type { NodeBase } from '../components/nodes/NodeBase copy';
-import type { ouputHandleId } from '../const/const';
+import type { outputHandleId } from '../const/const';
 import type { nodeTypeNames } from '../const/nodeDefines';
 
 export type DataTypeName = typeof DataTypeNames[keyof typeof DataTypeNames];
@@ -33,12 +33,11 @@ export type HandleDef = {
 
 export type HandleDefs = {
     [id: string]: HandleDef;
-
 } & {
-    [ouputHandleId]?: HandleDef;
+    [outputHandleId]?: HandleDef;
 };
 
 export interface NodeClass {
-    new(...args: any[]): NodeBase<HandleDefs>;
+    new(...args: ConstructorParameters<typeof NodeBase>): NodeBase<HandleDefs>;
     defNodeName: string;
-}
+};

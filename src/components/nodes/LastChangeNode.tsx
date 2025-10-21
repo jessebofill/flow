@@ -1,6 +1,6 @@
-import { ouputHandleId } from '../../const/const';
+import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
-import { defineHandles, NodeBase } from './NodeBase copy';
+import { defineHandles, NodeBase, type InputHandleId, type TransformId } from './NodeBase copy';
 
 const handles = defineHandles({
 
@@ -10,7 +10,7 @@ const handles = defineHandles({
     p2: {
         dataType: 'number'
     },
-    [ouputHandleId]: {
+    [outputHandleId]: {
         dataType: 'number'
     }
 });
@@ -28,11 +28,7 @@ export class LastChanged extends NodeBase<typeof handles> {
         };
     }
 
-    protected transform() {
-        const lastChangedId = this.getInputIds().find(id => this.state[id] !== this.prevVals[id]);
-
-        console.log('last', this.prevVals[lastChangedId], this.state[lastChangedId])
-        this.prevVals[lastChangedId] = this.state[lastChangedId];
-        return this.state[lastChangedId]
+    protected transform(id: InputHandleId<typeof this.handleDefs>) {
+        return this.state[id];
     }
 }

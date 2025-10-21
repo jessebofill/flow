@@ -1,5 +1,5 @@
 import { type FC, useState, useRef, type ButtonHTMLAttributes } from 'react';
-import { Operator, opMap, type BooleanOp, type MathOp } from './OpIcons copy';
+import { Operator, opMap, type BooleanOp, type CountOp, type MathOp } from './OpIcons copy';
 import Tippy from '@tippyjs/react';
 
 interface OperationSelectorProps<Ops extends Operator> {
@@ -8,7 +8,7 @@ interface OperationSelectorProps<Ops extends Operator> {
     onChange: (op: Ops) => void;
 }
 
-export function OperationSelector<Ops extends BooleanOp | MathOp>({ operators, selected: initial, onChange }: OperationSelectorProps<Ops>) {
+export function OperationSelector<Ops extends BooleanOp | MathOp | CountOp>({ operators, selected: initial, onChange }: OperationSelectorProps<Ops>) {
     const [open, setOpen] = useState(false);
     const [selected, setSelected] = useState(initial ?? operators[0]);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -17,7 +17,6 @@ export function OperationSelector<Ops extends BooleanOp | MathOp>({ operators, s
         const next = e.relatedTarget as HTMLElement | null;
         if (!next || !dropdownRef.current?.contains(next)) setOpen(false);
     };
-    console.log('select render ', open)
 
     return (
         <div ref={dropdownRef} style={{ position: 'relative' }}>

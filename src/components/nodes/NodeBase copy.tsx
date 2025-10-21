@@ -1,9 +1,9 @@
-import { Position, type Node, Handle, type NodeProps, NodeToolbar } from '@xyflow/react';
+import { Position, type Node, Handle, type NodeProps } from '@xyflow/react';
 import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets } from '../../const/utils';
-import { bangOutHandleId, ouputHandleId, bangInHandleId, isActiveHandleId } from '../../const/const';
-import { DataTypeNames, type DataTypeName, type DataTypes, type HandleDef, type HandleDefs } from '../../types/types';
+import { bangOutHandleId, outputHandleId, bangInHandleId, isActiveHandleId } from '../../const/const';
+import { DataTypeNames, type DataTypeName, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
 
@@ -17,6 +17,20 @@ export function defineHandles<T extends HandleDefs>(defs: T): T {
     return defs;
 };
 
+export function isBangOutHandleId(id: string) {
+    return id === bangOutHandleId;
+}
+
+export type InputHandleId<Defs extends HandleDefs> = {
+    [Id in keyof Defs]: Id extends typeof outputHandleId
+    ? never
+    : Defs[Id]['dataType'] extends typeof DataTypeNames.Bang
+    ? never
+    : Id;
+}[keyof Defs];
+
+export type TransformId<Defs extends HandleDefs> = InputHandleId<Defs> | typeof bangOutHandleId;
+
 type HandleTypeFromDefs<T extends HandleDefs, Id extends keyof T> = DataTypes[T[Id]['dataType']];
 type TypeOfHandle<Handle extends HandleDef> = DataTypes[Handle['dataType']];
 type State<Defs extends Record<string, HandleDef>> = {
@@ -26,10 +40,13 @@ type State<Defs extends Record<string, HandleDef>> = {
 export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeProps<Node>, State<Defs>> {
     static contextType = GraphStateContext;
     declare context: ContextType<typeof GraphStateContext>;
-    static defNodeName: string;
     protected abstract handleDefs: Defs;
-    /**Null means don't set output or bang next */
-    protected abstract transform(isBang: boolean): HandleTypeFromDefs<Defs, typeof ouputHandleId> | undefined | null;
+    /**
+     * Null means don't set output or bang next
+     * Pass either handle id of input that was set or bangOutHandleId if is bang
+     *
+     */
+    protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined | null;
     protected isBangable = false;
     protected bangIfOutputNull = false;
     protected hideIsActiveHandle = false;
@@ -40,7 +57,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         super(props);
         this.setDefaults();
         this.state = { ...this.state, [isActiveHandleId]: true };
-        console.log('node', this)
+        // console.log('node', this)
     }
 
     get id() {
@@ -48,15 +65,15 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     }
 
     get name() {
-        return (this.constructor as typeof NodeBase).defNodeName;
+        return (this.constructor as NodeClass).defNodeName;
     }
 
     onTargetConnected(sourceHandleId: string, targetNodeId: string, targetHandleId: string) {
-        if (!this.isBangOutHandle(sourceHandleId)) this.executeTargetCallback(sourceHandleId, targetNodeId, targetHandleId);
+        if (!this.isBangOutputHandle(sourceHandleId)) this.executeTargetCallback(sourceHandleId, targetNodeId, targetHandleId);
     }
 
     /**Execute after output and those outputs connections get called but before onFinish callbacks */
-    protected onOutputChange(prevValue: HandleTypeFromDefs<Defs, typeof ouputHandleId> | undefined, nextValue: HandleTypeFromDefs<Defs, typeof ouputHandleId> | undefined) {
+    protected onOutputChange(prevValue: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined, nextValue: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined) {
 
     }
 
@@ -65,13 +82,13 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     }
 
     protected getInputIds() {
-        return Object.entries(this.handleDefs).filter(([id, def]) => id !== ouputHandleId && def.dataType !== DataTypeNames.Bang).map(entry => entry[0]);
+        return Object.entries(this.handleDefs).filter(([id, def]) => id !== outputHandleId && def.dataType !== DataTypeNames.Bang).map(entry => entry[0]);
     }
     protected getExtraBangoutIds() {
-        return Object.entries(this.handleDefs).filter(([id, def]) => id !== ouputHandleId && def.dataType === DataTypeNames.Bang).map(entry => entry[0]);
+        return Object.entries(this.handleDefs).filter(([id, def]) => id !== outputHandleId && def.dataType === DataTypeNames.Bang).map(entry => entry[0]);
     }
 
-    protected isBangOutHandle(handleId: string) {
+    protected isBangOutputHandle(handleId: string) {
         return handleId === bangOutHandleId || this.getExtraBangoutIds().includes(handleId);
     }
 
@@ -111,21 +128,17 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
             },
             () => {
                 console.log('nnn', handleId, this.state)
-                const output = this.transform(false);
+                const output = this.transform(handleId);
                 if (output !== null) this.setOutput(output);
             }
         );
     };
 
-    protected onSetInput() {
-
-    }
-
-    private setOutput(value: HandleTypeFromDefs<Defs, typeof ouputHandleId> | undefined, onFinish?: () => void) {
-        const prevVal = this.state[ouputHandleId];
+    private setOutput(value: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined, onFinish?: () => void) {
+        const prevVal = this.state[outputHandleId];
         this.setState(
-            (prev) => ({ ...prev, [ouputHandleId]: value }),
-            () => (this.executeTargetCallbacks(ouputHandleId), this.onOutputChange(prevVal, value), onFinish?.())
+            (prev) => ({ ...prev, [outputHandleId]: value }),
+            () => (this.executeTargetCallbacks(outputHandleId), this.onOutputChange(prevVal, value), onFinish?.())
         );
     };
 
@@ -144,13 +157,13 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         const node = nodeInstanceRegistry.get(targetNodeId);
         if (!node) throw new Error(`The connected target node could not be found in the registry`);
 
-        if (this.isBangOutHandle(sourceHandleId)) node.bang();
-        else (node.setInput as (handleId: string, value: unknown) => void)(targetHandleId, this.state[ouputHandleId]);
+        if (this.isBangOutputHandle(sourceHandleId)) node.bang();
+        else (node.setInput as (handleId: string, value: unknown) => void)(targetHandleId, this.state[outputHandleId]);
     };
 
     private bang() {
         if (!this.state[isActiveHandleId]) return;
-        const output = this.transform(true);
+        const output = this.transform(bangOutHandleId);
         console.log(`${this.id}: banged with `, output)
         if (output !== null) {
             this.setOutput(
@@ -170,7 +183,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         if (connectingHandleId === null || connectingHandleId === undefined) throw new Error('Connecting node had no hanlde id to connect to');
         // if (thisHandleId === bangInHandleId) return connectingHandleId === bangOutHandleId;
         // if (connectingHandleId === bangInHandleId) return thisHandleId === bangOutHandleId;
-        if (thisHandleId === ouputHandleId && connectingHandleId === ouputHandleId) return false;
+        if (thisHandleId === outputHandleId && connectingHandleId === outputHandleId) return false;
 
         const otherNodeInstance = nodeInstanceRegistry.get(connectingNodeId);
         if (!otherNodeInstance) throw new Error('Could not find connecting node type in the registry');
@@ -183,7 +196,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         const handleDef = handleId === bangInHandleId || handleId === bangOutHandleId ? { dataType: 'bang' } as const :
             handleId === isActiveHandleId ? { label: 'Active', dataType: 'boolean' } as const :
                 this.handleDefs[handleId];
-        const isOut = handleId === ouputHandleId || this.isBangOutHandle(handleId);
+        const isOut = handleId === outputHandleId || this.isBangOutputHandle(handleId);
         const color = dataTypeColorMap[handleDef.dataType];
 
         return (
@@ -195,7 +208,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                                 dataType: handleDef.dataType,
                                 value: this.state[handleId],
                                 setValue: (v: unknown) => handleId === isActiveHandleId ? this.setActive(v as boolean) :
-                                    this.setInput(handleId, v as HandleTypeFromDefs<Defs, typeof handleId>),
+                                    this.setInput(handleId as InputHandleId<Defs>, v as HandleTypeFromDefs<Defs, typeof handleId>),
                                 disabled: getConnectedSources(this.context.edges, this.id, handleId).length > 0 ||
                                     !this.state[isActiveHandleId] && handleId !== isActiveHandleId
                             } as NodeInputProps}
@@ -211,7 +224,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                     </div>
                 } */}
                 <Tippy
-                    className={isOut  ? '' : 'hidden'}
+                    className={isOut || handleId === bangInHandleId ? '' : 'hidden'}
                     content={
                         handleId === bangInHandleId ? 'Run Input' :
                             handleId === bangOutHandleId ? 'Run Output' :
@@ -253,7 +266,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     protected renderContent(): ReactNode {
         // console.log('stat', this.state)
         // return <div>Test</div>;
-        const output = this.state[ouputHandleId];
+        const output = this.state[outputHandleId];
         //@ts-ignore
         // return <div>{String(output)}</div>;
         return <div>{output !== undefined ? String(output) : false}</div>;
@@ -266,7 +279,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     render() {
         const inputs = this.getInputIds().map(handleId => (this.getHandleElement(handleId)));
         const outputs: ReactNode[] = [];
-        if (ouputHandleId in this.handleDefs) outputs.push(this.getHandleElement(ouputHandleId));
+        if (outputHandleId in this.handleDefs) outputs.push(this.getHandleElement(outputHandleId));
         const leftBang = this.isBangable && !this.bangIfOutputNull && this.getHandleElement(bangInHandleId);
         const rightBang = this.isBangable && this.getHandleElement(bangOutHandleId);
         const extraBangOuts = this.getExtraBangoutIds().map(handleId => (this.getHandleElement(handleId)));
@@ -298,7 +311,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'flex-start' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', paddingRight: '5px' }}>{inputs}</div>
                         </div>
-                        {!this.handleDefs[ouputHandleId] ? this.renderContent() :
+                        {!this.handleDefs[outputHandleId] ? this.renderContent() :
                             <div
                                 style={{
                                     alignContent: 'center',

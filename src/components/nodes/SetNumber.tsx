@@ -1,31 +1,31 @@
-import { ouputHandleId } from '../../const/const';
+import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, NodeBase } from './NodeBase copy';
+import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase copy';
 
 const handles = defineHandles({
     in: {
         dataType: DataTypeNames.Number,
     },
-    [ouputHandleId]: {
+    [outputHandleId]: {
         dataType: DataTypeNames.Number
     }
 });
 
 @registerNodeType
-export class SetOutputNode extends NodeBase<typeof handles> {
-    static defNodeName = 'Set Ouput';
+export class SetNumberNode extends NodeBase<typeof handles> {
+    static defNodeName = 'Set Number';
     protected handleDefs = handles;
     protected isBangable = true;
     protected setDefaults(): void {
         this.state = {
             in: 0,
-            [ouputHandleId]: 0
+            [outputHandleId]: 0
         };
     }
 
-    protected transform(isBang: boolean) {
-        if (isBang) {
+    protected transform(id: string) {
+        if (isBangOutHandleId(id)) {
             return this.state.in;
         }
         return null;

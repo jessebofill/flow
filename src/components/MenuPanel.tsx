@@ -6,7 +6,6 @@ import type { NodeClass } from '../types/types';
 import { useDraggable } from '@neodrag/react';
 
 export const MenuPanel: FC<object> = () => {
-    console.log('menu render')
     const { setNodes, screenToFlowPosition } = useReactFlow();
     const [open, setOpen] = useState(true);
 

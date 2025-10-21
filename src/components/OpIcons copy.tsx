@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { AndIcon, DivideIcon, MinusIcon, MultiplyIcon, OrIcon, PlusIcon } from './OpIcons';
+import { AndIcon, DecIcon, DivideIcon, IncIcon, MinusIcon, MultiplyIcon, OrIcon, PlusIcon } from './OpIcons';
 
 export interface OpEntry<Type extends boolean | number> {
     name: string;
@@ -14,11 +14,13 @@ export enum Operator {
     Subtract = '-',
     Multiply = '*',
     Divide = '/',
+    Increment = '++',
+    Decrement = '--',
 }
 
 export type BooleanOp = Operator.And | Operator.Or;
 export type MathOp = Operator.Add | Operator.Subtract | Operator.Multiply | Operator.Divide;
-
+export type CountOp = Operator.Increment | Operator.Decrement;
 export const opMap = defineOps({
     [Operator.Or]: {
         name: 'Or',
@@ -53,6 +55,15 @@ export const opMap = defineOps({
             args.length === 0
                 ? 0
                 : args.reduce((a, b) => (b === 0 ? NaN : a / b)),
+    },
+    [Operator.Increment]: {
+        name: 'Increment',
+        icon: <IncIcon />,
+        operation: (p1: number, p2: number) => p1 + p2,
+    }, [Operator.Decrement]: {
+        name: 'Decrement',
+        icon: <DecIcon />,
+        operation: (p1: number, p2: number) => p1 - p2,
     },
 } as const);
 
