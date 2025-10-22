@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { OperationSelector } from '../OperationSelector';
-import { Operator, opMap, type MathOp } from '../OpIcons copy';
+import { Operator, opMap, type MathOp } from '../../const/opDefines';
 import { defineHandles, NodeBase } from './NodeBase';
 import { DataTypeNames } from '../../types/types';
 

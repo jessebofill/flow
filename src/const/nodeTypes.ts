@@ -2,11 +2,7 @@ import type { Node, XYPosition } from '@xyflow/react';
 import type { NodeClass } from '../types/types';
 import { v4 as uuidv4 } from 'uuid';
 
-export const nodeTypes: { [rfIdentifier: string]: NodeClass } = {
-    // bang: BangNode,
-    // // rng: RNGNode,
-    // chanceThresh: ChanceSuccessThresh
-}
+export const nodeTypes: { [rfIdentifier: string]: NodeClass } = {};
 
 window.nodes = nodeTypes
 export function registerNodeType<T extends NodeClass>(nodeClass: T) {

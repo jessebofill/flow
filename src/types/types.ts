@@ -1,10 +1,8 @@
 import type { ReactElement } from 'react';
 import type { NodeBase } from '../components/nodes/NodeBase';
 import type { outputHandleId } from '../const/const';
-import type { nodeTypeNames } from '../const/nodeDefines';
 
 export type DataTypeName = typeof DataTypeNames[keyof typeof DataTypeNames];
-export type NodeTypeName = (typeof nodeTypeNames)[number];
 
 export const DataTypeNames = {
     Bang: 'bang',

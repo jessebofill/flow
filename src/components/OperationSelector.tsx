@@ -1,5 +1,5 @@
 import { type FC, useState, useRef, type ButtonHTMLAttributes } from 'react';
-import { Operator, opMap, type BooleanOp, type CountOp, type MathOp } from './OpIcons copy';
+import { Operator, opMap, type BooleanOp, type CountOp, type MathOp } from '../const/opDefines';
 import Tippy from '@tippyjs/react';
 
 interface OperationSelectorProps<Ops extends Operator> {

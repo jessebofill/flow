@@ -3,7 +3,7 @@ import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { defineHandles, NodeBase } from './NodeBase';
-import { Operator, opMap, type BooleanOp } from '../OpIcons copy';
+import { Operator, opMap, type BooleanOp } from '../../const/opDefines';
 import { OperationSelector } from '../OperationSelector';
 
 const arbitraryParamPrefix = 'p_';

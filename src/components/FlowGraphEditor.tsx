@@ -104,6 +104,8 @@ export const FlowGraphEditor: FC<object> = () => {
                     onPaneClick={onPaneClick}
                     minZoom={0.3}
                     maxZoom={5}
+                    autoPanOnConnect
+                    autoPanOnNodeDrag
                 >
                     {/* <Controls /> */}
                     {/* <Panel position='center-left'

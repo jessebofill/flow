@@ -3,7 +3,7 @@ import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { OperationSelector } from '../OperationSelector';
-import { Operator, opMap, type CountOp } from '../OpIcons copy';
+import { Operator, opMap, type CountOp } from '../../const/opDefines';
 import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
