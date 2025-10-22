@@ -108,6 +108,10 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         this.executeTargetCallbacks(handleId);
     }
 
+    protected forceRender() {
+        this.setState(prev => ({ ...prev }));
+    }
+
     private setStateAsync<S extends State<Defs>, K extends keyof S>(
         state: ((prevState: Readonly<S>, props: Readonly<typeof this.props>) => Pick<S, K> | S | null) | (Pick<S, K> | S | null)
     ): Promise<void> {
@@ -167,7 +171,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     private async bang() {
         if (!this.state[isActiveHandleId]) return;
         const output = this.transform(bangOutHandleId);
-        console.log(`${this.id}: banged with `, output)
+        // console.log(`${this.id}: banged with `, output)
         if (output !== null) {
             await this.setOutput(output);
             this.bangThroughHandleId(bangOutHandleId);
@@ -281,7 +285,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         const inputs = this.getInputIds().map(handleId => (this.getHandleElement(handleId)));
         const outputs: ReactNode[] = [];
         if (outputHandleId in this.handleDefs) outputs.push(this.getHandleElement(outputHandleId));
-        const leftBang = this.isBangable  && this.getHandleElement(bangInHandleId);
+        const leftBang = this.isBangable && this.getHandleElement(bangInHandleId);
         const rightBang = this.isBangable && this.getHandleElement(bangOutHandleId);
         const extraBangOuts = this.getExtraBangoutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
