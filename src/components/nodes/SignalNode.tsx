@@ -1,4 +1,3 @@
-import { bangOutHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
@@ -7,6 +6,10 @@ const handles = defineHandles({
     delaySec: {
         dataType: DataTypeNames.Number,
         label: 'Delay Sec'
+    },
+    delayedSignal: {
+        dataType: DataTypeNames.Bang,
+        label: 'Delayed Signal'
     }
 });
 
@@ -21,10 +24,7 @@ export class SignalNode extends NodeBase<typeof handles> {
     transform = (id: string) => {
         if (!isBangOutHandleId(id)) return null;
 
-        const delay = this.state.delaySec;
-        if (delay && delay > 0) {
-            setTimeout(() => this.bangThroughHandleId(bangOutHandleId), delay * 1000);
-            return null;
-        }
+        const delay = this.state.delaySec ?? 0;
+        if (delay >= 0) setTimeout(() => this.bangThroughHandleId(this.getExtraBangoutIds()[0]), delay * 1000);
     }
 }
