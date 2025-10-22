@@ -24,13 +24,18 @@ export function NodeInput<Props extends NodeInputProps>({ dataType, value, disab
             );
         case 'boolean':
             return (
-                <input
-                    checked={value}
-                    type="checkbox"
-                    onChange={(e) => setValue(e.target.checked)}
-                    style={{ margin: 0 }}
-                    disabled={disabled}
-                />
+                <label className="switch">
+                    <input
+                        checked={value}
+                        type="checkbox"
+                        onChange={(e) => setValue(e.target.checked)}
+                        style={{ margin: 0 }}
+                        disabled={disabled}
+                    />
+                    <span className="slider">
+                        <span className='dot' />
+                    </span>
+                </label>
             );
     }
 }
