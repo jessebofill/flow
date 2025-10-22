@@ -5,7 +5,6 @@ import { DataTypeNames } from '../../types/types';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type CountOp } from '../OpIcons copy';
 import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
-import type { JSX } from 'react/jsx-runtime';
 
 const handles = defineHandles({
     step: {
@@ -40,15 +39,6 @@ export class CounterNode extends NodeBase<typeof handles> {
         }
         return null;
     }
-
-    // render(): JSX.Element {
-    //     return <div style={{display: 'flex', height: '30px'}}>
-    //         {opMap['+'].icon}
-    //         {opMap['-'].icon}
-    //         {opMap['++'].icon}
-    //         {opMap['--'].icon}
-    //     </div>
-    // }
 
     protected renderExtra(): ReactNode {
         return (

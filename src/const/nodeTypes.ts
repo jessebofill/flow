@@ -10,6 +10,7 @@ export const nodeTypes: { [rfIdentifier: string]: NodeClass } = {
 
 window.nodes = nodeTypes
 export function registerNodeType<T extends NodeClass>(nodeClass: T) {
+    if (typeof nodeClass.defNodeName !== 'string') throw new Error(`Missing static defNodeName on node class '${nodeClass.name}'`);
     if (nodeTypes[nodeClass.defNodeName]) throw new Error(`Duplicate identifier '${nodeClass.defNodeName}' found in node type map`);
     nodeTypes[nodeClass.defNodeName] = nodeClass;
 }

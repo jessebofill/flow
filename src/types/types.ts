@@ -29,8 +29,6 @@ export type HandleDef = {
     dataType: DataTypeName; //bang type only used for outputs
 };
 
-
-
 export type HandleDefs = {
     [id: string]: HandleDef;
 } & {

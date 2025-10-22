@@ -108,68 +108,69 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         this.executeTargetCallbacks(handleId);
     }
 
+    private setStateAsync<S extends State<Defs>, K extends keyof S>(
+        state: ((prevState: Readonly<S>, props: Readonly<typeof this.props>) => Pick<S, K> | S | null) | (Pick<S, K> | S | null)
+    ): Promise<void> {
+        return new Promise<void>(resolve => {
+            this.setState(state as Readonly<State<Defs>>, resolve);
+        });
+    }
+
     private setActive(value: boolean) {
-        console.log('set active', value)
+        // console.log('set active', value, this.id)
         this.setState((prev) => ({ ...prev ?? {}, [isActiveHandleId]: value }));
     };
 
     /**
      * Allow undefined values to change input for now. Just cast to 0. May need to change in future
      */
-    private setInput<K extends keyof Defs>(handleId: K, value: HandleTypeFromDefs<Defs, K> | undefined) {
+    private async setInput<K extends keyof Defs>(handleId: K, value: HandleTypeFromDefs<Defs, K> | undefined) {
         if (handleId !== isActiveHandleId && !this.state[isActiveHandleId]) return;
-        console.log('setr', handleId, value)
-        this.setState(
+        console.log('setr', handleId, value, this.id)
+        await this.setStateAsync(
             (prev) => {
-
                 const a = ({ ...prev ?? {}, [handleId]: value ?? 0 })
-                console.log('set444', handleId, a)
+                // console.log('set444', handleId, a)
                 return a
-            },
-            () => {
-                console.log('nnn', handleId, this.state)
-                const output = this.transform(handleId);
-                if (output !== null) this.setOutput(output);
-            }
-        );
+            });
+        const output = this.transform(handleId);
+        if (output !== null) await this.setOutput(output);
     };
 
-    private setOutput(value: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined, onFinish?: () => void) {
+    private async setOutput(value: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined) {
         const prevVal = this.state[outputHandleId];
-        this.setState(
-            (prev) => ({ ...prev, [outputHandleId]: value }),
-            () => (this.executeTargetCallbacks(outputHandleId), this.onOutputChange(prevVal, value), onFinish?.())
-        );
+        await this.setStateAsync((prev) => ({ ...prev, [outputHandleId]: value }));
+        await this.executeTargetCallbacks(outputHandleId)
+        this.onOutputChange(prevVal, value);
     };
 
-    private executeTargetCallbacks(sourceHandleId: string) {
-        // console.log('exe called', this.id)
+    private async executeTargetCallbacks(sourceHandleId: string): Promise<void> {
         const { edges } = this.context;
         const connectedTargets = getConnectedTargets(edges, this.id, sourceHandleId);
-        connectedTargets.forEach(target => {
+        for (const target of connectedTargets) {
             if (!target.targetHandleId) throw new Error('The connected target did not have an identifiable handle');
-            this.executeTargetCallback(sourceHandleId, target.targetNodeId, target.targetHandleId);
-        });
-    };
+            // console.log(this.id,'exe target', target.targetNodeI
+            await this.executeTargetCallback(sourceHandleId, target.targetNodeId, target.targetHandleId);
+        }
+    }
 
-    private executeTargetCallback(sourceHandleId: string, targetNodeId: string, targetHandleId: string) {
+
+    private async executeTargetCallback(sourceHandleId: string, targetNodeId: string, targetHandleId: string) {
         // console.log('exe target', sourceHandleId, targetNodeId, targetHandleId, this.state[ouputHandleId])
         const node = nodeInstanceRegistry.get(targetNodeId);
         if (!node) throw new Error(`The connected target node could not be found in the registry`);
 
-        if (this.isBangOutputHandle(sourceHandleId)) node.bang();
-        else (node.setInput as (handleId: string, value: unknown) => void)(targetHandleId, this.state[outputHandleId]);
+        if (this.isBangOutputHandle(sourceHandleId)) await node.bang();
+        else await node.setInput(targetHandleId, this.state[outputHandleId] as HandleTypeFromDefs<typeof node.handleDefs, keyof typeof node.handleDefs>);
     };
 
-    private bang() {
+    private async bang() {
         if (!this.state[isActiveHandleId]) return;
         const output = this.transform(bangOutHandleId);
         console.log(`${this.id}: banged with `, output)
         if (output !== null) {
-            this.setOutput(
-                output,
-                () => this.bangThroughHandleId(bangOutHandleId)
-            );
+            await this.setOutput(output);
+            this.bangThroughHandleId(bangOutHandleId);
         }
         // } else if (this.bangIfOutputNull) {
         //     this.executeTargetCallbacks(bangOutHandleId);

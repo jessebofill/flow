@@ -29,15 +29,13 @@ export class MathNode extends NodeBase<typeof handles> {
             p1: 0,
             p2: 0,
             [outputHandleId]: 0
-        }
+        };
     }
 
     protected transform() {
         console.log('execdcdcdeee', this.state)
         if (this.state.p1 === undefined || this.state.p2 === undefined) return;
         return opMap[this.operator ].operation(this.state.p1, this.state.p2);
-        return this.state.p1 + this.state.p2
-        return Object.entries(this.state).filter(([key, val]) => key !== outputHandleId).reduce((prev, [_, curr]) => prev + curr, 0);
     }
 
     protected renderExtra(): ReactNode {

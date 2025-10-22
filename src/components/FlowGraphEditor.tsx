@@ -106,12 +106,12 @@ export const FlowGraphEditor: FC<object> = () => {
                     maxZoom={5}
                 >
                     {/* <Controls /> */}
-                    <Panel position='center-left'
+                    {/* <Panel position='center-left'
                         style={{ height: '100%' }}
                     >
                         sdfsdfsf
                         <WatchView />
-                    </Panel>
+                    </Panel> */}
                     {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
                     <Background />
                 </ReactFlow>
