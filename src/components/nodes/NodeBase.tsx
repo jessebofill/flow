@@ -49,7 +49,6 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined | null;
     protected actionButtonText = 'Run';
     protected isBangable = false;
-    protected bangIfOutputNull = false;
     protected hideIsActiveHandle = false;
     // protected bangHandleDefs: HandleDefs = { [bangInHandleId]: { dataType: 'bang' }, [bangOutHandleId]: { dataType: 'bang' } };
     protected ref = createRef<HTMLDivElement>();
@@ -282,7 +281,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         const inputs = this.getInputIds().map(handleId => (this.getHandleElement(handleId)));
         const outputs: ReactNode[] = [];
         if (outputHandleId in this.handleDefs) outputs.push(this.getHandleElement(outputHandleId));
-        const leftBang = this.isBangable && !this.bangIfOutputNull && this.getHandleElement(bangInHandleId);
+        const leftBang = this.isBangable  && this.getHandleElement(bangInHandleId);
         const rightBang = this.isBangable && this.getHandleElement(bangOutHandleId);
         const extraBangOuts = this.getExtraBangoutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
