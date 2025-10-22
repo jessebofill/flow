@@ -16,6 +16,7 @@ export enum Operator {
     Divide = '/',
     Increment = '++',
     Decrement = '--',
+    Mod = '%',
 }
 
 export type BooleanOp = Operator.And | Operator.Or;
@@ -60,11 +61,17 @@ export const opMap = defineOps({
         name: 'Increment',
         icon: <IncIcon />,
         operation: (p1: number, p2: number) => p1 + p2,
-    }, [Operator.Decrement]: {
+    },
+    [Operator.Decrement]: {
         name: 'Decrement',
         icon: <DecIcon />,
         operation: (p1: number, p2: number) => p1 - p2,
     },
+    [Operator.Mod]: {
+        name: 'Modulus',
+        icon: '',
+        operation: (p1: number, p2: number) => p1 % p2
+    }
 } as const);
 
 function defineOps<Map extends { [Key in Operator]: OpEntry<boolean> | OpEntry<number> }>(map: Map): Map {
