@@ -4,17 +4,18 @@ import { registerNodeType } from '../../const/nodeTypes';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type MathOp } from '../OpIcons copy';
 import { defineHandles, NodeBase } from './NodeBase';
+import { DataTypeNames } from '../../types/types';
 
 const handles = defineHandles({
 
     p1: {
-        dataType: 'number'
+        dataType: DataTypeNames.Number
     },
     p2: {
-        dataType: 'number'
+        dataType: DataTypeNames.Number
     },
     [outputHandleId]: {
-        dataType: 'number'
+        dataType: DataTypeNames.Number
     }
 });
 

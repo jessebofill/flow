@@ -17,6 +17,7 @@ export class SetNumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'Set Number';
     protected handleDefs = handles;
     protected isBangable = true;
+    protected actionButtonText: string = 'Set';
     protected setDefaults(): void {
         this.state = {
             in: 0,

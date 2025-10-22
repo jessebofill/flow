@@ -1,17 +1,18 @@
 import { registerNodeType } from '../../const/nodeTypes';
 import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
 import { outputHandleId } from '../../const/const';
+import { DataTypeNames } from '../../types/types';
 const handles = defineHandles({
     max: {
-        dataType: 'number',
+        dataType: DataTypeNames.Number,
         label: 'Max'
     },
     min: {
-        dataType: 'number',
+        dataType: DataTypeNames.Number,
         label: 'Min'
     },
     [outputHandleId]: {
-        dataType: 'number'
+        dataType: DataTypeNames.Number
 
     }
 });
@@ -21,6 +22,7 @@ export class RNGNode extends NodeBase<typeof handles> {
     static defNodeName = 'RNG'
     protected handleDefs = handles;
     protected isBangable: boolean = true;
+    protected actionButtonText: string = 'Generate';
     protected setDefaults(): void {
         this.state = {
             min: 1,

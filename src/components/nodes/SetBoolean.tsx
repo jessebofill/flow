@@ -17,6 +17,7 @@ export class SetBooleanNode extends NodeBase<typeof handles> {
     static defNodeName = 'Set Boolean';
     protected handleDefs = handles;
     protected isBangable = true;
+    protected actionButtonText: string = 'Set';
     protected setDefaults(): void {
         this.state = {
             in: false,

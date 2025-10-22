@@ -1,30 +1,31 @@
 import { outputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
-import { defineHandles, NodeBase, type InputHandleId, type TransformId } from './NodeBase';
+import { DataTypeNames } from '../../types/types';
+import { defineHandles, NodeBase, type InputHandleId } from './NodeBase';
 
 const handles = defineHandles({
 
     p1: {
-        dataType: 'number'
+        dataType: DataTypeNames.Boolean
     },
     p2: {
-        dataType: 'number'
+        dataType: DataTypeNames.Boolean
     },
     [outputHandleId]: {
-        dataType: 'number'
+        dataType: DataTypeNames.Boolean
     }
 });
 
 @registerNodeType
-export class LastChanged extends NodeBase<typeof handles> {
-    static defNodeName = 'Last Changed';
+export class LastChangedBoolean extends NodeBase<typeof handles> {
+    static defNodeName = 'Last Changed Boolean';
     protected handleDefs = handles;
     prevVals: { p1: number; p2: number } = { p1: 0, p2: 0 };
 
     protected setDefaults(): void {
         this.state = {
-            p1: 0,
-            p2: 0
+            p1: false,
+            p2: false
         };
     }
 

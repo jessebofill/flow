@@ -33,7 +33,7 @@ const handles = defineHandles({
     },
     bangOnTrue: {
         dataType: DataTypeNames.Bang,
-        label: 'Run if true'
+        label: 'Signal if true'
     }
 });
 
@@ -56,7 +56,6 @@ export class BooleanNode extends NodeBase<typeof handles> {
     }
 
     protected transform() {
-        console.log('operator', this.operator)
         const p1 = this.state['p_1'];
         const p2 = this.state['p_2'];
         if (p1 === undefined || p2 === undefined) return;

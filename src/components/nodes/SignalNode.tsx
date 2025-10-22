@@ -5,10 +5,11 @@ const handles = defineHandles({});
 
 @registerNodeType
 export class BangNode extends NodeBase<typeof handles> {
-    static defNodeName = 'Bang';
+    static defNodeName = 'Signal';
     protected handleDefs = handles;
     protected isBangable = true;
     protected bangIfOutputNull = true;
     protected hideIsActiveHandle = true;
+    protected actionButtonText: string = 'Send';
     transform = () => { };
 }

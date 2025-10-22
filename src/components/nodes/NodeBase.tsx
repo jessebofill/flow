@@ -47,6 +47,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
      *
      */
     protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined | null;
+    protected actionButtonText = 'Run';
     protected isBangable = false;
     protected bangIfOutputNull = false;
     protected hideIsActiveHandle = false;
@@ -227,8 +228,8 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                 <Tippy
                     className={isOut || handleId === bangInHandleId ? '' : 'hidden'}
                     content={
-                        handleId === bangInHandleId ? 'Run Input' :
-                            handleId === bangOutHandleId ? 'Run Output' :
+                        handleId === bangInHandleId ? `${this.actionButtonText} on signal` :
+                            handleId === bangOutHandleId ? 'Send signal' :
                                 handleDef.label ?? 'Output'
                     }
                     placement="top"
@@ -357,7 +358,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                         }}
                         onClick={() => this.bang()}
                     >
-                        Run
+                        {this.actionButtonText}
                     </button>
                     <div style={{ position: 'absolute', right: 0 }}>
                         {rightBang}
