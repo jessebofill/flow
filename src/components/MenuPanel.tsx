@@ -29,7 +29,7 @@ export const MenuPanel: FC<object> = () => {
     );
 
     return (
-        <aside>
+        <aside style={{ overflowY: 'scroll' }}>
             {/* <div
                 style={{
                     display: 'flex',
