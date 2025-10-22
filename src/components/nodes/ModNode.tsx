@@ -14,6 +14,10 @@ const handles = defineHandles({
     p2: {
         dataType: DataTypeNames.Number
     },
+    offset: {
+        dataType: DataTypeNames.Number,
+        label: 'Offset'
+    },
     [outputHandleId]: {
         dataType: DataTypeNames.Number
     }
@@ -29,6 +33,7 @@ export class ModNode extends NodeBase<typeof handles> {
         this.state = {
             p1: 1,
             p2: 1,
+            offset: 0,
             [outputHandleId]: 0
         };
     }
@@ -36,6 +41,6 @@ export class ModNode extends NodeBase<typeof handles> {
     protected transform() {
         if (this.state.p1 === undefined || this.state.p2 === undefined) return;
         const val = opMap['%'].operation(this.state.p1, this.state.p2);
-        return isNaN(val) ? undefined : val;
+        return isNaN(val) ? undefined : val + (this.state.offset ?? 0);
     }
 }
