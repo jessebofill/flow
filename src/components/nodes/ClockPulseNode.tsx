@@ -1,3 +1,4 @@
+import { isActiveHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
@@ -18,7 +19,6 @@ export class ClockPulseNode extends NodeBase<typeof handles> {
     static defNodeName = 'Clock Pulse';
     protected handleDefs = handles;
     protected isBangable = true;
-    protected hideIsActiveHandle = true;
     protected running = false;
     protected actionButtonText: string = 'Start';
     protected intervalId: number = 0;
@@ -42,7 +42,8 @@ export class ClockPulseNode extends NodeBase<typeof handles> {
         if (!isBangOutHandleId(id)) {
             if (this.running) {
                 this.stop();
-                this.start();
+                const isActive = this.state[isActiveHandleId];
+                if (isActive) this.start();
                 if (!this.running) this.forceRender();
             }
             return null;

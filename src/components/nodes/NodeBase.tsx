@@ -35,6 +35,8 @@ type HandleTypeFromDefs<T extends HandleDefs, Id extends keyof T> = DataTypes[T[
 type TypeOfHandle<Handle extends HandleDef> = DataTypes[Handle['dataType']];
 type State<Defs extends Record<string, HandleDef>> = {
     [Id in keyof Defs]?: TypeOfHandle<Defs[Id]>;
+} & {
+    [Id in typeof isActiveHandleId]?: TypeOfHandle<{ dataType: typeof DataTypeNames.Boolean }>;
 };
 
 export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeProps<Node>, State<Defs>> {
@@ -119,11 +121,6 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
             this.setState(state as Readonly<State<Defs>>, resolve);
         });
     }
-
-    private setActive(value: boolean) {
-        // console.log('set active', value, this.id)
-        this.setState((prev) => ({ ...prev ?? {}, [isActiveHandleId]: value }));
-    };
 
     /**
      * Allow undefined values to change input for now. Just cast to 0. May need to change in future
@@ -212,7 +209,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                             {...{
                                 dataType: handleDef.dataType,
                                 value: this.state[handleId],
-                                setValue: (v: unknown) => handleId === isActiveHandleId ? this.setActive(v as boolean) :
+                                setValue: (v: unknown) => handleId === isActiveHandleId ? this.setInput(isActiveHandleId, v as never) :
                                     this.setInput(handleId as InputHandleId<Defs>, v as HandleTypeFromDefs<Defs, typeof handleId>),
                                 disabled: getConnectedSources(this.context.edges, this.id, handleId).length > 0 ||
                                     !this.state[isActiveHandleId] && handleId !== isActiveHandleId

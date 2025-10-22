@@ -18,13 +18,13 @@ export class SignalNode extends NodeBase<typeof handles> {
     static defNodeName = 'Signal';
     protected handleDefs = handles;
     protected isBangable = true;
-    protected hideIsActiveHandle = true;
     protected actionButtonText: string = 'Send';
+    protected timeoutId = 0;
 
     transform = (id: string) => {
         if (!isBangOutHandleId(id)) return null;
 
         const delay = this.state.delaySec ?? 0;
-        if (delay >= 0) setTimeout(() => this.bangThroughHandleId(this.getExtraBangoutIds()[0]), delay * 1000);
+        if (delay >= 0) this.timeoutId = setTimeout(() => this.bangThroughHandleId(this.getExtraBangoutIds()[0]), delay * 1000);
     }
 }
