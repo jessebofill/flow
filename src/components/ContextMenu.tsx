@@ -37,7 +37,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ id, top, left, right, bottom
 
     const deleteNode = useCallback(() => {
         setNodes((nodes) => nodes.filter((node) => node.id !== id));
-        setEdges((edges) => edges.filter((edge) => edge.source !== id));
+        // setEdges((edges) => edges.filter((edge) => edge.source !== id));
     }, [id, setNodes, setEdges]);
 
     return (

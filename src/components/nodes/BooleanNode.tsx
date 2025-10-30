@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId, variOutHandleIdPrefix } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { defineHandles, NodeBase } from './NodeBase';
@@ -15,6 +15,8 @@ function useArbitraryParam() {
 
 }
 
+const signalTrueId = `${variOutHandleIdPrefix}signalTrue`;
+
 const handles = defineHandles({
 
     p_1: {
@@ -27,10 +29,10 @@ const handles = defineHandles({
         dataType: DataTypeNames.Boolean,
         label: 'Invert'
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Boolean
     },
-    signalOnTrue: {
+    [signalTrueId]: {
         dataType: DataTypeNames.Bang,
         label: 'Signal if true'
     }
@@ -40,18 +42,22 @@ const handles = defineHandles({
 export class BooleanNode extends NodeBase<typeof handles> {
     static defNodeName = 'Boolean';
     protected handleDefs = handles;
-    protected operator: BooleanOp = Operator.And;
+    declare saveableState: { operator: BooleanOp };
+    
     protected setDefaults(): void {
         this.state = {
             p_1: false,
             p_2: false,
             invert: false
         }
+        this.saveableState = {
+            operator: Operator.And
+        };
     }
 
     protected onOutputChange(prevValue: boolean | undefined, nextValue: boolean | undefined): void {
         if (nextValue) {
-            this.bangThroughHandleId(this.handleDefToId(this.handleDefs.signalOnTrue)!);
+            this.exeTargetCallbacks(this.handleDefToId(this.handleDefs[signalTrueId])!);
         }
     }
 
@@ -60,13 +66,13 @@ export class BooleanNode extends NodeBase<typeof handles> {
         const p2 = this.state['p_2'];
         const invert = this.state.invert;
         if (p1 === undefined || p2 === undefined || invert === undefined) return;
-        const val =  opMap[this.operator].operation(p1, p2);
+        const val = opMap[this.saveableState.operator].operation(p1, p2);
         return invert ? !val : val;
     }
 
     protected renderExtra(): ReactNode {
         return (
-            <OperationSelector operators={[Operator.And, Operator.Or]} selected={this.operator} onChange={op => this.operator = op} />
+            <OperationSelector operators={[Operator.And, Operator.Or]} selected={this.saveableState.operator} onChange={op => this.saveableState.operator = op} />
         );
     }
 }

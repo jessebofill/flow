@@ -1,13 +1,16 @@
+import { variOutHandleIdPrefix } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
+import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
+
+const delayedSignalOutKey = `${variOutHandleIdPrefix}delay`
 
 const handles = defineHandles({
     delaySec: {
         dataType: DataTypeNames.Number,
         label: 'Delay Sec'
     },
-    delayedSignal: {
+    [delayedSignalOutKey]: {
         dataType: DataTypeNames.Bang,
         label: 'Delayed Signal'
     }
@@ -22,9 +25,9 @@ export class SignalNode extends NodeBase<typeof handles> {
     protected timeoutId = 0;
 
     transform = (id: string) => {
-        if (!isBangOutHandleId(id)) return null;
+        if (!isBangInHandleId(id)) return null;
 
         const delay = this.state.delaySec ?? 0;
-        if (delay >= 0) this.timeoutId = setTimeout(() => this.bangThroughHandleId(this.getExtraBangoutIds()[0]), delay * 1000);
+        if (delay >= 0) this.timeoutId = setTimeout(() => this.exeTargetCallbacks(delayedSignalOutKey), delay * 1000);
     }
 }

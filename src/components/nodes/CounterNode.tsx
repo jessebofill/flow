@@ -1,17 +1,17 @@
 import type { ReactNode } from 'react';
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type CountOp } from '../../const/opDefines';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
+import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
     step: {
         dataType: DataTypeNames.Number,
         label: 'Step'
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Number
     }
 })
@@ -21,28 +21,32 @@ export class CounterNode extends NodeBase<typeof handles> {
     static defNodeName = 'Counter';
     protected handleDefs = handles;
     protected isBangable: boolean = true;
-    protected operator: CountOp = Operator.Increment;
+    declare saveableState: { operator: CountOp };
 
     protected setDefaults(): void {
         this.state = {
             step: 1,
-            [outputHandleId]: 0
+            [mainOutputHandleId]: 0
+        };
+
+        this.saveableState = {
+            operator: Operator.Increment
         };
     }
 
     protected transform(id: string): number | null | undefined {
-        if (isBangOutHandleId(id)) {
+        if (isBangInHandleId(id)) {
             const step = this.state.step;
-            const accum = this.state[outputHandleId];
+            const accum = this.state[mainOutputHandleId];
             if (step === undefined || accum === undefined) return;
-            return opMap[this.operator].operation(accum, step);
+            return opMap[this.saveableState.operator].operation(accum, step);
         }
         return null;
     }
 
     protected renderExtra(): ReactNode {
         return (
-            <OperationSelector operators={[Operator.Increment, Operator.Decrement]} selected={this.operator} onChange={op => this.operator = op} />
+            <OperationSelector operators={[Operator.Increment, Operator.Decrement]} selected={this.saveableState.operator} onChange={op => this.saveableState.operator = op} />
         );
     }
 }

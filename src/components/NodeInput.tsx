@@ -1,17 +1,18 @@
-import type { DataTypeName, DataTypes } from '../types/types';
+import { DataTypeNames, type DataTypeName, type DataTypes } from '../types/types';
 
 export type NodeInputProps = {
-    [K in Exclude<DataTypeName, 'bang'>]: {
+    [K in DataTypeName]: {
         dataType: K;
         value: DataTypes[K] | undefined;
         setValue: (value: DataTypes[K]) => void;
+        label?: string;
         disabled?: boolean;
     };
-}[Exclude<DataTypeName, 'bang'>];
+}[DataTypeName];
 
-export function NodeInput<Props extends NodeInputProps>({ dataType, value, disabled, setValue }: Props) {
+export function NodeInput<Props extends NodeInputProps>({ dataType, value, label, disabled, setValue }: Props) {
     switch (dataType) {
-        case 'number':
+        case DataTypeNames.Number:
             return (
                 <input
                     value={value ?? 0}
@@ -22,7 +23,7 @@ export function NodeInput<Props extends NodeInputProps>({ dataType, value, disab
                     disabled={disabled}
                 />
             );
-        case 'boolean':
+        case DataTypeNames.Boolean:
             return (
                 <label className="switch">
                     <input
@@ -37,5 +38,13 @@ export function NodeInput<Props extends NodeInputProps>({ dataType, value, disab
                     </span>
                 </label>
             );
+        case DataTypeNames.Bang:
+            return (
+                <button
+                    onClick={setValue}
+                >
+                    {label || 'Run'}
+                </button>
+            )
     }
 }

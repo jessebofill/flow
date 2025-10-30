@@ -1,11 +1,12 @@
-import { Position, type Node, Handle, type NodeProps } from '@xyflow/react';
+import { Position, type Node, Handle, type NodeProps, type Edge } from '@xyflow/react';
 import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets } from '../../const/utils';
-import { bangOutHandleId, outputHandleId, bangInHandleId, isActiveHandleId } from '../../const/const';
+import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix } from '../../const/const';
 import { DataTypeNames, type DataTypeName, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
+import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from '../../const/nodeTypes';
 
 const dataTypeColorMap: { [K in DataTypeName]: string } = {
     bang: '#ef47f1',
@@ -17,12 +18,12 @@ export function defineHandles<T extends HandleDefs>(defs: T): T {
     return defs;
 };
 
-export function isBangOutHandleId(id: string) {
-    return id === bangOutHandleId;
+export function isBangInHandleId(id: string) {
+    return id === bangInHandleId;
 }
 
 export type InputHandleId<Defs extends HandleDefs> = {
-    [Id in keyof Defs]: Id extends typeof outputHandleId
+    [Id in keyof Defs]: Id extends typeof mainOutputHandleId
     ? never
     : Defs[Id]['dataType'] extends typeof DataTypeNames.Bang
     ? never
@@ -38,44 +39,79 @@ type State<Defs extends Record<string, HandleDef>> = {
 } & {
     [Id in typeof isActiveHandleId]?: TypeOfHandle<{ dataType: typeof DataTypeNames.Boolean }>;
 };
+export type CustomNodeDataProps = {
+    nodeInstanceRegistry: NodeInstanceRegistry;
+}
 
-export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeProps<Node>, State<Defs>> {
+export type StateSnapshot = {
+    react: object;
+    other: object;
+    edges: Edge[];
+}
+
+export type NodeBaseProps = Pick<NodeProps<Node<CustomNodeDataProps>>, 'id' | 'data'> & {
+    isVirtual: boolean;
+    stateSnapshot: StateSnapshot;
+}
+export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBaseProps, State<Defs>> {
     static contextType = GraphStateContext;
     declare context: ContextType<typeof GraphStateContext>;
+    id: string;
+    saveableState: object = {};
+    protected nodeInstanceRegistry: NodeInstanceRegistry;
+    protected isVirtualInstance: boolean = false;
+    private virtualEdges: Edge[] = [];
     protected abstract handleDefs: Defs;
     /**
      * Null means don't set output or bang next
      * Pass either handle id of input that was set or bangOutHandleId if is bang
      *
      */
-    protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined | null;
+    protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null;
     protected actionButtonText = 'Run';
     protected isBangable = false;
     protected hideIsActiveHandle = false;
     // protected bangHandleDefs: HandleDefs = { [bangInHandleId]: { dataType: 'bang' }, [bangOutHandleId]: { dataType: 'bang' } };
     protected ref = createRef<HTMLDivElement>();
 
-    constructor(props: NodeProps<Node>) {
+    constructor(props: NodeBaseProps) {
         super(props);
-        this.setDefaults();
-        this.state = { ...this.state, [isActiveHandleId]: true };
-        // console.log('node', this)
-    }
-
-    get id() {
-        return this.props.id;
+        this.id = props.id;
+        this.isVirtualInstance = props.isVirtual ?? false;
+        this.nodeInstanceRegistry = props.data.nodeInstanceRegistry;
+        if (this.isVirtualInstance) this.nodeInstanceRegistry.set(this.id, this);
+        this.initState(props.isVirtual ? props.stateSnapshot : undefined);
     }
 
     get name() {
         return (this.constructor as NodeClass).defNodeName;
     }
 
+    private initState(stateSnapshot?: StateSnapshot) {
+        this.setDefaults();
+        this.state = { ...this.state, [isActiveHandleId]: true };
+
+        if (stateSnapshot) {
+            this.state = { ...this.state, ...stateSnapshot.react as State<Defs> };
+            this.saveableState = { ...this.saveableState, ...stateSnapshot.other };
+            this.virtualEdges = stateSnapshot.edges;
+        }
+    }
+
     onTargetConnected(sourceHandleId: string, targetNodeId: string, targetHandleId: string) {
         if (!this.isBangOutputHandle(sourceHandleId)) this.executeTargetCallback(sourceHandleId, targetNodeId, targetHandleId);
     }
 
+    getHandleType(handleId: string) {
+        if (handleId === isActiveHandleId) return DataTypeNames.Boolean;
+        if (handleId === bangOutHandleId || handleId === bangInHandleId) return DataTypeNames.Bang;
+        const handle = this.handleDefs[handleId];
+        if (handle === undefined) throw new Error('Could not find handle id defined for class');
+        return handle.dataType;
+    }
+
     /**Execute after output and those outputs connections get called but before onFinish callbacks */
-    protected onOutputChange(prevValue: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined, nextValue: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined) {
+    protected onOutputChange(prevValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined, nextValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {
 
     }
 
@@ -84,10 +120,15 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     }
 
     protected getInputIds() {
-        return Object.entries(this.handleDefs).filter(([id, def]) => id !== outputHandleId && def.dataType !== DataTypeNames.Bang).map(entry => entry[0]);
+        return Object.keys(this.handleDefs).filter(id => !id.startsWith(variOutHandleIdPrefix) && id !== mainOutputHandleId);
     }
+
+    protected getExtraOutIds() {
+        return Object.keys(this.handleDefs).filter(id => id.startsWith(variOutHandleIdPrefix));
+    }
+
     protected getExtraBangoutIds() {
-        return Object.entries(this.handleDefs).filter(([id, def]) => id !== outputHandleId && def.dataType === DataTypeNames.Bang).map(entry => entry[0]);
+        return Object.entries(this.handleDefs).filter(([id, def]) => id.startsWith(variOutHandleIdPrefix) && def.dataType === DataTypeNames.Bang).map(entry => entry[0]);
     }
 
     protected isBangOutputHandle(handleId: string) {
@@ -98,16 +139,12 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         this.state = {} as State<Defs>;
     }
 
-    protected getHandleType(handleId: string) {
-        if (handleId === isActiveHandleId) return DataTypeNames.Boolean;
-        if (handleId === bangOutHandleId || handleId === bangInHandleId) return DataTypeNames.Bang;
-        const handle = this.handleDefs[handleId];
-        if (handle === undefined) throw new Error('Could not find handle id defined for class');
-        return handle.dataType;
+    protected async exeTargetCallbacks(handleId: string) {
+        await this.executeTargetCallbacks(handleId);
     }
 
-    protected bangThroughHandleId(handleId: string) {
-        this.executeTargetCallbacks(handleId);
+    protected async exeTargetCallbacksWithEdges(handleId: string, edges: Edge[]) {
+        await this.executeTargetCallbacks(handleId, edges);
     }
 
     protected forceRender() {
@@ -117,9 +154,16 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     private setStateAsync<S extends State<Defs>, K extends keyof S>(
         state: ((prevState: Readonly<S>, props: Readonly<typeof this.props>) => Pick<S, K> | S | null) | (Pick<S, K> | S | null)
     ): Promise<void> {
-        return new Promise<void>(resolve => {
-            this.setState(state as Readonly<State<Defs>>, resolve);
-        });
+        if (this.isVirtualInstance) {
+            return Promise.resolve().then(() => {
+                const nextState = typeof state === 'function' ? state(this.state as Readonly<S>, this.props) : state;
+                if (nextState) this.state = { ...this.state, ...nextState };
+            });
+        } else {
+            return new Promise<void>(resolve => {
+                this.setState(state as Readonly<State<Defs>>, resolve);
+            });
+        }
     }
 
     /**
@@ -128,26 +172,22 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     private async setInput<K extends keyof Defs>(handleId: K, value: HandleTypeFromDefs<Defs, K> | undefined) {
         if (handleId !== isActiveHandleId && !this.state[isActiveHandleId]) return;
         console.log('setr', handleId, value, this.id)
-        await this.setStateAsync(
-            (prev) => {
-                const a = ({ ...prev ?? {}, [handleId]: value ?? 0 })
-                // console.log('set444', handleId, a)
-                return a
-            });
+        await this.setStateAsync({ [handleId as keyof State<Defs>]: value ?? 0 });
         const output = this.transform(handleId);
         if (output !== null) await this.setOutput(output);
     };
 
-    private async setOutput(value: HandleTypeFromDefs<Defs, typeof outputHandleId> | undefined) {
-        const prevVal = this.state[outputHandleId];
-        await this.setStateAsync((prev) => ({ ...prev, [outputHandleId]: value }));
-        await this.executeTargetCallbacks(outputHandleId)
+    private async setOutput(value: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {
+        const prevVal = this.state[mainOutputHandleId];
+        await this.setStateAsync(() => ({ [mainOutputHandleId]: value }));
+        await this.executeTargetCallbacks(mainOutputHandleId);
         this.onOutputChange(prevVal, value);
     };
 
-    private async executeTargetCallbacks(sourceHandleId: string): Promise<void> {
-        const { edges } = this.context;
+    private async executeTargetCallbacks(sourceHandleId: string, withEdges?: Edge[]): Promise<void> {
+        const edges = withEdges ?? (this.isVirtualInstance ? this.virtualEdges : this.context.masterEdges);
         const connectedTargets = getConnectedTargets(edges, this.id, sourceHandleId);
+        console.log('targets', sourceHandleId, connectedTargets)
         for (const target of connectedTargets) {
             if (!target.targetHandleId) throw new Error('The connected target did not have an identifiable handle');
             // console.log(this.id,'exe target', target.targetNodeI
@@ -155,82 +195,77 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
         }
     }
 
-
     private async executeTargetCallback(sourceHandleId: string, targetNodeId: string, targetHandleId: string) {
+        if (targetNodeId === nodeCreatorNodeId) return;
         // console.log('exe target', sourceHandleId, targetNodeId, targetHandleId, this.state[ouputHandleId])
-        const node = nodeInstanceRegistry.get(targetNodeId);
+        const node = this.nodeInstanceRegistry.get(targetNodeId);
         if (!node) throw new Error(`The connected target node could not be found in the registry`);
 
-        if (this.isBangOutputHandle(sourceHandleId)) await node.bang();
-        else await node.setInput(targetHandleId, this.state[outputHandleId] as HandleTypeFromDefs<typeof node.handleDefs, keyof typeof node.handleDefs>);
+        if (this.getHandleType(sourceHandleId) === DataTypeNames.Bang) await node.bang(targetHandleId);
+        else await node.setInput(targetHandleId, this.state[sourceHandleId] as HandleTypeFromDefs<typeof node.handleDefs, keyof typeof node.handleDefs>);
     };
 
-    private async bang() {
+    private async bang(bangedOnHandleId: string) {
         if (!this.state[isActiveHandleId]) return;
-        const output = this.transform(bangOutHandleId);
-        // console.log(`${this.id}: banged with `, output)
-        if (output !== null) {
+        const output = this.transform(bangedOnHandleId);
+        console.log(`${this.id}: banged with `, output, bangedOnHandleId)
+        if (output !== null && bangedOnHandleId === bangInHandleId) {
             await this.setOutput(output);
-            this.bangThroughHandleId(bangOutHandleId);
+            await this.executeTargetCallbacks(bangOutHandleId);
         }
         // } else if (this.bangIfOutputNull) {
         //     this.executeTargetCallbacks(bangOutHandleId);
         // }
     }
 
-    private validateConnection(thisHandleId: string, connectingNodeId: string, connectingHandleId: string | null | undefined) {
-        // console.log('connect', thisHandleId, connectingNodeId, connectingHandleId)
-        if (thisHandleId === connectingHandleId) return false;
-        if (connectingNodeId === this.id) return false;
-        if (connectingHandleId === null || connectingHandleId === undefined) throw new Error('Connecting node had no hanlde id to connect to');
-        // if (thisHandleId === bangInHandleId) return connectingHandleId === bangOutHandleId;
-        // if (connectingHandleId === bangInHandleId) return thisHandleId === bangOutHandleId;
-        if (thisHandleId === outputHandleId && connectingHandleId === outputHandleId) return false;
-
-        const otherNodeInstance = nodeInstanceRegistry.get(connectingNodeId);
-        if (!otherNodeInstance) throw new Error('Could not find connecting node type in the registry');
-        const otherHandleType = otherNodeInstance.getHandleType(connectingHandleId);
-        const thisHandleType = this.getHandleType(thisHandleId);
-        return thisHandleType === otherHandleType;
-    }
-
     private getHandleElement(handleId: string) {
         const handleDef = handleId === bangInHandleId || handleId === bangOutHandleId ? { dataType: 'bang' } as const :
             handleId === isActiveHandleId ? { label: 'Active', dataType: 'boolean' } as const :
                 this.handleDefs[handleId];
-        const isOut = handleId === outputHandleId || this.isBangOutputHandle(handleId);
+        const isExtraOut = this.getExtraOutIds().includes(handleId);
+        const isOut = handleId === mainOutputHandleId || handleId === bangOutHandleId || isExtraOut;
         const color = dataTypeColorMap[handleDef.dataType];
 
         return (
             <div key={handleId as string} ref={this.ref} style={{ display: 'flex', flexDirection: isOut ? 'row' : 'row-reverse', height: '3em', gap: '5px', alignItems: 'center', alignSelf: isOut ? 'flex-end' : 'flex-start' }} >
-                {!isOut && handleDef.dataType !== 'bang' &&
+                {!isOut && handleId !== bangInHandleId &&
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                         <NodeInput
                             {...{
                                 dataType: handleDef.dataType,
                                 value: this.state[handleId],
-                                setValue: (v: unknown) => handleId === isActiveHandleId ? this.setInput(isActiveHandleId, v as never) :
-                                    this.setInput(handleId as InputHandleId<Defs>, v as HandleTypeFromDefs<Defs, typeof handleId>),
-                                disabled: getConnectedSources(this.context.edges, this.id, handleId).length > 0 ||
+                                label: handleDef.label,
+                                setValue: handleDef.dataType === DataTypeNames.Bang ? () => this.bang(handleId) :
+                                    (v: unknown) => handleId === isActiveHandleId ? this.setInput(isActiveHandleId, v as never) :
+                                        this.setInput(handleId as InputHandleId<Defs>, v as HandleTypeFromDefs<Defs, typeof handleId>),
+                                disabled: getConnectedSources(this.context.masterEdges, this.id, handleId).length > 0 ||
                                     !this.state[isActiveHandleId] && handleId !== isActiveHandleId
                             } as NodeInputProps}
                         />
-                        {handleDef.label && <div>
+                        {handleDef.label && handleDef.dataType !== DataTypeNames.Bang && <div>
                             {handleDef.label}
                         </div>}
                     </div>
                 }
-                {/* {isOut && handleDef.label &&
-                    <div style={{ textAlign: 'right' }}>
-                        {handleDef.label}
+                {isExtraOut && handleDef.dataType !== DataTypeNames.Bang &&
+                    <div
+                        style={{
+                            padding: '0 8px',
+                            fontSize: '20px',
+                            background: '#1d1d20',
+                            borderRadius: '4px'
+                        }}
+                    >
+                        <div>{this.state[handleId] !== undefined ? String(this.state[handleId]) : false}</div>
                     </div>
-                } */}
+                }
                 <Tippy
-                    className={isOut || handleId === bangInHandleId ? '' : 'hidden'}
+                    className={handleId === bangOutHandleId || handleId === bangInHandleId || handleId === mainOutputHandleId || handleDef.label ? '' : 'hidden'}
                     content={
                         handleId === bangInHandleId ? `${this.actionButtonText} on signal` :
                             handleId === bangOutHandleId ? 'Send signal' :
-                                handleDef.label ?? 'Output'
+                                handleId === mainOutputHandleId ? 'Output' :
+                                    handleDef.label
                     }
                     placement="top"
                     arrow={false}
@@ -251,13 +286,13 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                         }}
                         onConnect={connection => {
                             console.log('connection', connection.sourceHandle, connection.targetHandle, this.id)
+                            if (connection.source === nodeCreatorNodeId) return;
                             if (connection.sourceHandle === null || connection.sourceHandle === undefined) throw new Error('Connecting source handle id did not exist');
                             if (connection.targetHandle === null || connection.targetHandle === undefined) throw new Error('Connecting target handle id did not exist');
-                            const sourceNode = nodeInstanceRegistry.get(connection.source);
+                            const sourceNode = this.nodeInstanceRegistry.get(connection.source);
                             if (!sourceNode) throw new Error('Could not find source node in the node registry');
                             sourceNode.onTargetConnected(connection.sourceHandle, connection.target, connection.targetHandle);
                         }}
-                        isValidConnection={connection => this.validateConnection(handleId, isOut ? connection.target : connection.source, isOut ? connection.targetHandle : connection.sourceHandle)}
                     />
                 </Tippy>
 
@@ -268,7 +303,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     protected renderContent(): ReactNode {
         // console.log('stat', this.state)
         // return <div>Test</div>;
-        const output = this.state[outputHandleId];
+        const output = this.state[mainOutputHandleId];
         //@ts-ignore
         // return <div>{String(output)}</div>;
         return <div>{output !== undefined ? String(output) : false}</div>;
@@ -281,10 +316,10 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     render() {
         const inputs = this.getInputIds().map(handleId => (this.getHandleElement(handleId)));
         const outputs: ReactNode[] = [];
-        if (outputHandleId in this.handleDefs) outputs.push(this.getHandleElement(outputHandleId));
+        if (mainOutputHandleId in this.handleDefs) outputs.push(this.getHandleElement(mainOutputHandleId));
         const leftBang = this.isBangable && this.getHandleElement(bangInHandleId);
         const rightBang = this.isBangable && this.getHandleElement(bangOutHandleId);
-        const extraBangOuts = this.getExtraBangoutIds().map(handleId => (this.getHandleElement(handleId)));
+        const extraOuts = this.getExtraOutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
             <div style={{
                 // boxShadow: 'rgb(105 121 248 / 24%) 0px 0px 20px 0px', 
@@ -313,7 +348,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'flex-start' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', paddingRight: '5px' }}>{inputs}</div>
                         </div>
-                        {!this.handleDefs[outputHandleId] ? this.renderContent() :
+                        {!this.handleDefs[mainOutputHandleId] ? this.renderContent() :
                             <div
                                 style={{
                                     alignContent: 'center',
@@ -332,7 +367,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                         }
                         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
-                                {outputs.concat(extraBangOuts)}
+                                {outputs.concat(extraOuts)}
                             </div>
                         </div>
                     </div>
@@ -356,7 +391,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
                             borderBottomLeftRadius: 8,
                             borderBottomRightRadius: 8,
                         }}
-                        onClick={() => this.bang()}
+                        onClick={() => this.bang(bangInHandleId)}
                     >
                         {this.actionButtonText}
                     </button>
@@ -369,9 +404,9 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     }
 
     componentDidMount() {
-        nodeInstanceRegistry.set(this.id, this);
+        globalNodeInstanceRegistry.set(this.id, this);
         setTimeout(() => {
-            this.context.setNodes(nodes => {
+            this.context.setMasterNodes(nodes => {
                 return nodes.map(node => {
                     if (node.id !== this.id) return node;
                     const x = node.position.x - (node.measured?.width ?? 0) / 4;
@@ -383,14 +418,6 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodePr
     }
 
     componentWillUnmount() {
-        nodeInstanceRegistry.delete(this.id);
+        globalNodeInstanceRegistry.delete(this.id);
     }
 }
-
-// type NodeInstanceUnion = {
-//     [K in NodeTypeName]: NodeBase<K>;
-// }[NodeTypeName];
-
-export const nodeInstanceRegistry = new Map<string, NodeBase<HandleDefs>>();
-//@ts-ignore
-window.reg2 = nodeInstanceRegistry

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type MathOp } from '../../const/opDefines';
@@ -18,7 +18,7 @@ const handles = defineHandles({
         dataType: DataTypeNames.Number,
         label: 'Offset'
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Number
     }
 });
@@ -27,14 +27,13 @@ const handles = defineHandles({
 export class ModNode extends NodeBase<typeof handles> {
     static defNodeName = 'Modulus';
     protected handleDefs = handles;
-    protected operator: MathOp = Operator.Add;
 
     protected setDefaults(): void {
         this.state = {
             p1: 1,
             p2: 1,
             offset: 0,
-            [outputHandleId]: 0
+            [mainOutputHandleId]: 0
         };
     }
 

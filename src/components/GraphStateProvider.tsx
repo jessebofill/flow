@@ -1,15 +1,16 @@
-import type { Node, Edge } from '@xyflow/react';
+import { type Node, type Edge, ReactFlowProvider } from '@xyflow/react';
 import { type FCChildren, useState } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
-import { testNodes } from '../const/testData';
 
 export const GraphStateProvider: FCChildren<object> = ({ children }) => {
-    const [nodes, setNodes] = useState<Node[]>(testNodes);
-    const [edges, setEdges] = useState<Edge[]>([]);
+    const [masterNodes, setMasterNodes] = useState<Node[]>([]);
+    const [masterEdges, setMasterEdges] = useState<Edge[]>([]);
 
     return (
-        <GraphStateContext.Provider value={{ nodes, edges, setNodes, setEdges }}>
-            {children}
+        <GraphStateContext.Provider value={{ masterNodes, masterEdges, setMasterNodes, setMasterEdges }}>
+            <ReactFlowProvider>
+                {children}
+            </ReactFlowProvider>
         </GraphStateContext.Provider>
     );
 };

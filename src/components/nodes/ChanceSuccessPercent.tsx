@@ -1,14 +1,14 @@
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
+import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
     percent: {
         dataType: DataTypeNames.Number,
         label: '% Chance'
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Boolean
     }
 });
@@ -27,7 +27,7 @@ export class ChanceSuccessPercent extends NodeBase<typeof handles> {
     }
 
     protected transform(id: string) {
-        if (isBangOutHandleId(id)) {
+        if (isBangInHandleId(id)) {
             const max = 100;
             const min = 1;
             const thresh = this.state.percent;

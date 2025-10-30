@@ -1,38 +1,68 @@
-import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, reconnectEdge, Panel, type NodeMouseHandler } from '@xyflow/react';
-import { type FC, useContext, useCallback, useRef, useEffect, useState } from 'react';
+import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport } from '@xyflow/react';
+import { type FC, useContext, useCallback, useRef, useState } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
-import { nodeTypes } from '../const/nodeTypes';
-import { bangInHandleId } from '../const/const';
+import { allNodeTypes } from '../const/nodeTypes';
+import { bangInHandleId, basicEdgeTypeName, nodeCreatorNodeId, nodeCreatorTypeName } from '../const/const';
 import { MenuPanel } from './MenuPanel';
-import { WatchView } from './WatchView';
 import { ContextMenu } from './ContextMenu';
+import { getNodeHandleType, validateConnection } from '../const/utils';
+import { edgeTypes } from '../const/edgeTypes';
+import type { TBasicEdge } from './BasicEdge';
+import { NodeCreatorContext } from '../contexts/NodeCreatorContext';
+
+
 
 export const FlowGraphEditor: FC<object> = () => {
-    const { nodes, edges, setNodes, setEdges } = useContext(GraphStateContext);
+    const { masterNodes, masterEdges, setMasterNodes, setMasterEdges } = useContext(GraphStateContext);
+    const { isCreatingNode } = useContext(NodeCreatorContext);
+    const viewport = useViewport();
     const [menu, setMenu] = useState(null);
-    const ref = useRef(null);
+    const ref = useRef<HTMLDivElement>(null);
     const edgeReconnectSuccessful = useRef(true);
 
     const onNodesChange = useCallback(
-        (changes: NodeChange<Node>[]) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
-        [setNodes]
+        (changes: NodeChange<Node>[]) => {
+            // console.log('changes', changes)
+            const removedIds = changes.filter(change => change.type === 'remove').map(change => change.id);
+
+            if (removedIds.length > 0) {
+                setMasterEdges(prevEdges => prevEdges.filter(edge => !removedIds.includes(edge.source) && !removedIds.includes(edge.target)));
+            }
+            setMasterNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot));
+        },
+        [setMasterEdges, setMasterNodes]
     );
     const onEdgesChange = useCallback(
-        (changes: EdgeChange<Edge>[]) => setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-        [setEdges]
+        (changes: EdgeChange<Edge>[]) => {
+            console.log('edges changes', changes)
+            setMasterEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot))
+        },
+        [setMasterEdges]
     );
     const onConnect = useCallback(
         (connection: Connection) => {
-            setEdges((edgesSnapshot) => {
+            console.log(connection)
+            setMasterEdges((edgesSnapshot) => {
                 const { source, sourceHandle, target, targetHandle } = connection;
                 const alreadyExists = edgesSnapshot.some((e) => e.source === source && e.sourceHandle === sourceHandle && e.target === target && e.targetHandle === targetHandle);
                 if (alreadyExists) return edgesSnapshot;
 
-                const filtered = edgesSnapshot.filter((e) => targetHandle === bangInHandleId || !(e.target === target && e.targetHandle === targetHandle));
-                return addEdge(connection, filtered);
+                const getTypeFrom: [string, string] = source === nodeCreatorNodeId ? [target, targetHandle!] : [source, sourceHandle!];
+                const dataType = getNodeHandleType(...getTypeFrom);
+                const edge = {
+                    ...connection,
+                    type: basicEdgeTypeName,
+                    data: { dataType: dataType }
+                } as TBasicEdge
+
+                //do not allow multiple connection from same source handle of nodecreator
+                const filtered = edgesSnapshot.filter((e) => !(e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle))
+                    //do not allow multiple connections to same target handle except for bang
+                    .filter((e) => !(e.target === target && e.targetHandle === targetHandle && targetHandle !== bangInHandleId));
+                return addEdge(edge, filtered);
             });
         },
-        [setEdges]
+        [setMasterEdges]
     );
 
     const onReconnectStart = useCallback(() => {
@@ -41,21 +71,31 @@ export const FlowGraphEditor: FC<object> = () => {
 
     const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
         edgeReconnectSuccessful.current = true;
-        setEdges((edgesSnapshot) => {
+        setMasterEdges((edgesSnapshot) => {
             const { source, sourceHandle, target, targetHandle } = newConnection;
             const alreadyExists = edgesSnapshot.some((e) => e.source === source && e.sourceHandle === sourceHandle && e.target === target && e.targetHandle === targetHandle);
             if (alreadyExists) return edgesSnapshot;
 
-            return reconnectEdge(oldEdge, newConnection, edgesSnapshot);
+            const getTypeFrom: [string, string] = source === nodeCreatorNodeId ? [target, targetHandle!] : [source, sourceHandle!];
+            const dataType = getNodeHandleType(...getTypeFrom);
+            const edge = {
+                ...newConnection,
+                type: basicEdgeTypeName,
+                data: { dataType: dataType }
+            } as TBasicEdge
+
+            const filtered = edgesSnapshot.filter((e) => !(e === oldEdge || e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle))
+                .filter((e) => !(e.target === target && e.targetHandle === targetHandle && targetHandle !== bangInHandleId));
+            return addEdge(edge, filtered);
         });
-    }, [setEdges]);
+    }, [setMasterEdges]);
 
     const onReconnectEnd = useCallback((_: unknown, edge: { id: string; }) => {
         if (!edgeReconnectSuccessful.current) {
-            setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+            setMasterEdges((eds) => eds.filter((e) => e.id !== edge.id));
         }
         edgeReconnectSuccessful.current = true;
-    }, [setEdges]);
+    }, [setMasterEdges]);
 
     const onNodeContextMenu: NodeMouseHandler = useCallback(
         (event, node) => {
@@ -79,6 +119,41 @@ export const FlowGraphEditor: FC<object> = () => {
 
     const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
 
+    const setNodeCreator = useCallback((viewport: Viewport, add?: boolean) => {
+        const pane = ref.current!.getBoundingClientRect();
+        const inset = 10; // pixels from left edge of screen
+        const width = pane.width - inset * 2;
+        const height = pane.height - inset * 2;
+        const canvasX = (inset - viewport.x) / viewport.zoom;
+        const canvasY = (inset - viewport.y) / viewport.zoom;
+        const nodeCreator = {
+            id: nodeCreatorNodeId,
+            type: nodeCreatorTypeName,
+            position: { x: canvasX, y: canvasY },
+            draggable: false,
+            // selectable: false,
+            focusable: false,
+            style: {
+                zIndex: '-1000',
+                transform: `scale(${1 / viewport.zoom})`,
+                left: canvasX,
+                top: canvasY,
+                height: `${height}px`,
+                width: `${width}px`,
+                cursor: 'grab'
+            },
+            data: {},
+        };
+
+        setMasterNodes(nodes => {
+            if (add && !isCreatingNode) return [...nodes, nodeCreator];
+            if (nodes.some(node => node.type === nodeCreatorTypeName)) return [...nodes.filter(n => n.type !== nodeCreatorTypeName), nodeCreator];
+            return nodes;
+        });
+    }, [isCreatingNode, setMasterNodes]);
+
+    const isValidConnection: IsValidConnection = useCallback((connection) => validateConnection(connection, masterEdges), [masterEdges]);
+
     return (
         <div className="dndflow">
             <div
@@ -87,9 +162,10 @@ export const FlowGraphEditor: FC<object> = () => {
             >
                 <ReactFlow
                     ref={ref}
-                    nodeTypes={nodeTypes}
-                    nodes={nodes}
-                    edges={edges}
+                    nodeTypes={allNodeTypes}
+                    edgeTypes={edgeTypes}
+                    nodes={masterNodes}
+                    edges={masterEdges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
@@ -102,9 +178,11 @@ export const FlowGraphEditor: FC<object> = () => {
                     edgesReconnectable={true}
                     onNodeContextMenu={onNodeContextMenu}
                     onPaneClick={onPaneClick}
-                    minZoom={0.3}
-                    maxZoom={5}
-                    autoPanOnConnect
+                    onViewportChange={setNodeCreator}
+                    isValidConnection={isValidConnection}
+                    minZoom={isCreatingNode ? 0.5 : 0.3}
+                    maxZoom={isCreatingNode ? 1.1 : 5}
+                    autoPanOnConnect={!isCreatingNode}
                     autoPanOnNodeDrag
                 >
                     {/* <Controls /> */}
@@ -114,11 +192,12 @@ export const FlowGraphEditor: FC<object> = () => {
                         sdfsdfsf
                         <WatchView />
                     </Panel> */}
+                    {/* <MiniMap/> */}
                     {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
                     <Background />
                 </ReactFlow>
             </div>
-            <MenuPanel />
+            <MenuPanel createNode={() => setNodeCreator(viewport, true)} />
         </div>
     );
 };

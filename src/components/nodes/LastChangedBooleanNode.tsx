@@ -1,4 +1,4 @@
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { defineHandles, NodeBase, type InputHandleId } from './NodeBase';
@@ -11,7 +11,7 @@ const handles = defineHandles({
     p2: {
         dataType: DataTypeNames.Boolean
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Boolean
     }
 });

@@ -1,16 +1,20 @@
 import type { FC } from 'react';
 import { Panel, useReactFlow, type XYPosition } from '@xyflow/react';
 import { useCallback, useRef, useState } from 'react';
-import { createNodeFromClassDef, nodeTypes } from '../const/nodeTypes';
+import { createNodeFromClassDef, coreNodeTypes } from '../const/nodeTypes';
 import type { NodeClass } from '../types/types';
 import { useDraggable } from '@neodrag/react';
 
-export const MenuPanel: FC<object> = () => {
-    const { setNodes, screenToFlowPosition } = useReactFlow();
+interface MenuPanelProps {
+    createNode: () => void;
+}
+
+export const MenuPanel: FC<MenuPanelProps> = ({ createNode }) => {
+    const { addNodes, screenToFlowPosition, fitView } = useReactFlow();
     const [open, setOpen] = useState(true);
 
 
-    const addNode = useCallback(
+    const add = useCallback(
         (nodeClass: NodeClass, screenPosition: XYPosition) => {
             const flow = document.querySelector('.react-flow');
             const flowRect = flow?.getBoundingClientRect();
@@ -23,13 +27,27 @@ export const MenuPanel: FC<object> = () => {
 
             const position = screenToFlowPosition(screenPosition);
             const newNode = createNodeFromClassDef(nodeClass, position);
-            if (isInFlow) setNodes((nds) => nds.concat(newNode));
+            if (isInFlow) addNodes(newNode);
         },
-        [setNodes, screenToFlowPosition],
+        [addNodes, screenToFlowPosition],
     );
 
     return (
         <aside style={{ overflowY: 'scroll' }}>
+            <button onClick={() => {
+                fitView({
+                    maxZoom: 1.1,
+                    minZoom: 0.5,
+                    padding: 0.3,
+                    duration: 500,
+                    ease: t => t * (2 - t),
+                    interpolate: 'smooth'
+                });
+                setTimeout(createNode, 100)
+
+            }}>
+                Create Node
+            </button>
             {/* <div
                 style={{
                     display: 'flex',
@@ -68,8 +86,8 @@ export const MenuPanel: FC<object> = () => {
                         boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                     }}
                 > */}
-            {Object.values(nodeTypes).map(node => (
-                <DraggableNode key={node.defNodeName} nodeClass={node} onDrop={addNode}>
+            {Object.values(coreNodeTypes).map(node => (
+                <DraggableNode key={node.defNodeName} nodeClass={node} onDrop={add}>
                     {node.defNodeName}
                 </DraggableNode>
             )

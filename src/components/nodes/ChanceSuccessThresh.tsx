@@ -1,4 +1,4 @@
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { defineHandles, NodeBase } from './NodeBase';
@@ -16,7 +16,7 @@ const handles = defineHandles({
         dataType: DataTypeNames.Number,
         label: 'Pass'
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Boolean
     }
 });

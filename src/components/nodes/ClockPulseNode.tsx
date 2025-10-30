@@ -1,14 +1,16 @@
-import { isActiveHandleId } from '../../const/const';
+import { isActiveHandleId, variOutHandleIdPrefix } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
+import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
+
+const pulseSignalOutKey = `${variOutHandleIdPrefix}pulse`
 
 const handles = defineHandles({
     interval: {
         dataType: DataTypeNames.Number,
         label: 'Interval Sec'
     },
-    delayedSignal: {
+    [pulseSignalOutKey]: {
         dataType: DataTypeNames.Bang,
         label: 'Pulsed Signal'
     }
@@ -33,13 +35,13 @@ export class ClockPulseNode extends NodeBase<typeof handles> {
         const interval = this.state.interval;
         if (interval && interval > 0) {
             this.actionButtonText = 'Stop';
-            this.intervalId = setInterval(() => this.bangThroughHandleId(this.getExtraBangoutIds()[0]), interval * 1000);
+            this.intervalId = setInterval(() => this.exeTargetCallbacks(pulseSignalOutKey), interval * 1000);
             this.running = true;
         }
     }
 
     transform = (id: string) => {
-        if (!isBangOutHandleId(id)) {
+        if (!isBangInHandleId(id)) {
             if (this.running) {
                 this.stop();
                 const isActive = this.state[isActiveHandleId];

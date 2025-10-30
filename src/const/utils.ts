@@ -1,6 +1,15 @@
-import type { Edge } from '@xyflow/react';
+import { getConnectedEdges, type Connection, type Edge, type Node } from '@xyflow/react';
+import { globalNodeInstanceRegistry } from './nodeTypes';
+import { nodeCreatorNodeId } from './const';
+import type { CustomNodeDataProps } from '../components/nodes/NodeBase';
+import { appDb } from '../database';
+import type { GraphState } from '../types/types';
+import { ProxyNode } from '../components/nodes/ProxyNode';
 
 
+export function getConnections(edges: Edge[], nodeId: string, handleId: string) {
+    return edges.filter((edge) => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId);
+}
 export function getConnectedTargets(edges: Edge[], sourceNodeId: string, sourceHandleId: string) {
     return edges.filter((edge) => edge.source === sourceNodeId && edge.sourceHandle === sourceHandleId)
         .map((edge) => ({
@@ -15,5 +24,92 @@ export function getConnectedSources(edges: Edge[], targetNodeId: string, targetH
             sourceHandleId: edge.sourceHandle,
         }));
 }
+
+export function getIslands(nodes: Node[], edges: Edge[]): Node[][] {
+    const visited = new Set<string>();
+    const adjacency = new Map<string, Set<string>>();
+
+    // Build adjacency map
+    for (const edge of edges) {
+        if (!adjacency.has(edge.source)) adjacency.set(edge.source, new Set());
+        if (!adjacency.has(edge.target)) adjacency.set(edge.target, new Set());
+        adjacency.get(edge.source)!.add(edge.target);
+        adjacency.get(edge.target)!.add(edge.source);
+    }
+
+    const islands: Node[][] = [];
+
+    function dfs(nodeId: string, island: Node[]) {
+        visited.add(nodeId);
+        const node = nodes.find(n => n.id === nodeId);
+        if (node) island.push(node);
+        for (const neighbor of adjacency.get(nodeId) ?? []) {
+            if (!visited.has(neighbor)) dfs(neighbor, island);
+        }
+    }
+
+    for (const node of nodes) {
+        if (!visited.has(node.id)) {
+            const island: Node[] = [];
+            dfs(node.id, island);
+            islands.push(island);
+        }
+    }
+
+    return islands;
+}
+
+export function getIslandOfNode(nodeId: string, nodes: Node[], edges: Edge[]) {
+    return getIslands(nodes, edges).find(island => island.some(n => n.id === nodeId)) ?? [];
+}
+
+export function getNodeHandleType(nodeId: string, handleId: string) {
+    const instance = globalNodeInstanceRegistry.get(nodeId);
+    if (!instance) throw new Error('Could not find node in the registry to get handle type');
+    return instance.getHandleType(handleId);
+}
+
+export function validateConnection(connection: Connection | Edge, edges: Edge[]) {
+    const { source, sourceHandle, target, targetHandle } = connection;
+    if (source === target) return false;
+    if (sourceHandle === null || sourceHandle === undefined) throw new Error('Source node had no hanlde id to connect to');
+    if (targetHandle === null || targetHandle === undefined) throw new Error('Target node had no hanlde id to connect to');
+
+    if (source === nodeCreatorNodeId) {
+        return true;
+        // const existingTargets = getConnectedTargets(edges, source, sourceHandle);
+        // if (existingTargets.length <= 0) return true;
+        // return getNodeHandleType(target, targetHandle) === getNodeHandleType(existingTargets[0].targetNodeId, existingTargets[0].targetHandleId!);
+    } else if (target === nodeCreatorNodeId) return true;
+    return getNodeHandleType(source, sourceHandle) === getNodeHandleType(target, targetHandle);
+}
+
+export async function saveVirtualNodeGraph(virtualGraphId: string, allEdges: Edge[]) {
+    const connectedNodes: Node<CustomNodeDataProps>[] = [];
+    const instances = connectedNodes.map(node => {
+        const instance = globalNodeInstanceRegistry.get(node.id);
+        if (!instance) throw new Error('Could not find node instance in registry to save its state');
+        const state = {
+            rfTypeIndentifier: node.type!,
+            initState: {
+                react: instance.state as object,
+                other: instance.saveableState
+            }
+        };
+        return [node.id, state] as const;
+    });
+    const edges = getConnectedEdges(connectedNodes, allEdges);
+    const graph: GraphState = { nodes: Object.fromEntries(instances.concat()), edges };
+    await appDb.graphStore.put({ graphId: virtualGraphId, graph });
+}
+
+export async function onAppLoad() {
+    await appDb.syncCache();
+    //need to update react flow when this changes
+    Object.entries(appDb.cache.userNodes).forEach(([typeIndentifier]) => {
+        ProxyNode.registerUserNodeType(typeIndentifier);
+    });
+}
+
 
 

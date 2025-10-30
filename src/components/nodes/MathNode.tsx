@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type MathOp } from '../../const/opDefines';
@@ -14,7 +14,7 @@ const handles = defineHandles({
     p2: {
         dataType: DataTypeNames.Number
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Number
     }
 });
@@ -23,24 +23,28 @@ const handles = defineHandles({
 export class MathNode extends NodeBase<typeof handles> {
     static defNodeName = 'Math';
     protected handleDefs = handles;
-    protected operator: MathOp = Operator.Add;
+    declare saveableState: { operator: MathOp };
 
     protected setDefaults(): void {
         this.state = {
             p1: 0,
             p2: 0,
-            [outputHandleId]: 0
+            [mainOutputHandleId]: 0
         };
+
+        this.saveableState = {
+            operator: Operator.Add
+        }
     }
 
     protected transform() {
         if (this.state.p1 === undefined || this.state.p2 === undefined) return;
-        return opMap[this.operator].operation(this.state.p1, this.state.p2);
+        return opMap[this.saveableState.operator].operation(this.state.p1, this.state.p2);
     }
 
     protected renderExtra(): ReactNode {
         return (
-            <OperationSelector operators={[Operator.Add, Operator.Subtract, Operator.Multiply, Operator.Divide]} selected={this.operator} onChange={op => this.operator = op} />
+            <OperationSelector operators={[Operator.Add, Operator.Subtract, Operator.Multiply, Operator.Divide]} selected={this.saveableState.operator} onChange={op => this.saveableState.operator = op} />
         );
     }
 }

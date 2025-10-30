@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import type { NodeBase } from '../components/nodes/NodeBase';
-import type { outputHandleId } from '../const/const';
+import type { mainOutputHandleId } from '../const/const';
+import type { Edge } from '@xyflow/react';
 
 export type DataTypeName = typeof DataTypeNames[keyof typeof DataTypeNames];
 
@@ -16,24 +17,36 @@ export type DataTypes = {
     [DataTypeNames.Number]: number;
 };
 
-export type HandleData = {
-    id: string;
-    label?: string;
-    dataType: DataTypeName;
-};
 
 export type HandleDef = {
     label?: ReactElement | string;
     dataType: DataTypeName; //bang type only used for outputs
 };
 
+export type HandleData = HandleDef & {
+    id: string;
+};
+
 export type HandleDefs = {
     [id: string]: HandleDef;
 } & {
-    [outputHandleId]?: HandleDef;
+    [mainOutputHandleId]?: HandleDef;
 };
 
 export interface NodeClass {
     new(...args: ConstructorParameters<typeof NodeBase>): NodeBase<HandleDefs>;
     defNodeName: string;
 };
+
+// export type GraphState = {
+//     edges: Edge[];
+//     nodes: {
+//         [id: string]: {
+//             rfTypeIndentifier: string;
+//             initState: {
+//                 react: object;
+//                 other: object;
+//             }
+//         }
+//     }
+// };

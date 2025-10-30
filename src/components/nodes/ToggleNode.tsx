@@ -1,10 +1,10 @@
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
+import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Boolean
     }
 })
@@ -16,8 +16,8 @@ export class ToggleNode extends NodeBase<typeof handles> {
     protected handleDefs = handles;
     protected actionButtonText: string = 'Toggle';
     protected transform(id: string): boolean | null | undefined {
-        if (isBangOutHandleId(id)) {
-            return !this.state[outputHandleId];
+        if (isBangInHandleId(id)) {
+            return !this.state[mainOutputHandleId];
         }
     }
 }

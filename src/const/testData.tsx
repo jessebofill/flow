@@ -1,10 +1,11 @@
+import { nodeCreatorTypeName } from './const';
 
 
 export const testNodes = [
-    // {
-    //     id: 'n1', position: { x: 0, y: 0 }, data: { label: 'Node 1', nodeType: 'rng' },
-    //     type: 'RNG'
-    // },
+    {
+        id: 'n1', position: { x: 0, y: 0 }, data: { label: 'Node 1', nodeType: 'rng' },
+        type: nodeCreatorTypeName
+    },
     // {
     //     id: 'ffgdf', position: { x: 0, y: 100 }, data: { label: 'Node 1', nodeType: 'rng' },
     //     type: 'RNG'

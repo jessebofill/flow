@@ -1,13 +1,13 @@
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
+import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
     in: {
         dataType: DataTypeNames.Boolean,
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Boolean
     }
 });
@@ -21,12 +21,12 @@ export class SetBooleanNode extends NodeBase<typeof handles> {
     protected setDefaults(): void {
         this.state = {
             in: false,
-            [outputHandleId]: false
+            [mainOutputHandleId]: false
         };
     }
 
     protected transform(id: string) {
-        if (isBangOutHandleId(id)) {
+        if (isBangInHandleId(id)) {
             return this.state.in;
         }
         return null;

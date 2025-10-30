@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
-import { outputHandleId } from '../../const/const';
+import { mainOutputHandleId } from '../../const/const';
 import { registerNodeType } from '../../const/nodeTypes';
 import { DataTypeNames } from '../../types/types';
 import { OperationSelector } from '../OperationSelector';
-import { Operator, opMap, type ComparisonOp, type CountOp } from '../../const/opDefines';
-import { defineHandles, isBangOutHandleId, NodeBase } from './NodeBase';
+import { Operator, opMap, type ComparisonOp } from '../../const/opDefines';
+import { defineHandles, NodeBase } from './NodeBase';
 
 const handles = defineHandles({
     p1: {
@@ -13,7 +13,7 @@ const handles = defineHandles({
     p2: {
         dataType: DataTypeNames.Number,
     },
-    [outputHandleId]: {
+    [mainOutputHandleId]: {
         dataType: DataTypeNames.Boolean
     }
 })
@@ -22,13 +22,17 @@ const handles = defineHandles({
 export class ComparisonNode extends NodeBase<typeof handles> {
     static defNodeName = 'Comparison';
     protected handleDefs = handles;
-    protected operator: ComparisonOp = Operator.Equal;
+    declare saveableState: { operator: ComparisonOp };
 
     protected setDefaults(): void {
         this.state = {
             p1: 0,
             p2: 1,
-            [outputHandleId]: false
+            [mainOutputHandleId]: false
+        };
+
+        this.saveableState = {
+            operator: Operator.Equal
         };
     }
 
@@ -36,7 +40,7 @@ export class ComparisonNode extends NodeBase<typeof handles> {
         const p1 = this.state.p1;
         const p2 = this.state.p2;
         if (p1 === undefined || p2 === undefined) return;
-        return Boolean(opMap[this.operator].operation(p1, p2));
+        return Boolean(opMap[this.saveableState.operator].operation(p1, p2));
     }
 
     protected renderExtra(): ReactNode {
@@ -50,8 +54,8 @@ export class ComparisonNode extends NodeBase<typeof handles> {
                     Operator.GreaterEqual,
                     Operator.LessEqual
                 ]}
-                selected={this.operator}
-                onChange={op => this.operator = op}
+                selected={this.saveableState.operator}
+                onChange={op => this.saveableState.operator = op}
             />
         );
     }
