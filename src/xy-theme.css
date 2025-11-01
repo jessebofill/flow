@@ -5,12 +5,13 @@ body {
     --xy-background-color: #1d1d20;
     /* Custom Variables */
     --xy-theme-selected: #f57dbd;
-    --xy-theme-hover: #c5c5c5;
+    --xy-theme-hover: #7c65ff;
     --xy-theme-edge-hover: rgb(190, 31, 110);
     --xy-theme-color-focus: #e8e8e8;
 
     /* Built-in Variables see https://reactflow.dev/learn/customization/theming */
     --xy-node-border-default-color:#6a61d8;
+    --xy-bang-button-default-color:#8161f0;
 
     --xy-node-boxshadow-default:
         0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d,
@@ -86,13 +87,13 @@ body {
 }
 
 .dndflow .dndnode {
-    height: 20px;
+    height: 15px;
     padding: 8px;
     /* border: var(--xy-node-border-default); */
-    border-radius: 6px;
-    margin-bottom: 10px;
+    border-radius: 4px;
+    /* margin-bottom: 10px; */
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     cursor: grab;
     /* Prevent zoom or scroll when dragging nodes on mobile */
@@ -100,6 +101,7 @@ body {
     background: var(--xy-node-background-color-default);
     font-size: 12px;
     text-wrap: nowrap;
+    transition: background .4s;
 }
 
 .dndflow .ghostnode {
@@ -110,6 +112,10 @@ body {
 
 .dndflow .dndnode:active {
     cursor: grabbing;
+    background: #8161f0 !important;
+}
+.dndflow .dndnode:hover {
+    background: #6829ff;
 }
 
 .dndflow .dndnode.input {
@@ -152,6 +158,9 @@ body {
     border-width: 1px;
     border-style: solid;
     color: var(--xy-node-color, var(--xy-node-color-default));
+    transition: box-shadow 0.2s;
+
+
 }
 
 .react-flow__node:has(> .node-creator) {
@@ -184,7 +193,9 @@ body {
 
 .react-flow__node.selectable:hover,
 .react-flow__node.draggable:hover {
-    border-color: var(--xy-theme-hover);
+    border-color: #8190ff;
+    box-shadow: 0 0 5px 0 #6343ff;
+
 }
 
 .react-flow__node.selectable.selected {
@@ -515,4 +526,80 @@ input[type="checkbox"]:checked {
     border-radius: 3px;
     width: 16px;
     height: 16px;
+}
+
+.element {
+  position: relative;
+  border-radius: 8px;
+  padding: 8px;
+  background: linear-gradient(to bottom, #1f1d33 40%, #3a2d74) 100%;
+}
+
+
+.element::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px; /* border thickness */
+  border-radius: 5px;
+  background: linear-gradient(to bottom, #6a61d8, #2a2c4a);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+.element2 {
+  position: relative;
+  border-radius: 8px;
+  padding: 8px;
+  background: linear-gradient(to bottom, #5d54cd 40%, #7156cc) 100%;
+}
+
+.element2::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px; /* border thickness */
+  border-radius: 5px;
+  background: linear-gradient(to bottom, #ab97ff, #47b3d9);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+.dropdown {
+    border: 1px solid rgba(77, 77, 77, 0.65);
+    border-radius: 8px;
+}
+.dropdown .trigger {
+    
+}
+
+.dropdown:focus {
+    border: 2px solid #4c30a9;
+    /* outline: none; */
+}
+.dropdown .option:hover {
+    background: #4c4957;
+}
+.dropdown .option.selected {
+    background: #513dab;
+}
+.dropdown .option {
+    transition: background .25s;
+}
+
+.tabs button.main:hover {
+    background: var(--xy-bang-button-default-color);
+    outline: none;
+}
+.tabs button.main {
+    transition: background .5s;
+    outline: none !important;
 }

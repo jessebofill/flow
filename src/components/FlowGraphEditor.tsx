@@ -1,16 +1,15 @@
 import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport } from '@xyflow/react';
-import { type FC, useContext, useCallback, useRef, useState } from 'react';
+import { type FC, useContext, useCallback, useRef, useState, createContext } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
 import { allNodeTypes } from '../const/nodeTypes';
 import { bangInHandleId, basicEdgeTypeName, nodeCreatorNodeId, nodeCreatorTypeName } from '../const/const';
-import { MenuPanel } from './MenuPanel';
+import { NodeList } from './NodeList';
 import { ContextMenu } from './ContextMenu';
 import { getNodeHandleType, validateConnection } from '../const/utils';
 import { edgeTypes } from '../const/edgeTypes';
 import type { TBasicEdge } from './BasicEdge';
-import { NodeCreatorContext } from '../contexts/NodeCreatorContext';
-
-
+import { CreateNodeCallback, NodeCreatorContext } from '../contexts/NodeCreatorContext';
+import { SidebarMenu } from './SidebarMenu';
 
 export const FlowGraphEditor: FC<object> = () => {
     const { masterNodes, masterEdges, setMasterNodes, setMasterEdges } = useContext(GraphStateContext);
@@ -197,7 +196,9 @@ export const FlowGraphEditor: FC<object> = () => {
                     <Background />
                 </ReactFlow>
             </div>
-            <MenuPanel createNode={() => setNodeCreator(viewport, true)} />
+            <CreateNodeCallback.Provider value={{ createNode: () => setNodeCreator(viewport, true)}}>
+                <SidebarMenu />
+            </CreateNodeCallback.Provider>
         </div>
     );
 };

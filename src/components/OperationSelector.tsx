@@ -24,7 +24,7 @@ export function OperationSelector<Ops extends BooleanOp | MathOp | CountOp | Com
             {open && (
                 <div style={{
                     position: 'absolute',
-                    bottom: '100%',
+                    bottom: 'calc(100% + 5px)',
                     right: 0,
                     display: 'flex',
                     padding: 0,

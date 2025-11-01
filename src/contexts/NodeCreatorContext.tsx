@@ -9,3 +9,5 @@ export const NodeCreatorContext = createContext<NodeCreatorContextData>({
     isCreatingNode: false,
     setIsCreatingNode: () => { },
 });
+
+export const CreateNodeCallback = createContext({ createNode: () => { } });

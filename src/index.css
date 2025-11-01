@@ -38,23 +38,42 @@ h1 {
 
 button {
     border-radius: 8px;
-    border: 1px solid transparent;
+    border: 1.5px solid transparent;
     padding: 0.6em 1.2em;
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
     background-color: #1a1a1a;
     cursor: pointer;
-    transition: border-color 0.25s;
+    transition: border-color .6s;
 }
 
 button:hover {
-    border-color: #646cff;
+    border-color: #7c65ff;
 }
 
+.tab-button {
+    box-shadow: #7587ff 0px 12px 21px -20px inset;
+    transition: box-shadow .5s, border-color .6s;
+}
+
+.tab-button:hover {
+    box-shadow: #7587ff 0px 12px 30px -20px inset;
+}
+
+.tab-button.active-tab {
+    /* box-shadow: #7587ff 0px 17px 21px -20px inset; */
+}
+
+.tab-button svg {
+    height: 1.75em;
+    width: 1.75em;
+}
+
+button.active-tab,
 button:focus,
 button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
+    outline: 2px solid #858bff;
 }
 
 @media (prefers-color-scheme: light) {
@@ -75,32 +94,32 @@ button:focus-visible {
 
 html,
 body {
-  margin: 0;
-  font-family: sans-serif;
-  box-sizing: border-box;
+    margin: 0;
+    font-family: sans-serif;
+    box-sizing: border-box;
 }
 
 #app {
-  width: 100vw;
-  height: 100vh;
+    width: 100vw;
+    height: 100vh;
 }
 
 .context-menu {
-  background: white;
-  border-style: solid;
-  box-shadow: 10px 19px 20px rgba(0, 0, 0, 10%);
-  position: absolute;
-  z-index: 10;
+    background: white;
+    border-style: solid;
+    box-shadow: 10px 19px 20px rgba(0, 0, 0, 10%);
+    position: absolute;
+    z-index: 10;
 }
 
 .context-menu button {
-  border: none;
-  display: block;
-  padding: 0.5em;
-  text-align: left;
-  width: 100%;
+    border: none;
+    display: block;
+    padding: 0.5em;
+    text-align: left;
+    width: 100%;
 }
- 
+
 .context-menu button:hover {
-  background: white;
+    background: white;
 }

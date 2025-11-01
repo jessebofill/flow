@@ -7,6 +7,7 @@ import { DataTypeNames, type DataTypeName, type DataTypes, type HandleDef, type 
 import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from '../../const/nodeTypes';
+import { NodeTitleEditor } from '../NodeTitleEditor';
 
 const dataTypeColorMap: { [K in DataTypeName]: string } = {
     bang: '#ef47f1',
@@ -64,11 +65,11 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
     protected abstract handleDefs: Defs;
     /**
      * Null means don't set output or bang next
-     * Pass either handle id of input that was set or bangOutHandleId if is bang
-     *
+     * Pass either handle id of input that was set or bang handle id  or bangOutHandleId if is bang
      */
     protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null;
     protected actionButtonText = 'Run';
+    protected label?: string;
     protected isBangable = false;
     protected hideIsActiveHandle = false;
     // protected bangHandleDefs: HandleDefs = { [bangInHandleId]: { dataType: 'bang' }, [bangOutHandleId]: { dataType: 'bang' } };
@@ -342,6 +343,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                     <div style={{ textAlign: 'left' }}>
                         {this.name}
                     </div>
+                    {/* <NodeTitleEditor title={this.label || this.name} setTitle={label => (this.label = label) || setTimeout(() => this.forceRender(), 1)}/> */}
                 </div>
                 <div style={{ padding: '10px 0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
