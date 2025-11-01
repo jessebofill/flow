@@ -172,6 +172,7 @@ export const FlowGraphEditor: FC<object> = () => {
                     onReconnect={onReconnect}
                     onReconnectEnd={onReconnectEnd}
                     reconnectRadius={20}
+                    nodesFocusable={false}
                     edgesFocusable={false}
                     proOptions={{ hideAttribution: true }}
                     edgesReconnectable={true}

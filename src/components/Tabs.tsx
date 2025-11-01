@@ -75,7 +75,7 @@ export const Tabs: FC<TabsProps> = ({ tabs }) => {
                                 style={{
                                     background: 'linear-gradient(#211f28, #313050)',
                                     padding: '5px 10px 10px',
-                                    borderBottom: '1px solid #858bff'
+                                    borderBottom: '1.5px solid #858bff'
                                 }}
                             >
                                 <div

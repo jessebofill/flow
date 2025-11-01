@@ -1,7 +1,7 @@
 import { Position, type Node, Handle, type NodeProps, type Edge } from '@xyflow/react';
 import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
-import { getConnectedSources, getConnectedTargets } from '../../const/utils';
+import { getConnectedSources, getConnectedTargets, getConnections } from '../../const/utils';
 import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix } from '../../const/const';
 import { DataTypeNames, type DataTypeName, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';
@@ -109,6 +109,11 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         const handle = this.handleDefs[handleId];
         if (handle === undefined) throw new Error('Could not find handle id defined for class');
         return handle.dataType;
+    }
+
+    isHandleConnected(handleId: string) {
+        const edges = this.isVirtualInstance ? this.virtualEdges : this.context.masterEdges;
+        return edges.some(edge => edge.source === this.id && edge.sourceHandle === handleId || edge.target === this.id && edge.targetHandle === handleId);
     }
 
     /**Execute after output and those outputs connections get called but before onFinish callbacks */
@@ -273,11 +278,12 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                     animation="fade"
                     duration={[400, 250]}>
                     <Handle
+                        className={`${handleDef.dataType} ${this.isHandleConnected(handleId) ? 'connected' : ''}`}
                         type={isOut ? 'source' : 'target'}
                         position={isOut ? Position.Right : Position.Left}
                         id={handleId}
                         style={{
-                            border: `2px solid ${color}`,
+                            // border: `2px solid ${color}`,
                             position: 'relative',
                             display: 'flex',
                             flexDirection: isOut ? 'row' : 'row-reverse',

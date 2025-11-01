@@ -1,9 +1,7 @@
-import { getConnectedEdges, type Connection, type Edge, type Node } from '@xyflow/react';
+import { type Connection, type Edge, type Node } from '@xyflow/react';
 import { globalNodeInstanceRegistry } from './nodeTypes';
 import { nodeCreatorNodeId } from './const';
-import type { CustomNodeDataProps } from '../components/nodes/NodeBase';
 import { appDb } from '../database';
-import type { GraphState } from '../types/types';
 import { ProxyNode } from '../components/nodes/ProxyNode';
 
 
@@ -82,25 +80,6 @@ export function validateConnection(connection: Connection | Edge, edges: Edge[])
         // return getNodeHandleType(target, targetHandle) === getNodeHandleType(existingTargets[0].targetNodeId, existingTargets[0].targetHandleId!);
     } else if (target === nodeCreatorNodeId) return true;
     return getNodeHandleType(source, sourceHandle) === getNodeHandleType(target, targetHandle);
-}
-
-export async function saveVirtualNodeGraph(virtualGraphId: string, allEdges: Edge[]) {
-    const connectedNodes: Node<CustomNodeDataProps>[] = [];
-    const instances = connectedNodes.map(node => {
-        const instance = globalNodeInstanceRegistry.get(node.id);
-        if (!instance) throw new Error('Could not find node instance in registry to save its state');
-        const state = {
-            rfTypeIndentifier: node.type!,
-            initState: {
-                react: instance.state as object,
-                other: instance.saveableState
-            }
-        };
-        return [node.id, state] as const;
-    });
-    const edges = getConnectedEdges(connectedNodes, allEdges);
-    const graph: GraphState = { nodes: Object.fromEntries(instances.concat()), edges };
-    await appDb.graphStore.put({ graphId: virtualGraphId, graph });
 }
 
 export async function onAppLoad() {
