@@ -1,4 +1,4 @@
-import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport } from '@xyflow/react';
+import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport, SelectionMode } from '@xyflow/react';
 import { type FC, useContext, useCallback, useRef, useState, createContext } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
 import { allNodeTypes } from '../const/nodeTypes';
@@ -10,6 +10,7 @@ import { edgeTypes } from '../const/edgeTypes';
 import type { TBasicEdge } from './BasicEdge';
 import { CreateNodeCallback, NodeCreatorContext } from '../contexts/NodeCreatorContext';
 import { SidebarMenu } from './SidebarMenu';
+import { ConnectionLine } from './ConnectionLine';
 
 export const FlowGraphEditor: FC<object> = () => {
     const { masterNodes, masterEdges, setMasterNodes, setMasterEdges } = useContext(GraphStateContext);
@@ -51,6 +52,7 @@ export const FlowGraphEditor: FC<object> = () => {
                 const edge = {
                     ...connection,
                     type: basicEdgeTypeName,
+                    selectable: false,
                     data: { dataType: dataType }
                 } as TBasicEdge
 
@@ -80,6 +82,7 @@ export const FlowGraphEditor: FC<object> = () => {
             const edge = {
                 ...newConnection,
                 type: basicEdgeTypeName,
+                selectable: false,
                 data: { dataType: dataType }
             } as TBasicEdge
 
@@ -165,6 +168,7 @@ export const FlowGraphEditor: FC<object> = () => {
                     edgeTypes={edgeTypes}
                     nodes={masterNodes}
                     edges={masterEdges}
+                    connectionLineComponent={ConnectionLine}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
@@ -174,6 +178,10 @@ export const FlowGraphEditor: FC<object> = () => {
                     reconnectRadius={20}
                     nodesFocusable={false}
                     edgesFocusable={false}
+                    panOnDrag={[1]}
+                    selectionMode={SelectionMode.Partial}
+                    selectionOnDrag={true}
+                    connectOnClick={false}
                     proOptions={{ hideAttribution: true }}
                     edgesReconnectable={true}
                     onNodeContextMenu={onNodeContextMenu}

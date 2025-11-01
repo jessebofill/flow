@@ -219,7 +219,18 @@ body {
 }
 
 .react-flow__edge .react-flow__edge-path {
+    transition: opacity .25s;
     stroke: var(--data-type-color);
+    stroke-width: 1.5px;
+}
+
+.react-flow__connectionline path,
+.react-flow__edge.updating .react-flow__edge-path {
+    stroke: var(--data-type-color, var(--xy-node-border-default-color));
+}
+.react-flow__connectionline path:not(.no-color),
+.react-flow__edge.updating .react-flow__edge-path {
+    opacity: .5;
 }
 
 .react-flow__handle {
