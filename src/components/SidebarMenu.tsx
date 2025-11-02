@@ -101,7 +101,8 @@ export const SidebarMenu: FC = () => {
                     height: '100%',
                     cursor: 'ew-resize',
                     background: 'transparent',
-                    zIndex: '1'
+                    zIndex: '1',
+                    pointerEvents: collapsed ? 'none' : 'all'
                 }}
             />
             <aside

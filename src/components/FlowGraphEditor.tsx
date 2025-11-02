@@ -1,5 +1,5 @@
 import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport, SelectionMode } from '@xyflow/react';
-import { type FC, useContext, useCallback, useRef, useState, createContext } from 'react';
+import { type FC, useContext, useCallback, useRef, useState, createContext, useEffect } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
 import { allNodeTypes } from '../const/nodeTypes';
 import { bangInHandleId, basicEdgeTypeName, nodeCreatorNodeId, nodeCreatorTypeName } from '../const/const';
@@ -154,6 +154,15 @@ export const FlowGraphEditor: FC<object> = () => {
         });
     }, [isCreatingNode, setMasterNodes]);
 
+    useEffect(() => {
+        if (!ref.current) return;
+        const observer = new ResizeObserver(() => setNodeCreator(viewport));
+        observer.observe(ref.current);
+
+        return () => observer.disconnect();
+    }, [viewport, setNodeCreator]);
+
+
     const isValidConnection: IsValidConnection = useCallback((connection) => validateConnection(connection, masterEdges), [masterEdges]);
 
     return (
@@ -205,7 +214,7 @@ export const FlowGraphEditor: FC<object> = () => {
                     <Background />
                 </ReactFlow>
             </div>
-            <CreateNodeCallback.Provider value={{ createNode: () => setNodeCreator(viewport, true)}}>
+            <CreateNodeCallback.Provider value={{ createNode: () => setNodeCreator(viewport, true) }}>
                 <SidebarMenu />
             </CreateNodeCallback.Provider>
         </div>
