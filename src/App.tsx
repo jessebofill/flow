@@ -9,6 +9,7 @@ import { WatchViewProvider } from './components/WatchViewProvider';
 import { onAppLoad } from './const/utils';
 import { NodeCreatorContextProvider } from './components/NodeCreatorContextProvider';
 import { Toaster } from 'sonner';
+import { NodeListProvider } from './components/NodeListProvider';
 // import './style.css'
 
 export const App: FC<object> = () => {
@@ -16,10 +17,12 @@ export const App: FC<object> = () => {
         <GraphStateProvider>
             <WatchViewProvider>
                 <NodeCreatorContextProvider>
-                    <ReactFlowProvider>
-                        <Toaster richColors position="bottom-right" />
-                        <FlowGraphEditor />
-                    </ReactFlowProvider>
+                    <NodeListProvider>
+                        <ReactFlowProvider>
+                            <Toaster richColors position="bottom-right" />
+                            <FlowGraphEditor />
+                        </ReactFlowProvider>
+                    </NodeListProvider>
                 </NodeCreatorContextProvider>
             </WatchViewProvider>
         </GraphStateProvider>

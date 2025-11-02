@@ -24,8 +24,8 @@ const handles = defineHandles({
 @registerNodeType
 export class ChanceSuccessThresh extends NodeBase<typeof handles> {
     static defNodeName = 'Chance Threshold';
+    static isBangable = true;
     protected handleDefs = handles;
-    protected isBangable = true;
     protected actionButtonText: string = 'Try';
 
     protected transform(id: string) {

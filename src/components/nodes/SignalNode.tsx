@@ -19,8 +19,8 @@ const handles = defineHandles({
 @registerNodeType
 export class SignalNode extends NodeBase<typeof handles> {
     static defNodeName = 'Signal';
+    static isBangable = true;
     protected handleDefs = handles;
-    protected isBangable = true;
     protected actionButtonText: string = 'Send';
     protected timeoutId = 0;
 

@@ -5,6 +5,7 @@ import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type MathOp } from '../../const/opDefines';
 import { defineHandles, NodeBase } from './NodeBase';
 import { DataTypeNames } from '../../types/types';
+import { Tags } from '../../const/tags';
 
 const handles = defineHandles({
 
@@ -22,6 +23,7 @@ const handles = defineHandles({
 @registerNodeType
 export class MathNode extends NodeBase<typeof handles> {
     static defNodeName = 'Math';
+    static tags = [Tags.Operation];
     protected handleDefs = handles;
     declare saveableState: { operator: MathOp };
 

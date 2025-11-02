@@ -27,22 +27,24 @@ export const Tabs: FC<TabsProps> = ({ tabs }) => {
                 // background: '#27282d',
                 flex: '1'
             }}>
-                {tabs.map(tab => <button
-                    className={`tab-button ${activeTab === tab.id ? 'active-tab' : ''}`}
-                    onClick={() => setActiveTab(tab.id)}
-                    style={{
-                        position: 'relative',
-                        bottom: '-8px',
-                        background: '#211f28',
-                        padding: '5px 8px',
-                        flex: '1',
-                        display: 'flex',
-                        justifyContent: 'center'
-                    }}
-                >
-                    {tab.icon}
-                </button>
-                )}
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        className={`tab-button ${activeTab === tab.id ? 'active-tab' : ''}`}
+                        onClick={() => setActiveTab(tab.id)}
+                        style={{
+                            position: 'relative',
+                            bottom: '-8px',
+                            background: '#211f28',
+                            padding: '5px 8px',
+                            flex: '1',
+                            display: 'flex',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        {tab.icon}
+                    </button>
+                ))}
             </div>
             <div
                 ref={containerRef}

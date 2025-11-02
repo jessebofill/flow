@@ -15,8 +15,8 @@ const handles = defineHandles({
 @registerNodeType
 export class SetNumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'Set Number';
+    static isBangable = true;
     protected handleDefs = handles;
-    protected isBangable = true;
     protected actionButtonText: string = 'Set';
     protected setDefaults(): void {
         this.state = {

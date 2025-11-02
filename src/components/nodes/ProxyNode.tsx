@@ -30,8 +30,7 @@ export class ProxyNode extends NodeBase<{}> {
     }
 
     private load() {
-        const { graphId, handleDefs, isBangable, actionLabel } = appDb.cache.userNodes[this.name];
-        this.isBangable = isBangable;
+        const { graphId, handleDefs, actionLabel } = appDb.cache.userNodes[this.name];
         this.handleDefs = handleDefs;
         if (actionLabel) this.actionButtonText = actionLabel;
         const graphStateId = this.isVirtualInstance ? this.id : graphId;
@@ -165,11 +164,12 @@ export class ProxyNode extends NodeBase<{}> {
         appDb.putGraphState(this.id, graphState);
     }
 
-    static registerUserNodeType(defNodeName: string) {
+    static registerUserNodeType(defNodeName: string, isBangable: boolean) {
         class ProxyWrapper extends ProxyNode {
             static defNodeName = defNodeName;
+            static isBangable = isBangable;
         };
-        registerNodeType(ProxyWrapper);
+        registerNodeType(ProxyWrapper, true);
         return ProxyWrapper;
     }
 }

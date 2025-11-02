@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Panel, useReactFlow, type XYPosition } from '@xyflow/react';
+import { useReactFlow, type XYPosition } from '@xyflow/react';
 import { useCallback, useContext, useRef, useState } from 'react';
 import { createNodeFromClassDef, coreNodeTypes } from '../const/nodeTypes';
 import type { NodeClass } from '../types/types';
@@ -9,9 +9,12 @@ import { FaTag } from 'react-icons/fa6';
 import { MdDragIndicator } from 'react-icons/md';
 import Tippy from '@tippyjs/react';
 import { CreateNodeCallback } from '../contexts/NodeCreatorContext';
+import { NodeListContext } from '../contexts/NodeListContext';
+import { tags } from '../const/tags';
 
 export const NodeList: FC<object> = () => {
     const { addNodes, screenToFlowPosition } = useReactFlow();
+    const { nodeList } = useContext(NodeListContext);
 
     const add = useCallback(
         (nodeClass: NodeClass, screenPosition: XYPosition) => {
@@ -33,7 +36,7 @@ export const NodeList: FC<object> = () => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {Object.values(coreNodeTypes).map(node => (
+            {nodeList.map(node => (
                 <DraggableNode key={node.defNodeName} nodeClass={node} onDrop={add}>
                     {node.defNodeName}
                     <MdDragIndicator />
@@ -46,12 +49,11 @@ export const NodeList: FC<object> = () => {
 export const NodeListHeader: FC<{}> = () => {
     const { fitView } = useReactFlow();
     const { createNode } = useContext(CreateNodeCallback);
-    const tags: string[] = ['All Nodes', 'math', 'other'];
 
     return (
         <div style={{ display: 'flex', gap: '10px' }}>
             <div style={{ flex: '1' }}>
-                <TagSelector options={tags} />
+                <TagSelector />
             </div>
             <Tippy
                 content={'Create Node'}
@@ -116,20 +118,19 @@ function DraggableNode({ className, children, nodeClass, onDrop }: DraggableNode
 
 
 interface TagSelectorProps {
-    options: string[];
-    initial?: string;
-    onChange?: (selected: string) => void;
+    // onChange?: (selected: string) => void;
 }
 
-const TagSelector: FC<TagSelectorProps> = ({ options, initial, onChange }) => {
+const TagSelector: FC<TagSelectorProps> = () => {
+    const options = tags;
+    const { setNodeList } = useContext(NodeListContext);
     const [open, setOpen] = useState(false);
-    const [selected, setSelected] = useState(initial ?? options[0]);
+    const [selected, setSelected] = useState(options[0]);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const handleBlur = (e: React.FocusEvent) => {
         const next = e.relatedTarget as HTMLElement | null;
 
-        console.log(next)
         if (!next || !dropdownRef.current?.contains(next)) {
             setOpen(false);
         }
@@ -177,6 +178,7 @@ const TagSelector: FC<TagSelectorProps> = ({ options, initial, onChange }) => {
                             onMouseDown={() => {
                                 setSelected(option);
                                 setOpen(false);
+                                setNodeList(() => Object.values(coreNodeTypes).filter(node => node.tags.includes(option)));
                                 // onChange?.(option);
                             }}
                         >

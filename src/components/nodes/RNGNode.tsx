@@ -20,8 +20,8 @@ const handles = defineHandles({
 @registerNodeType
 export class RNGNode extends NodeBase<typeof handles> {
     static defNodeName = 'RNG'
+    static isBangable: boolean = true;
     protected handleDefs = handles;
-    protected isBangable: boolean = true;
     protected actionButtonText: string = 'Generate';
     protected setDefaults(): void {
         this.state = {

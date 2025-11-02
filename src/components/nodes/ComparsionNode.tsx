@@ -5,6 +5,7 @@ import { DataTypeNames } from '../../types/types';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type ComparisonOp } from '../../const/opDefines';
 import { defineHandles, NodeBase } from './NodeBase';
+import { Tags } from '../../const/tags';
 
 const handles = defineHandles({
     p1: {
@@ -21,6 +22,7 @@ const handles = defineHandles({
 @registerNodeType
 export class ComparisonNode extends NodeBase<typeof handles> {
     static defNodeName = 'Comparison';
+    static tags = [Tags.Operation];
     protected handleDefs = handles;
     declare saveableState: { operator: ComparisonOp };
 

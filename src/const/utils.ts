@@ -85,8 +85,8 @@ export function validateConnection(connection: Connection | Edge, edges: Edge[])
 export async function onAppLoad() {
     await appDb.syncCache();
     //need to update react flow when this changes
-    Object.entries(appDb.cache.userNodes).forEach(([typeIndentifier]) => {
-        ProxyNode.registerUserNodeType(typeIndentifier);
+    Object.entries(appDb.cache.userNodes).forEach(([typeIndentifier, values]) => {
+        ProxyNode.registerUserNodeType(typeIndentifier, values.isBangable);
     });
 }
 

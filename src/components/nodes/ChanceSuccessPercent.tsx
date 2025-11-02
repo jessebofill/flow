@@ -16,8 +16,8 @@ const handles = defineHandles({
 @registerNodeType
 export class ChanceSuccessPercent extends NodeBase<typeof handles> {
     static defNodeName = 'Chance Percent';
+    static isBangable = true;
     protected handleDefs = handles;
-    protected isBangable = true;
     protected actionButtonText: string = 'Try';
 
     protected setDefaults(): void {

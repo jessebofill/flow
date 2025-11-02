@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import type { NodeBase } from '../components/nodes/NodeBase';
 import type { mainOutputHandleId } from '../const/const';
-import type { Edge } from '@xyflow/react';
+import type { Tags } from '../const/tags';
 
 export type DataTypeName = typeof DataTypeNames[keyof typeof DataTypeNames];
 
@@ -35,6 +35,8 @@ export type HandleDefs = {
 
 export interface NodeClass {
     new(...args: ConstructorParameters<typeof NodeBase>): NodeBase<HandleDefs>;
+    isBangable: boolean;
+    tags: Tags[];
     defNodeName: string;
 };
 

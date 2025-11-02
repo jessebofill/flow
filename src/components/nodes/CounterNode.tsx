@@ -5,6 +5,7 @@ import { DataTypeNames } from '../../types/types';
 import { OperationSelector } from '../OperationSelector';
 import { Operator, opMap, type CountOp } from '../../const/opDefines';
 import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
+import { Tags } from '../../const/tags';
 
 const handles = defineHandles({
     step: {
@@ -19,8 +20,9 @@ const handles = defineHandles({
 @registerNodeType
 export class CounterNode extends NodeBase<typeof handles> {
     static defNodeName = 'Counter';
+    static isBangable: boolean = true;
+    static tags = [Tags.Operation];
     protected handleDefs = handles;
-    protected isBangable: boolean = true;
     declare saveableState: { operator: CountOp };
 
     protected setDefaults(): void {

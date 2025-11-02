@@ -19,8 +19,8 @@ const handles = defineHandles({
 @registerNodeType
 export class ClockPulseNode extends NodeBase<typeof handles> {
     static defNodeName = 'Clock Pulse';
+    static isBangable = true;
     protected handleDefs = handles;
-    protected isBangable = true;
     protected running = false;
     protected actionButtonText: string = 'Start';
     protected intervalId: number = 0;

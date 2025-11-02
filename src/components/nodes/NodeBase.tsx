@@ -8,6 +8,7 @@ import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from '../../const/nodeTypes';
 import { NodeTitleEditor } from '../NodeTitleEditor';
+import type { Tags } from '../../const/tags';
 
 const dataTypeColorMap: { [K in DataTypeName]: string } = {
     bang: '#ef47f1',
@@ -55,6 +56,7 @@ export type NodeBaseProps = Pick<NodeProps<Node<CustomNodeDataProps>>, 'id' | 'd
     stateSnapshot: StateSnapshot;
 }
 export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBaseProps, State<Defs>> {
+    declare static tags: Tags[];
     static contextType = GraphStateContext;
     declare context: ContextType<typeof GraphStateContext>;
     id: string;
@@ -70,7 +72,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
     protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null;
     protected actionButtonText = 'Run';
     protected label?: string;
-    protected isBangable = false;
+    static isBangable = false;
     protected hideIsActiveHandle = false;
     // protected bangHandleDefs: HandleDefs = { [bangInHandleId]: { dataType: 'bang' }, [bangOutHandleId]: { dataType: 'bang' } };
     protected ref = createRef<HTMLDivElement>();
@@ -86,6 +88,10 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
 
     get name() {
         return (this.constructor as NodeClass).defNodeName;
+    }
+
+    get _isBangable() {
+        return (this.constructor as NodeClass).isBangable;
     }
 
     private initState(stateSnapshot?: StateSnapshot) {
@@ -324,8 +330,8 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         const inputs = this.getInputIds().map(handleId => (this.getHandleElement(handleId)));
         const outputs: ReactNode[] = [];
         if (mainOutputHandleId in this.handleDefs) outputs.push(this.getHandleElement(mainOutputHandleId));
-        const leftBang = this.isBangable && this.getHandleElement(bangInHandleId);
-        const rightBang = this.isBangable && this.getHandleElement(bangOutHandleId);
+        const leftBang = this._isBangable && this.getHandleElement(bangInHandleId);
+        const rightBang = this._isBangable && this.getHandleElement(bangOutHandleId);
         const extraOuts = this.getExtraOutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
             <div style={{
@@ -386,7 +392,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                         {this.renderExtra()}
                     </div>
                 </div>
-                {this.isBangable && <div style={{ display: 'flex', alignItems: 'center' }}>
+                {this._isBangable && <div style={{ display: 'flex', alignItems: 'center' }}>
                     <div style={{ position: 'absolute' }}>
                         {leftBang}
                     </div>

@@ -5,6 +5,7 @@ import { DataTypeNames } from '../../types/types';
 import { defineHandles, NodeBase } from './NodeBase';
 import { Operator, opMap, type BooleanOp } from '../../const/opDefines';
 import { OperationSelector } from '../OperationSelector';
+import { Tags } from '../../const/tags';
 
 const arbitraryParamPrefix = 'p_';
 function isArbitraryParam(hanldeId: string) {
@@ -41,6 +42,7 @@ const handles = defineHandles({
 @registerNodeType
 export class BooleanNode extends NodeBase<typeof handles> {
     static defNodeName = 'Boolean';
+    static tags = [Tags.Operation];
     protected handleDefs = handles;
     declare saveableState: { operator: BooleanOp };
     

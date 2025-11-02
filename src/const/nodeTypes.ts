@@ -8,6 +8,7 @@ import { NodeCreator } from '../components/nodes/NodeCreator';
 import type { ComponentType } from 'react';
 import { ProxyNode } from '../components/nodes/ProxyNode';
 import { toast } from 'sonner';
+import { Tags } from './tags';
 
 export type NodeInstanceRegistry = Map<string, NodeBase<HandleDefs>>;
 
@@ -48,10 +49,15 @@ function combineNodeTypes(...targets: Record<string, Function>[]) {
     }) as Record<string, ComponentType<NodeProps>>;
 }
 
-export function registerNodeType<T extends NodeClass>(nodeClass: T) {
+export function registerNodeType<T extends NodeClass>(nodeClass: T, isUserNode?: boolean) {
     if (typeof nodeClass.defNodeName !== 'string') throw new Error(`Missing static defNodeName on node class '${nodeClass.name}'`);
     if (coreNodeTypes[nodeClass.defNodeName]) throw new Error(`Duplicate identifier '${nodeClass.defNodeName}' found in node type map`);
     coreNodeTypes[nodeClass.defNodeName] = nodeClass;
+    if (!nodeClass.tags) nodeClass.tags = [];
+    nodeClass.tags.push(Tags.All);
+    if (nodeClass.isBangable) nodeClass.tags.push(Tags.Action);
+    else nodeClass.tags.push(Tags.NotAction);
+    if (isUserNode) nodeClass.tags.push(Tags.User);
 }
 
 export function createNodeFromClassDef(NodeClass: NodeClass, pos?: XYPosition): Node<CustomNodeDataProps> {
@@ -82,5 +88,5 @@ export function saveUserNode(rfTypeIdentifier: string, isBangable: boolean, hand
     }).catch((e) => {
         toast.error(`Node "${rfTypeIdentifier}" failed to be saved to the databased.\n${e}}`);
     });
-    return ProxyNode.registerUserNodeType(rfTypeIdentifier);
+    return ProxyNode.registerUserNodeType(rfTypeIdentifier, isBangable);
 }
