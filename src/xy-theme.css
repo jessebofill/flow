@@ -78,9 +78,8 @@ body {
 
 .dndflow aside {
     border-left: 1px solid #4d4d4da6;
-    padding: 15px 10px;
     font-size: 12px;
-    background: var(--xy-background-color)
+    background: var(--xy-background-color);
 }
 
 .dndflow aside .description {

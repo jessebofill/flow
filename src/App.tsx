@@ -19,7 +19,7 @@ export const App: FC<object> = () => {
                 <NodeCreatorProvider>
                     <NodeListProvider>
                         <ReactFlowProvider>
-                            <Toaster richColors position="bottom-right" />
+                            <Toaster richColors theme='dark' position="bottom-right" />
                             <FlowGraphEditor />
                         </ReactFlowProvider>
                     </NodeListProvider>
