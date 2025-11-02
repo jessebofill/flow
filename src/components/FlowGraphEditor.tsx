@@ -1,9 +1,8 @@
-import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport, SelectionMode } from '@xyflow/react';
-import { type FC, useContext, useCallback, useRef, useState, createContext, useEffect } from 'react';
+import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport, SelectionMode, useReactFlow } from '@xyflow/react';
+import { type FC, useContext, useCallback, useRef, useState, useEffect } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
 import { allNodeTypes } from '../const/nodeTypes';
 import { bangInHandleId, basicEdgeTypeName, nodeCreatorNodeId, nodeCreatorTypeName } from '../const/const';
-import { NodeList } from './NodeList';
 import { ContextMenu } from './ContextMenu';
 import { getNodeHandleType, validateConnection } from '../const/utils';
 import { edgeTypes } from '../const/edgeTypes';
@@ -15,6 +14,7 @@ import { ConnectionLine } from './ConnectionLine';
 export const FlowGraphEditor: FC<object> = () => {
     const { masterNodes, masterEdges, setMasterNodes, setMasterEdges } = useContext(GraphStateContext);
     const { isCreatingNode } = useContext(NodeCreatorContext);
+    const { fitView } = useReactFlow();
     const viewport = useViewport();
     const [menu, setMenu] = useState(null);
     const ref = useRef<HTMLDivElement>(null);
@@ -165,6 +165,19 @@ export const FlowGraphEditor: FC<object> = () => {
 
     const isValidConnection: IsValidConnection = useCallback((connection) => validateConnection(connection, masterEdges), [masterEdges]);
 
+    const createNode = useCallback(() => {
+        if (isCreatingNode) return;
+        fitView({
+            maxZoom: 1.1,
+            minZoom: 0.5,
+            padding: 0.3,
+            duration: 500,
+            ease: t => t * (2 - t),
+            interpolate: 'smooth'
+        });
+        setTimeout(() => setNodeCreator(viewport, true), 100);
+    }, [fitView, isCreatingNode, setNodeCreator, viewport]);
+
     return (
         <div className="dndflow">
             <div
@@ -214,7 +227,7 @@ export const FlowGraphEditor: FC<object> = () => {
                     <Background />
                 </ReactFlow>
             </div>
-            <CreateNodeCallback.Provider value={{ createNode: () => setNodeCreator(viewport, true) }}>
+            <CreateNodeCallback.Provider value={{ createNode }}>
                 <SidebarMenu />
             </CreateNodeCallback.Provider>
         </div>

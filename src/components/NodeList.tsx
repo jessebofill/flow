@@ -63,17 +63,7 @@ export const NodeListHeader: FC<{}> = () => {
                 duration={[400, 250]}>
                 <button
                     className='main'
-                    onClick={() => {
-                        fitView({
-                            maxZoom: 1.1,
-                            minZoom: 0.5,
-                            padding: 0.3,
-                            duration: 500,
-                            ease: t => t * (2 - t),
-                            interpolate: 'smooth'
-                        });
-                        setTimeout(createNode, 100)
-                    }}>
+                    onClick={createNode}>
                     <BiAddToQueue />
                 </button>
             </Tippy>
