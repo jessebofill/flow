@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { App } from './App'
-import.meta.glob('./components/nodes/*.tsx', { eager: true });
+import.meta.glob('./components/nodes/core/*.tsx', { eager: true });
 
 createRoot(document.getElementById('root')!).render(
     // <StrictMode>

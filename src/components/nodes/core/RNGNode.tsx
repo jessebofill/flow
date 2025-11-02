@@ -1,7 +1,7 @@
-import { registerNodeType } from '../../const/nodeTypes';
-import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
-import { mainOutputHandleId } from '../../const/const';
-import { DataTypeNames } from '../../types/types';
+import { registerNodeType } from '../../../const/nodeTypes';
+import { defineHandles, isBangInHandleId, NodeBase } from '../NodeBase';
+import { mainOutputHandleId } from '../../../const/const';
+import { DataTypeNames } from '../../../types/types';
 const handles = defineHandles({
     max: {
         dataType: DataTypeNames.Number,

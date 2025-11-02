@@ -1,7 +1,7 @@
 import { Position, type Node, Handle, type NodeProps, type Edge } from '@xyflow/react';
 import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
-import { getConnectedSources, getConnectedTargets, getConnections } from '../../const/utils';
+import { getConnectedSources, getConnectedTargets } from '../../const/utils';
 import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix } from '../../const/const';
 import { DataTypeNames, type DataTypeName, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';

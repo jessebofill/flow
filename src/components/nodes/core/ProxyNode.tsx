@@ -1,10 +1,10 @@
 import { type Edge } from '@xyflow/react';
-import { bangInHandleId, bangOutHandleId, nodeCreatorNodeId, variInHandleIdPrefix, variOutHandleIdPrefix } from '../../const/const';
-import { coreNodeTypes, registerNodeType, type NodeInstanceRegistry } from '../../const/nodeTypes';
-import { getConnectedSources, getConnectedTargets } from '../../const/utils';
-import { appDb, type GraphState, type GraphStateNode } from '../../database';
-import { isBangInHandleId, NodeBase, type NodeBaseProps } from './NodeBase';
-import { DataTypeNames, type HandleDefs } from '../../types/types';
+import { bangInHandleId, bangOutHandleId, nodeCreatorNodeId, variInHandleIdPrefix, variOutHandleIdPrefix } from '../../../const/const';
+import { coreNodeTypes, registerNodeType, type NodeInstanceRegistry } from '../../../const/nodeTypes';
+import { getConnectedSources, getConnectedTargets } from '../../../const/utils';
+import { appDb, type GraphState, type GraphStateNode } from '../../../database';
+import { isBangInHandleId, NodeBase, type NodeBaseProps } from '../NodeBase';
+import { DataTypeNames, type HandleDefs } from '../../../types/types';
 
 export class ProxyNode extends NodeBase<{}> {
     static defNodeName = '';

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { HandleData } from '../../types/types';
-import { variOutHandleIdPrefix, variInHandleIdPrefix } from '../../const/const';
+import type { HandleData } from '../types/types';
+import { variOutHandleIdPrefix, variInHandleIdPrefix } from '../const/const';
 
 export type NodeCreatorHandleData = HandleData | Omit<HandleData, 'dataType'>;
 

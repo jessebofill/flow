@@ -2,15 +2,15 @@ import { type Node, type NodeProps, getConnectedEdges, Handle, Position, useReac
 import { useCallback, useContext, useEffect, useState, type CSSProperties, type FC } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets, getIslandOfNode, getNodeHandleType } from '../../const/utils';
-import { useNewNodeCreatorState, type NodeCreatorHandleData } from '../hooks/useNewNodeCreatorState';
-import { DataTypeNames, type HandleData, type HandleDef } from '../../types/types';
+import { useNewNodeCreatorState, type NodeCreatorHandleData } from '../../hooks/useNewNodeCreatorState';
+import { DataTypeNames, type HandleData } from '../../types/types';
 import { NodeTitleEditor } from '../NodeTitleEditor';
 import { saveUserNode, globalNodeInstanceRegistry, createNodeFromClassDef, allNodeTypes } from '../../const/nodeTypes';
 import { v4 as uuid } from 'uuid';
 import { NodeCreatorContext } from '../../contexts/NodeCreatorContext';
 import { LuSave, LuX } from 'react-icons/lu';
 import { bangInHandleId } from '../../const/const';
-import { ProxyNode } from './ProxyNode';
+import { ProxyNode } from './core/ProxyNode';
 import type { GraphState, GraphStateNode } from '../../database';
 import { toast } from 'sonner';
 
@@ -23,7 +23,7 @@ const handleStyle: CSSProperties = {
 export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
     const { masterEdges: edges, masterNodes: nodes } = useContext(GraphStateContext);
     const { setIsCreatingNode } = useContext(NodeCreatorContext);
-    const { setNodes, setEdges, fitView } = useReactFlow();
+    const { setNodes, fitView } = useReactFlow();
     const { inputs, outputs, setInputs, setOutputs, generateHandleId, getDataType } = useNewNodeCreatorState();
     const [isBangConnected, setIsBangConnected] = useState(false);
     const [title, setTitle] = useState('');
@@ -61,25 +61,6 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
         setOutputs(handles => updateHandles(handles, true));
         updateInternals(nodeId);
     }, [edges]);
-
-    // useEffect(() => {
-    //     //removes edges of old type when type changes. assumes latest edge will be at end of edges array
-    //     let needsUpdate = false;
-    //     const lastEdgesOfHandles: { [handleId: string]: TBasicEdge } = {};
-    //     edges.forEach(edge => { if (edge.source === nodeId) lastEdgesOfHandles[edge.sourceHandle!] = edge as TBasicEdge });
-    //     const newEdges = edges.filter(edge => {
-    //         const { source, sourceHandle, data } = edge;
-    //         if (source !== nodeId || !data || !('dataType' in data) || !lastEdgesOfHandles[sourceHandle!]) return true;
-    //         const lastEdgeOfHandle = lastEdgesOfHandles[sourceHandle!];
-    //         if (!lastEdgeOfHandle || !lastEdgeOfHandle.data?.dataType) return true;
-
-    //         const dataType = (data as TBasicEdge['data'])!.dataType;
-    //         const isExpectedType = dataType === lastEdgeOfHandle.data.dataType;
-    //         if (!isExpectedType) needsUpdate = true;
-    //         return isExpectedType;
-    //     });
-    //     if (needsUpdate) setEdges(newEdges);
-    // }, [edges, nodeId, setEdges]);
 
     const onSave = useCallback(() => {
         const indentifier = title;
@@ -222,23 +203,8 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
                         </div>
                     )}
                 </div>
-                {/* <div
-                    style={{
-                        alignContent: 'center',
-                        fontSize: '36px',
-                        // background: '#1d1d20',
-                        flex: 'auto',
-                        padding: '15px',
-                        borderRadius: '5px',
-                        minWidth: '76px',
-                        minHeight: '54px',
-                        maxWidth: '76px',
-                        maxHeight: '54px'
-                    }}>
-
-                </div> */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    {outputs.map((handle, index) =>
+                    {outputs.map((handle) =>
                         <div key={handle.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
 
                             <Handle
@@ -300,29 +266,5 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
             </div>
         </div>
 
-    );
-};
-
-interface NodeCreatorHandleProps {
-    handle: HandleDef;
-
-}
-
-const NodeCreatorHandle = ({ handle, }) => {
-
-
-    return (
-        <div style={{ display: 'flex' }}>
-
-            <Handle
-                className={getDataType(handle)}
-                key={handle.id}
-                id={handle.id}
-                type='source'
-                position={Position.Right}
-                style={handleStyle}
-            />
-            <NodeTitleEditor setTitle={() => { }} />
-        </div>
     );
 };

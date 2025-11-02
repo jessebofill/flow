@@ -2,7 +2,7 @@ import { type Connection, type Edge, type Node } from '@xyflow/react';
 import { globalNodeInstanceRegistry } from './nodeTypes';
 import { nodeCreatorNodeId } from './const';
 import { appDb } from '../database';
-import { ProxyNode } from '../components/nodes/ProxyNode';
+import { ProxyNode } from '../components/nodes/core/ProxyNode';
 
 
 export function getConnections(edges: Edge[], nodeId: string, handleId: string) {

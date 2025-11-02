@@ -53,7 +53,7 @@ interface OpButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const OpButton: FC<OpButtonProps> = ({ op, hideTooltip, isMenuButton, ...buttonProps }) => {
-    // console.log()
+
     const opEntry = opMap[op];
 
     return (

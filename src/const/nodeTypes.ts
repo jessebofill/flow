@@ -6,7 +6,7 @@ import { appDb, type Graph, type GraphState } from '../database';
 import { nodeCreatorTypeName } from './const';
 import { NodeCreator } from '../components/nodes/NodeCreator';
 import type { ComponentType } from 'react';
-import { ProxyNode } from '../components/nodes/ProxyNode';
+import { ProxyNode } from '../components/nodes/core/ProxyNode';
 import { toast } from 'sonner';
 import { Tags } from './tags';
 

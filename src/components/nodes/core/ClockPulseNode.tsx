@@ -1,7 +1,7 @@
-import { isActiveHandleId, variOutHandleIdPrefix } from '../../const/const';
-import { registerNodeType } from '../../const/nodeTypes';
-import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
+import { isActiveHandleId, variOutHandleIdPrefix } from '../../../const/const';
+import { registerNodeType } from '../../../const/nodeTypes';
+import { DataTypeNames } from '../../../types/types';
+import { defineHandles, isBangInHandleId, NodeBase } from '../NodeBase';
 
 const pulseSignalOutKey = `${variOutHandleIdPrefix}pulse`
 

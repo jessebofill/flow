@@ -1,11 +1,11 @@
 import { type ReactNode } from 'react';
-import { mainOutputHandleId, variOutHandleIdPrefix } from '../../const/const';
-import { registerNodeType } from '../../const/nodeTypes';
-import { DataTypeNames } from '../../types/types';
-import { defineHandles, NodeBase } from './NodeBase';
-import { Operator, opMap, type BooleanOp } from '../../const/opDefines';
-import { OperationSelector } from '../OperationSelector';
-import { Tags } from '../../const/tags';
+import { mainOutputHandleId, variOutHandleIdPrefix } from '../../../const/const';
+import { registerNodeType } from '../../../const/nodeTypes';
+import { DataTypeNames } from '../../../types/types';
+import { defineHandles, NodeBase } from '../NodeBase';
+import { Operator, opMap, type BooleanOp } from '../../../const/opDefines';
+import { OperationSelector } from '../../OperationSelector';
+import { Tags } from '../../../const/tags';
 
 const arbitraryParamPrefix = 'p_';
 function isArbitraryParam(hanldeId: string) {

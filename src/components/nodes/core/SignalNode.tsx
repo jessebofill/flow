@@ -1,7 +1,7 @@
-import { variOutHandleIdPrefix } from '../../const/const';
-import { registerNodeType } from '../../const/nodeTypes';
-import { DataTypeNames } from '../../types/types';
-import { defineHandles, isBangInHandleId, NodeBase } from './NodeBase';
+import { variOutHandleIdPrefix } from '../../../const/const';
+import { registerNodeType } from '../../../const/nodeTypes';
+import { DataTypeNames } from '../../../types/types';
+import { defineHandles, isBangInHandleId, NodeBase } from '../NodeBase';
 
 const delayedSignalOutKey = `${variOutHandleIdPrefix}delay`
 

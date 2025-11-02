@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { mainOutputHandleId } from '../../const/const';
-import { registerNodeType } from '../../const/nodeTypes';
-import { OperationSelector } from '../OperationSelector';
-import { Operator, opMap, type MathOp } from '../../const/opDefines';
-import { defineHandles, NodeBase } from './NodeBase';
-import { DataTypeNames } from '../../types/types';
-import { Tags } from '../../const/tags';
+import { mainOutputHandleId } from '../../../const/const';
+import { registerNodeType } from '../../../const/nodeTypes';
+import { OperationSelector } from '../../OperationSelector';
+import { Operator, opMap, type MathOp } from '../../../const/opDefines';
+import { defineHandles, NodeBase } from '../NodeBase';
+import { DataTypeNames } from '../../../types/types';
+import { Tags } from '../../../const/tags';
 
 const handles = defineHandles({
 
