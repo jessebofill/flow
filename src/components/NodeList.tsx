@@ -1,53 +1,25 @@
 import type { FC } from 'react';
-import { useReactFlow, type XYPosition } from '@xyflow/react';
-import { useCallback, useContext, useRef, useState } from 'react';
-import { createNodeFromClassDef, coreNodeTypes } from '../const/nodeTypes';
-import type { NodeClass } from '../types/types';
-import { useDraggable } from '@neodrag/react';
+import { useContext, useRef, useState } from 'react';
+import { coreNodeTypes } from '../const/nodeTypes';
 import { BiAddToQueue } from 'react-icons/bi';
 import { FaTag } from 'react-icons/fa6';
-import { MdDragIndicator } from 'react-icons/md';
 import Tippy from '@tippyjs/react';
 import { CreateNodeCallback } from '../contexts/NodeCreatorContext';
 import { NodeListContext } from '../contexts/NodeListContext';
 import { tags } from '../const/tags';
+import { DraggableNodeListPreview } from './NodeListPreview';
 
 export const NodeList: FC<object> = () => {
-    const { addNodes, screenToFlowPosition } = useReactFlow();
     const { nodeList } = useContext(NodeListContext);
-
-    const add = useCallback(
-        (nodeClass: NodeClass, screenPosition: XYPosition) => {
-            const flow = document.querySelector('.react-flow');
-            const flowRect = flow?.getBoundingClientRect();
-            const isInFlow =
-                flowRect &&
-                screenPosition.x >= flowRect.left &&
-                screenPosition.x <= flowRect.right &&
-                screenPosition.y >= flowRect.top &&
-                screenPosition.y <= flowRect.bottom;
-
-            const position = screenToFlowPosition(screenPosition);
-            const newNode = createNodeFromClassDef(nodeClass, position);
-            if (isInFlow) addNodes(newNode);
-        },
-        [addNodes, screenToFlowPosition],
-    );
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {nodeList.map(node => (
-                <DraggableNode key={node.defNodeName} nodeClass={node} onDrop={add}>
-                    {node.defNodeName}
-                    <MdDragIndicator />
-                </DraggableNode>
-            ))}
+            {nodeList.map(node => <DraggableNodeListPreview key={node.defNodeName} nodeClass={node} />)}
         </div>
     );
 };
 
 export const NodeListHeader: FC<{}> = () => {
-    const { fitView } = useReactFlow();
     const { createNode } = useContext(CreateNodeCallback);
 
     return (
@@ -71,47 +43,7 @@ export const NodeListHeader: FC<{}> = () => {
     );
 };
 
-interface DraggableNodeProps {
-    className?: string;
-    children: React.ReactNode;
-    nodeClass: NodeClass;
-    onDrop: (nodeClass: NodeClass, position: XYPosition) => void;
-}
-
-function DraggableNode({ className, children, nodeClass, onDrop }: DraggableNodeProps) {
-    const draggableRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState<XYPosition>({ x: 0, y: 0 });
-
-    useDraggable(draggableRef as unknown as React.RefObject<HTMLElement>, {
-        position: position,
-        onDrag: ({ offsetX, offsetY }) => {
-            setPosition({
-                x: offsetX,
-                y: offsetY,
-            });
-        },
-        onDragEnd: ({ event }) => {
-            setPosition({ x: 0, y: 0 });
-            onDrop(nodeClass, {
-                x: event.clientX,
-                y: event.clientY,
-            });
-        },
-    });
-
-    return (
-        <div className={'dndnode'} ref={draggableRef}>
-            {children}
-        </div>
-    );
-};
-
-
-interface TagSelectorProps {
-    // onChange?: (selected: string) => void;
-}
-
-const TagSelector: FC<TagSelectorProps> = () => {
+const TagSelector: FC<object> = () => {
     const options = tags;
     const { setNodeList } = useContext(NodeListContext);
     const [open, setOpen] = useState(false);
@@ -163,21 +95,20 @@ const TagSelector: FC<TagSelectorProps> = () => {
                 }}>
                     {options.map((option) =>
                         <div
+                            key={option}
                             className={`option ${selected === option ? 'selected' : ''}`}
                             style={{ padding: '3px 10px' }}
                             onMouseDown={() => {
                                 setSelected(option);
                                 setOpen(false);
                                 setNodeList(() => Object.values(coreNodeTypes).filter(node => node.tags.includes(option)));
-                                // onChange?.(option);
                             }}
                         >
                             {option}
                         </div>
                     )}
                 </div>
-            )
-            }
+            )}
         </div >
     );
 };

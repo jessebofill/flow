@@ -12,7 +12,7 @@ body {
 
     /* Built-in Variables see https://reactflow.dev/learn/customization/theming */
     --xy-node-border-default-color: #6a61d8;
-    --xy-bang-button-default-color: #8161f0;
+    --xy-bang-button-color: #8161f0;
 
     --xy-node-boxshadow-default:
         0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d,
@@ -86,7 +86,7 @@ body {
     margin-bottom: 10px;
 }
 
-.dndflow .dndnode {
+.dndflow .node-list-node-preview {
     height: 15px;
     padding: 8px;
     /* border: var(--xy-node-border-default); */
@@ -104,26 +104,20 @@ body {
     transition: background .4s;
 }
 
-.dndflow .ghostnode {
-    position: fixed;
-    pointer-events: none;
-    width: 100px;
-}
-
-.dndflow .dndnode:active {
+.dndflow .node-list-node-preview.ghost {
     cursor: grabbing;
-    background: #8161f0 !important;
+    background: var(--xy-bang-button-color) !important;
 }
 
-.dndflow .dndnode:hover {
+.dndflow .node-list-node-preview:hover {
     background: #6829ff;
 }
 
-.dndflow .dndnode.input {
+.dndflow .node-list-node-preview.input {
     border-color: #0041d0;
 }
 
-.dndflow .dndnode.output {
+.dndflow .node-list-node-preview.output {
     border-color: #ff0072;
 }
 
@@ -633,7 +627,7 @@ input[type="checkbox"]:checked {
 }
 
 .tabs button.main:hover {
-    background: var(--xy-bang-button-default-color);
+    background: var(--xy-bang-button-color);
     outline: none;
 }
 

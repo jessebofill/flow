@@ -10,6 +10,7 @@ import { onAppLoad } from './const/utils';
 import { NodeCreatorProvider } from './components/contextProviders/NodeCreatorProvider';
 import { Toaster } from 'sonner';
 import { NodeListProvider } from './components/contextProviders/NodeListProvider';
+import { DndContext } from '@dnd-kit/core';
 // import './style.css'
 
 export const App: FC<object> = () => {
@@ -19,8 +20,10 @@ export const App: FC<object> = () => {
                 <NodeCreatorProvider>
                     <NodeListProvider>
                         <ReactFlowProvider>
-                            <Toaster richColors theme='dark' position="bottom-right" />
-                            <FlowGraphEditor />
+                            <DndContext>
+                                <Toaster richColors theme='dark' position="bottom-right" />
+                                <FlowGraphEditor />
+                            </DndContext>
                         </ReactFlowProvider>
                     </NodeListProvider>
                 </NodeCreatorProvider>

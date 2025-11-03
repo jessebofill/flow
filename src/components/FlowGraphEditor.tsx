@@ -10,6 +10,8 @@ import type { TBasicEdge } from './BasicEdge';
 import { CreateNodeCallback, NodeCreatorContext } from '../contexts/NodeCreatorContext';
 import { SidebarMenu } from './SidebarMenu';
 import { ConnectionLine } from './ConnectionLine';
+import { useDroppable } from '@dnd-kit/core';
+import { DragAndDropOverlay } from './DragAndDropOverlay';
 
 export const FlowGraphEditor: FC<object> = () => {
     const { masterNodes, masterEdges, setMasterNodes, setMasterEdges } = useContext(GraphStateContext);
@@ -19,6 +21,7 @@ export const FlowGraphEditor: FC<object> = () => {
     const [menu, setMenu] = useState(null);
     const ref = useRef<HTMLDivElement>(null);
     const edgeReconnectSuccessful = useRef(true);
+    const { setNodeRef } = useDroppable({ id: 'xyflow' });
 
     const onNodesChange = useCallback(
         (changes: NodeChange<Node>[]) => {
@@ -181,6 +184,7 @@ export const FlowGraphEditor: FC<object> = () => {
     return (
         <div className="dndflow">
             <div
+                ref={setNodeRef}
                 className='reactflow-wrapper'
             // style={{ width: '100vw', height: '100vh' }}
             >
@@ -230,6 +234,7 @@ export const FlowGraphEditor: FC<object> = () => {
             <CreateNodeCallback.Provider value={{ createNode }}>
                 <SidebarMenu />
             </CreateNodeCallback.Provider>
+            <DragAndDropOverlay />
         </div>
     );
 };

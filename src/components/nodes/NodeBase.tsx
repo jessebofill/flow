@@ -423,7 +423,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
             this.context.setMasterNodes(nodes => {
                 return nodes.map(node => {
                     if (node.id !== this.id) return node;
-                    const x = node.position.x - (node.measured?.width ?? 0) / 4;
+                    const x = node.position.x - (node.measured?.width ?? 0) / 2;
                     const y = node.position.y - 10;
                     return { ...node, position: { x, y }, style: { visibility: 'visible' } };
                 })
