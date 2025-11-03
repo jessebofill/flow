@@ -12,7 +12,7 @@ interface ContextMenuProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const ContextMenu: FC<ContextMenuProps> = ({ id, top, left, right, bottom, ...props }) => {
-    const { getNode, setNodes, addNodes, setEdges } = useReactFlow();
+    const { getNode, setNodes, addNodes } = useReactFlow();
     const { watched, setWatched } = useContext(WatchViewContext);
 
     const watchNode = useCallback(() => setWatched(prev => [...prev, id]), [id, setWatched]);
@@ -35,10 +35,7 @@ export const ContextMenu: FC<ContextMenuProps> = ({ id, top, left, right, bottom
         });
     }, [id, getNode, addNodes]);
 
-    const deleteNode = useCallback(() => {
-        setNodes((nodes) => nodes.filter((node) => node.id !== id));
-        // setEdges((edges) => edges.filter((edge) => edge.source !== id));
-    }, [id, setNodes, setEdges]);
+    const deleteNode = useCallback(() => setNodes((nodes) => nodes.filter((node) => node.id !== id)), [id, setNodes]);
 
     return (
         <div

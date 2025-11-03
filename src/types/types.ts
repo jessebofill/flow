@@ -1,4 +1,3 @@
-import type { ReactElement } from 'react';
 import type { NodeBase } from '../components/nodes/NodeBase';
 import type { mainOutputHandleId } from '../const/const';
 import type { Tags } from '../const/tags';

@@ -64,6 +64,8 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
         updateInternals(nodeId);
     }, [edges]);
 
+    const close = useCallback(() => setNodes((nodes) => nodes.filter((node) => node.id !== nodeId)), [nodeId, setNodes]);
+
     const onSave = useCallback(() => {
         const indentifier = title;
         if (outputs.length <= 1 && inputs.length <= 1) {
@@ -160,7 +162,7 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
                         <LuSave />
                     </button>
                     <button
-                        onClick={onSave}
+                        onClick={close}
                         style={{
                             background: 'transparent',
                             padding: 0,
