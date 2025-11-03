@@ -19,7 +19,7 @@ export type DataTypes = {
 
 
 export type HandleDef = {
-    label?: ReactElement | string;
+    label?: string;
     dataType: DataTypeName; //bang type only used for outputs
 };
 

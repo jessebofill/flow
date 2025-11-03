@@ -30,12 +30,14 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
     const [actionName, setActionName] = useState('Action');
     const updateInternals = useUpdateNodeInternals();
 
+    const isHandleConnected = useCallback((handleId: string) => edges.some(edge => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId), [edges, nodeId]);
+
     useEffect(() => {
         setIsCreatingNode(true);
         return () => setIsCreatingNode(false);
     }, [setIsCreatingNode])
 
-    useEffect(() => setIsBangConnected(!!getConnectedTargets(edges, nodeId, bangInHandleId).length), [edges, nodeId])
+    useEffect(() => setIsBangConnected(isHandleConnected(bangInHandleId)), [isHandleConnected])
 
     useEffect(() => {
         //remove handles that have no connections and make sure last handle is ghost
@@ -185,7 +187,7 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
                     {inputs.map((handle) =>
                         <div key={handle.id} style={{ display: 'flex', flexDirection: 'column' }}>
                             <Handle
-                                className={getDataType(handle)}
+                                className={`${getDataType(handle)} ${isHandleConnected(handle.id) ? 'connected' : ''}`}
                                 id={handle.id}
                                 type='source'
                                 position={Position.Right}
@@ -208,8 +210,7 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
                         <div key={handle.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
 
                             <Handle
-                                className={getDataType(handle)}
-
+                                className={`${getDataType(handle)} ${isHandleConnected(handle.id) ? 'connected' : ''}`}
                                 id={handle.id}
                                 type='target'
                                 position={Position.Left}
@@ -242,7 +243,7 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
             >
                 <div>
                     <Handle
-                        className={DataTypeNames.Bang}
+                        className={`${DataTypeNames.Bang} ${isBangConnected ? 'connected' : ''}`}
                         id={bangInHandleId}
                         type='source'
                         position={Position.Right}

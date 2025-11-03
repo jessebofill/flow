@@ -1,8 +1,9 @@
 import { type Connection, type Edge, type Node } from '@xyflow/react';
 import { globalNodeInstanceRegistry } from './nodeTypes';
-import { nodeCreatorNodeId } from './const';
+import { bangInHandleId, nodeCreatorNodeId } from './const';
 import { appDb } from '../database';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
+import { DataTypeNames } from '../types/types';
 
 
 export function getConnections(edges: Edge[], nodeId: string, handleId: string) {
@@ -74,6 +75,7 @@ export function validateConnection(connection: Connection | Edge, edges: Edge[])
     if (targetHandle === null || targetHandle === undefined) throw new Error('Target node had no hanlde id to connect to');
 
     if (source === nodeCreatorNodeId) {
+        if (sourceHandle === bangInHandleId ) return getNodeHandleType(target, targetHandle) === DataTypeNames.Bang;
         return true;
         // const existingTargets = getConnectedTargets(edges, source, sourceHandle);
         // if (existingTargets.length <= 0) return true;

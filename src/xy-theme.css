@@ -233,8 +233,7 @@ body {
     transition: box-shadow .2s, opactity .2s, background-color .4s;
 }
 
-.react-flow__handle.connected,
-.node-creator .react-flow__handle:not(.ghost) {
+.react-flow__handle.connected {
     background-color: var(--data-type-color);
     box-shadow: 0 0 15px -1px var(--data-type-color);
 }
@@ -247,12 +246,8 @@ body {
     transform: translate(-50%);
 }
 
-.node-creator .react-flow__handle {
-    background-color: var(--data-type-color);
-}
-
 .react-flow__handle.ghost {
-    background-color: gray;
+    border-color: var(--xy-node-border-default-color);
 }
 
 .react-flow__handle.connectionindicator:hover {
@@ -261,9 +256,8 @@ body {
 
 .react-flow__handle.connectionindicator:hover:not(.connectingto),
 .react-flow__handle.connectingto.valid {
-    /* border-color: var(--xy-theme-edge-hover); */
-    /* background-color: white; */
-    box-shadow: 0 0 10px 3px var(--data-type-color), 0 0 5px 0 inset var(--data-type-color);
+    --default-shadow-color: #706ba8;
+    box-shadow: 0 0 10px 3px var(--data-type-color, var(--default-shadow-color)), 0 0 5px 0 inset var(--data-type-color, var(--default-shadow-color));
 }
 
 .react-flow__handle.connectionindicator:focus,

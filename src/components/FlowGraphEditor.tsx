@@ -44,7 +44,6 @@ export const FlowGraphEditor: FC<object> = () => {
     );
     const onConnect = useCallback(
         (connection: Connection) => {
-            console.log(connection)
             setMasterEdges((edgesSnapshot) => {
                 const { source, sourceHandle, target, targetHandle } = connection;
                 const alreadyExists = edgesSnapshot.some((e) => e.source === source && e.sourceHandle === sourceHandle && e.target === target && e.targetHandle === targetHandle);
@@ -59,8 +58,8 @@ export const FlowGraphEditor: FC<object> = () => {
                     data: { dataType: dataType }
                 } as TBasicEdge
 
-                //do not allow multiple connection from same source handle of nodecreator
-                const filtered = edgesSnapshot.filter((e) => !(e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle))
+                //do not allow multiple connection from same source handle of nodecreator except bang
+                const filtered = edgesSnapshot.filter((e) => !(e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle && sourceHandle !== bangInHandleId))
                     //do not allow multiple connections to same target handle except for bang
                     .filter((e) => !(e.target === target && e.targetHandle === targetHandle && targetHandle !== bangInHandleId));
                 return addEdge(edge, filtered);
@@ -89,7 +88,7 @@ export const FlowGraphEditor: FC<object> = () => {
                 data: { dataType: dataType }
             } as TBasicEdge
 
-            const filtered = edgesSnapshot.filter((e) => !(e === oldEdge || e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle))
+            const filtered = edgesSnapshot.filter((e) => !(e === oldEdge || e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle && sourceHandle !== bangInHandleId))
                 .filter((e) => !(e.target === target && e.targetHandle === targetHandle && targetHandle !== bangInHandleId));
             return addEdge(edge, filtered);
         });

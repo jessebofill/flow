@@ -1,7 +1,8 @@
 import { getBezierPath, Position, type ConnectionLineComponentProps, type Edge } from '@xyflow/react';
 import type { FC } from 'react';
-import type { DataTypeName } from '../types/types';
+import { DataTypeNames, type DataTypeName } from '../types/types';
 import { globalNodeInstanceRegistry } from '../const/nodeTypes';
+import { bangInHandleId, nodeCreatorNodeId } from '../const/const';
 
 export type TBasicEdge = Edge<{
     dataType: DataTypeName;
@@ -25,7 +26,8 @@ export const ConnectionLine: FC<ConnectionLineComponentProps> = ({ fromNode, fro
         targetY: fromY,
         targetPosition: Position.Left,
     });
-    const type = globalNodeInstanceRegistry.get(fromNode.id)?.getHandleType(fromHandle.id!);
+    const type = fromNode.id === nodeCreatorNodeId && fromHandle.id === bangInHandleId ? DataTypeNames.Bang :
+        globalNodeInstanceRegistry.get(fromNode.id)?.getHandleType(fromHandle.id!);
 
     return (
         <g>
