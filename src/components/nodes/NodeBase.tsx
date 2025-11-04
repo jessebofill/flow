@@ -261,10 +261,10 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                 }
                 {isExtraOut && handleDef.dataType !== DataTypeNames.Bang &&
                     <div
+                        className='output-box'
                         style={{
                             padding: '0 8px',
                             fontSize: '20px',
-                            background: '#1d1d20',
                             borderRadius: '4px'
                         }}
                     >
@@ -342,16 +342,18 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                 // border: '1px solid #6a61d8',
                 width: '100%'
             }}>
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '0 20px',
-                    background: '#1d1d20',
-                    fontSize: '20px',
-                    borderTopLeftRadius: 8,
-                    borderTopRightRadius: 8,
-                }}>
+                <div
+                    className='header'
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0 20px',
+                        fontSize: '20px',
+                        borderTopLeftRadius: 6,
+                        borderTopRightRadius: 6,
+                    }}
+                >
                     <div style={{ textAlign: 'left' }}>
                         {this.name}
                     </div>
@@ -364,10 +366,10 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                         </div>
                         {!this.handleDefs[mainOutputHandleId] ? this.renderContent() :
                             <div
+                                className='output-box'
                                 style={{
                                     alignContent: 'center',
                                     fontSize: '36px',
-                                    background: '#1d1d20',
                                     flex: 'auto',
                                     padding: '15px',
                                     borderRadius: '5px',
@@ -397,13 +399,13 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                         {leftBang}
                     </div>
                     <button
+                        className='action'
                         style={{
                             width: '100%',
-                            background: '#8161f0',
                             borderTopLeftRadius: 0,
                             borderTopRightRadius: 0,
-                            borderBottomLeftRadius: 8,
-                            borderBottomRightRadius: 8,
+                            borderBottomLeftRadius: 6,
+                            borderBottomRightRadius: 6,
                         }}
                         onClick={() => this.bang(bangInHandleId)}
                     >

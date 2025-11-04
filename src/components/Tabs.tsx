@@ -35,7 +35,7 @@ export const Tabs: FC<TabsProps> = ({ tabs }) => {
                         style={{
                             position: 'relative',
                             bottom: '-8px',
-                            background: '#211f28',
+                            // background: '#211f28',
                             padding: '5px 8px',
                             flex: '1',
                             display: 'flex',
@@ -74,11 +74,8 @@ export const Tabs: FC<TabsProps> = ({ tabs }) => {
                             }}
                         >
                             <div
-                                style={{
-                                    background: 'linear-gradient(#211f28, #313050)',
-                                    padding: '5px 10px 10px',
-                                    borderBottom: '1.5px solid #858bff'
-                                }}
+                                className='header'
+                                style={{ padding: '5px 10px 10px' }}
                             >
                                 <div
                                     style={{

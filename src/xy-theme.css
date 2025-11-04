@@ -2,7 +2,7 @@
 
 .react-flow,
 body {
-    --xy-background-color: #1d1d20;
+    --xy-background-color: #141414;
     /* Custom Variables */
     --xy-theme-selected: #712aff;
     --xy-theme-selected2: #a490ff;
@@ -11,15 +11,19 @@ body {
     --xy-theme-color-focus: #e8e8e8;
 
     /* Built-in Variables see https://reactflow.dev/learn/customization/theming */
-    --xy-node-border-default-color: #6a61d8;
-    --xy-bang-button-color: #8161f0;
+    --xy-node-border-color: #8771ff;
+    --xy-bang-button-color: #987cff;
 
-    --xy-node-boxshadow-default:
+    --main-accent-color: #7513ec;
+    --dark-accent-color: #150024;
+
+    --xy-node-boxshadow:
         0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d,
         0px 0.51px 1.01px 0px #0000001a;
 
-    --xy-node-border-radius-default: 8px;
-    --xy-node-background-color-default: #27282d;
+    --xy-node-border-radius: 8px;
+    /* --xy-node-background-color: #27282d; */
+    --xy-node-background-color: #222225;
     --xy-node-min-width: 200px;
 
     --xy-handle-background-color-default: #691919;
@@ -29,7 +33,7 @@ body {
 }
 
 .react-flow.dark {
-    --xy-node-boxshadow-default:
+    --xy-node-boxshadow:
         0px 3.54px 4.55px 0px rgba(255, 255, 255, 0.05),
         /* light shadow */
         0px 3.54px 4.55px 0px rgba(255, 255, 255, 0.13),
@@ -98,7 +102,7 @@ body {
     cursor: grab;
     /* Prevent zoom or scroll when dragging nodes on mobile */
     touch-action: none;
-    background: var(--xy-node-background-color-default);
+    background: var(--xy-node-background-color);
     font-size: 12px;
     text-wrap: nowrap;
     transition: background .4s;
@@ -110,7 +114,8 @@ body {
 }
 
 .dndflow .node-list-node-preview:hover {
-    background: #6829ff;
+    background: var(--main-accent-color);
+    /* background: #6829ff; */
 }
 
 .dndflow .node-list-node-preview.input {
@@ -139,9 +144,9 @@ body {
 
 
 .react-flow__node {
-    box-shadow: var(--xy-node-boxshadow-default);
-    border-radius: var(--xy-node-border-radius-default);
-    background-color: var(--xy-node-background-color-default);
+    box-shadow: var(--xy-node-boxshadow);
+    border-radius: var(--xy-node-border-radius);
+    background-color: var(--xy-node-background-color);
     min-width: var(--xy-node-min-width);
     display: flex;
     justify-content: center;
@@ -149,13 +154,33 @@ body {
     text-align: center;
     font-size: 12px;
     flex-direction: column;
-    border-color: var(--xy-node-border-default-color);
-    border-width: 1px;
+    border-color: var(--xy-node-border-color);
+    border-width: 2px;
     border-style: solid;
     color: var(--xy-node-color, var(--xy-node-color-default));
-    transition: box-shadow 0.2s, border .3s;
+    transition: box-shadow 0.4s, border .3s;
+}
 
+.react-flow__node .header {
+    background-color: var(--main-accent-color);
+    /* text-shadow: 0 0 20px black; */
+    /* color: #d7dcff; */
+}
 
+.react-flow__node button.action {
+    background-color: #140221;
+    /* color: #c9bfff; */
+    border-color: transparent;
+    outline: none;
+    transition: background-color .5s;
+}
+
+.react-flow__node button.action:hover {
+    background-color: var(--xy-bang-button-color);
+}
+
+.react-flow__node .output-box {
+    background-color: #42424c;
 }
 
 .react-flow__node:has(> .node-creator) {
@@ -163,19 +188,25 @@ body {
     border-width: 2px;
 }
 
-.node-creator .border-bottom,
-.node-creator .border-top {
+.node-creator .header,
+.node-creator .action {
+    background-color: var(--xy-node-background-color);
+    transition: background-color .5s;
     border-width: 2px;
 }
 
-.node-creator .border-bottom {
-    border-bottom-color: var(--xy-node-border-default-color);
+.node-creator .header {
+    border-bottom-color: var(--xy-node-border-color);
     border-bottom-style: solid;
 }
 
-.node-creator .border-top {
-    border-top-color: var(--xy-node-border-default-color);
+.node-creator .action {
+    border-top-color: var(--xy-node-border-color);
     border-top-style: solid;
+}
+
+.node-creator .action.connected {
+    background-color: var(--dark-accent-color);
 }
 
 .react-flow__node.selectable:focus {
@@ -184,21 +215,20 @@ body {
 }
 
 .react-flow__node.selectable:focus:active {
-    box-shadow: var(--xy-node-boxshadow-default);
+    box-shadow: var(--xy-node-boxshadow);
 }
 
 .react-flow__node.selectable:hover,
 .react-flow__node.draggable:hover {
     border-color: #8190ff;
-    box-shadow: 0 0 10px -2px #6343ff;
+    box-shadow: 0 0 15px 2px hsl(270, 100%, 56%);
 
 }
 
 .react-flow__node.selectable.selected {
     border-color: var(--xy-theme-selected2);
-    box-shadow: var(--xy-node-boxshadow-default);
     outline: 2px solid var(--xy-theme-selected2);
-    box-shadow: 0 0 21px 2px #4321ab;
+    box-shadow: 0 0 35px 3px hsl(265 100% 56% / 1);
 }
 
 .react-flow__node-group {
@@ -219,8 +249,9 @@ body {
 
 .react-flow__connectionline path,
 .react-flow__edge.updating .react-flow__edge-path {
-    stroke: var(--data-type-color, var(--xy-node-border-default-color));
+    stroke: var(--data-type-color, var(--xy-node-border-color));
 }
+
 .react-flow__connectionline path:not(.no-color),
 .react-flow__edge.updating .react-flow__edge-path {
     opacity: .5;
@@ -247,7 +278,7 @@ body {
 }
 
 .react-flow__handle.ghost {
-    border-color: var(--xy-node-border-default-color);
+    border-color: var(--xy-node-border-color);
 }
 
 .react-flow__handle.connectionindicator:hover {
@@ -339,7 +370,7 @@ body {
     transition:
         background-color 0.2s ease,
         border-color 0.2s ease;
-    box-shadow: var(--xy-node-boxshadow-default);
+    box-shadow: var(--xy-node-boxshadow);
     cursor: pointer;
 }
 
@@ -438,7 +469,7 @@ body {
     font-size: 1rem;
     color: inherit;
     margin-right: 0.5rem;
-    box-shadow: var(--xy-node-boxshadow-default);
+    box-shadow: var(--xy-node-boxshadow);
 }
 
 .xy-theme__select:focus {
@@ -488,10 +519,10 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #1d1d20;
+    background-color: var(--dark-accent-color);
     transition: 0.4s;
     border-radius: 34px;
-    border: 1.5px solid #6a61d8;
+    border: 1.5px solid var(--xy-node-border-color);
 }
 
 .slider .dot {
@@ -513,7 +544,7 @@ body {
 }
 
 input:checked+.slider {
-    background-color: #6a61d8;
+    background-color: var(--xy-node-border-color);
 }
 
 input:checked+.slider .dot {
@@ -524,15 +555,15 @@ input:checked+.slider .dot {
 
 /* og */
 input {
-    background: var(--xy-background-color);
+    background: var(--dark-accent-color);
     border: 1.5px solid #6a61d8;
     border-radius: 3px;
 }
 
 input[type="checkbox"]:not(:checked) {
-    background: var(--xy-background-color);
+    background: var(--dark-accent-color);
     /* light gray background */
-    border: 1px solid #6a61d8;
+    border: 1px solid var(--xy-node-border-color);
     /* custom border */
     width: 16px;
     height: 16px;
@@ -543,7 +574,7 @@ input[type="checkbox"]:not(:checked) {
 }
 
 input[type="checkbox"]:checked {
-    accent-color: #8161f0;
+    accent-color: var(--xy-node-border-color);
     border-radius: 3px;
     width: 16px;
     height: 16px;
@@ -604,7 +635,7 @@ input[type="checkbox"]:checked {
 .dropdown .trigger {}
 
 .dropdown:focus {
-    border: 2px solid #4c30a9;
+    /* border: 2px solid #4c30a9; */
     /* outline: none; */
 }
 
@@ -613,7 +644,7 @@ input[type="checkbox"]:checked {
 }
 
 .dropdown .option.selected {
-    background: #513dab;
+    background:var(--main-accent-color);
 }
 
 .dropdown .option {
@@ -628,4 +659,98 @@ input[type="checkbox"]:checked {
 .tabs button.main {
     transition: background .5s;
     outline: none !important;
+}
+.tabs .header {
+    background: linear-gradient(var(--dark-accent-color), #401278);
+    border-bottom: 1.5px solid var(--xy-theme-hover);
+}
+
+.tab-button {
+    box-shadow: #7587ff 0px 12px 21px -20px inset;
+    transition: box-shadow .5s, border-color .6s;
+    background-color: var(--dark-accent-color);
+}
+
+.tab-button:hover {
+    box-shadow: #7587ff 0px 12px 30px -20px inset;
+}
+
+.tab-button.active-tab {
+    /* box-shadow: #7587ff 0px 17px 21px -20px inset; */
+}
+
+.tab-button svg {
+    height: 1.75em;
+    width: 1.75em;
+}
+
+button {
+    border-radius: 8px;
+    border: 1.5px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    background-color: var(--main-accent-color);
+    cursor: pointer;
+    transition: border-color .6s;
+}
+
+button:hover {
+    border-color: var(--xy-theme-hover);
+}
+
+button.active-tab,
+button:focus,
+button:focus-visible {
+    outline: 2px solid #858bff;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        color: #213547;
+        background-color: #ffffff;
+    }
+
+    a:hover {
+        color: #747bff;
+    }
+
+    button {
+        background-color: #f9f9f9;
+    }
+}
+
+
+html,
+body {
+    margin: 0;
+    font-family: sans-serif;
+    box-sizing: border-box;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+}
+
+.context-menu {
+    background: white;
+    border-style: solid;
+    box-shadow: 10px 19px 20px rgba(0, 0, 0, 10%);
+    position: absolute;
+    z-index: 10;
+}
+
+.context-menu button {
+    border: none;
+    display: block;
+    padding: 0.5em;
+    text-align: left;
+    width: 100%;
+}
+
+.context-menu button:hover {
+    background: white;
 }

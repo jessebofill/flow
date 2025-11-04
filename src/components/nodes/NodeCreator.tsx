@@ -134,7 +134,7 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
             }}
         >
             <div
-                className='border-bottom'
+                className='header'
                 style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -233,12 +233,11 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
                 </div>
             </div>
             <div
-                className='border-top'
+                className={`action ${isBangConnected ? 'connected' : ''}`}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     height: '3.2em',
-                    background: isBangConnected ? '#8161f0' : '#1d1d20',
                     borderBottomLeftRadius: 8,
                     borderBottomRightRadius: 8,
                 }}
