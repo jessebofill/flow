@@ -125,7 +125,7 @@ export const FlowGraphEditor: FC<object> = () => {
 
     const setNodeCreator = useCallback((viewport: Viewport, add?: boolean) => {
         const pane = ref.current!.getBoundingClientRect();
-        const inset = 10; // pixels from left edge of screen
+        const inset = 15; // pixels from left edge of screen
         const width = pane.width - inset * 2;
         const height = pane.height - inset * 2;
         const canvasX = (inset - viewport.x) / viewport.zoom;

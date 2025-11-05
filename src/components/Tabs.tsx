@@ -10,41 +10,51 @@ export interface TabData {
 
 export interface TabsProps {
     tabs: TabData[];
+    tabBarStartExtraElt?: ReactElement;
+    tabBarEndExtraElt?: ReactElement;
 };
 
-export const Tabs: FC<TabsProps> = ({ tabs }) => {
+export const Tabs: FC<TabsProps> = ({ tabBarStartExtraElt, tabBarEndExtraElt, tabs }) => {
     const [activeTab, setActiveTab] = useState(tabs[0].id);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const activeIndex = tabs.findIndex(tab => tab.id === activeTab);
 
     return (
         <div className='tabs' style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{
-                display: 'flex',
-                gap: '8px',
-                padding: '0 4px',
-                overflow: 'clip',
-                // background: '#27282d',
-                flex: '1'
-            }}>
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        className={`tab-button ${activeTab === tab.id ? 'active-tab' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                        style={{
-                            position: 'relative',
-                            bottom: '-8px',
-                            // background: '#211f28',
-                            padding: '5px 8px',
-                            flex: '1',
-                            display: 'flex',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        {tab.icon}
-                    </button>
-                ))}
+            <div style={{ display: 'flex' }}>
+                {tabBarStartExtraElt && <div style={{ display: 'flex', alignItems: 'end', paddingLeft: '4px' }}>
+                    {tabBarStartExtraElt}
+                </div>}
+                <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    padding: '0 4px',
+                    overflow: 'clip',
+                    // background: '#27282d',
+                    flex: '1'
+                }}>
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            className={`tab-button ${activeTab === tab.id ? 'active-tab' : ''}`}
+                            onClick={() => setActiveTab(tab.id)}
+                            style={{
+                                position: 'relative',
+                                bottom: '-8px',
+                                // background: '#211f28',
+                                padding: '5px 8px',
+                                flex: '1',
+                                display: 'flex',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            {tab.icon}
+                        </button>
+                    ))}
+                </div>
+                {tabBarEndExtraElt && <div style={{ display: 'flex', alignItems: 'end', paddingRight: '4px' }}>
+                    {tabBarEndExtraElt}
+                </div>}
             </div>
             <div
                 ref={containerRef}

@@ -6,6 +6,7 @@ body {
     /* Custom Variables */
     --xy-theme-selected: #712aff;
     --xy-theme-selected2: #a490ff;
+    --xy-theme-selected3: #858bff;
     --xy-theme-hover: #7c65ff;
     --xy-theme-edge-hover: rgb(190, 31, 110);
     --xy-theme-color-focus: #e8e8e8;
@@ -142,6 +143,67 @@ body {
     }
 } */
 
+.sidebar-open-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: var(--main-accent-color);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .8s, visibility .8s;
+}
+
+.sidebar-hover-zone {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    z-index: 5;
+    width: 10px;
+    background: linear-gradient(to left, var(--main-accent-color), transparent);
+    transition: opacity 0.4s ease, visibility 0.4s ease, background .6s ease, width .4s;
+}
+
+.sidebar-hover-zone.inactive,
+.sidebar-hover-zone:not(.mouse-up) {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.sidebar-hover-zone.active.mouse-up:hover {
+    width: 30px;
+}
+
+.sidebar-hover-zone.active.mouse-up:hover .sidebar-open-button {
+    opacity: 1;
+    visibility: visible;
+}
+
+.sidebar-resizer {
+    position: absolute;
+    top: 0;
+    left: -3px;
+    width: 6px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 5;
+    background-color: transparent;
+    transition: background-color .5s;
+}
+
+.sidebar-resizer:hover {
+    background-color: var(--main-accent-color);
+}
+
+.sidebar-close-button {
+    transition: color .4s;
+}
+
+.sidebar-close-button:hover {
+    color: var(--xy-theme-selected3);
+}
 
 .react-flow__node {
     box-shadow: var(--xy-node-boxshadow);
@@ -644,7 +706,7 @@ input[type="checkbox"]:checked {
 }
 
 .dropdown .option.selected {
-    background:var(--main-accent-color);
+    background: var(--main-accent-color);
 }
 
 .dropdown .option {
@@ -660,6 +722,7 @@ input[type="checkbox"]:checked {
     transition: background .5s;
     outline: none !important;
 }
+
 .tabs .header {
     background: linear-gradient(var(--dark-accent-color), #401278);
     border-bottom: 1.5px solid var(--xy-theme-hover);
@@ -704,7 +767,7 @@ button:hover {
 button.active-tab,
 button:focus,
 button:focus-visible {
-    outline: 2px solid #858bff;
+    outline: 2px solid var(--xy-theme-selected3);
 }
 
 @media (prefers-color-scheme: light) {

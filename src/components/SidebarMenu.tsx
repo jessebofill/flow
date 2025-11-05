@@ -1,13 +1,15 @@
-import { useRef, useState, type FC } from 'react';
+import { useEffect, useRef, useState, type FC } from 'react';
 import { NodeList, NodeListHeader } from './NodeList';
 import { AiOutlineNodeIndex } from 'react-icons/ai';
 import { IoMdEye } from 'react-icons/io';
 import { type TabData, Tabs } from './Tabs';
+import { TbLayoutSidebarRightCollapse, TbLayoutSidebarRightExpand } from 'react-icons/tb';
 
 export const SidebarMenu: FC = () => {
     const [width, setWidth] = useState(240);
     const [collapsed, setCollapsed] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [mouseDown, setMouseDown] = useState(false);
     const widthRef = useRef(width);
     const outerRef = useRef<HTMLDivElement>(null);
     const innerRef = useRef<HTMLDivElement>(null);
@@ -15,6 +17,23 @@ export const SidebarMenu: FC = () => {
     const maxWidth = 600;
     const transitionTimingFunction = 'ease-in-out'
     const transitionDuration = '.5s'
+
+    const tabs: TabData[] = [
+        {
+            id: 'node-list',
+            label: 'Nodes',
+            icon: <AiOutlineNodeIndex />,
+            content: <NodeList />,
+            header: <NodeListHeader />
+        },
+        {
+            id: 'node-list2',
+            label: 'Watchlist',
+            icon: <IoMdEye />,
+            content: <div />,
+            header: <div />
+        }
+    ];
 
     const handleDrag = (e: React.MouseEvent) => {
         const startX = e.clientX;
@@ -41,22 +60,23 @@ export const SidebarMenu: FC = () => {
         document.addEventListener('mouseup', onMouseUp);
     };
 
-    const tabs: TabData[] = [
-        {
-            id: 'node-list',
-            label: 'Nodes',
-            icon: <AiOutlineNodeIndex />,
-            content: <NodeList />,
-            header: <NodeListHeader />
-        },
-        {
-            id: 'node-list2',
-            label: 'Watchlist',
-            icon: <IoMdEye />,
-            content: <div />,
-            header: <div />
-        }
-    ];
+    useEffect(() => {
+        const handleDown = () => setMouseDown(true);
+        const handleUp = () => setMouseDown(false);
+
+        window.addEventListener('mousedown', handleDown, true);
+        window.addEventListener('mouseup', handleUp, true);
+        return () => {
+            window.removeEventListener('mousedown', handleDown, true);
+            window.removeEventListener('mouseup', handleUp, true);
+        };
+    }, []);
+
+    const openClose = () =>
+        setCollapsed(prev => {
+            if (outerRef.current) outerRef.current.style.width = `${prev ? width : 0}px`;
+            return !prev
+        });
 
     return (
         <div
@@ -70,40 +90,18 @@ export const SidebarMenu: FC = () => {
                 transitionTimingFunction,
                 transitionDuration
             }}>
-            <button
-                onClick={() => setCollapsed(prev => {
-                    if (outerRef.current) outerRef.current.style.width = `${prev ? width : 0}px`;
-                    return !prev
-
-                })}
-                style={{
-                    position: 'absolute',
-                    top: 10,
-                    left: '-40px',
-                    width: '30px',
-                    height: '30px',
-                    background: '#27282d',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    zIndex: 10,
-                }}
-            >
-                {collapsed ? '◀' : '▶'}
-            </button>
+            <div className={`sidebar-hover-zone ${collapsed ? 'active' : 'inactive'} ${!mouseDown ? 'mouse-up' : ''}`}>
+                <div
+                    onClick={openClose}
+                    className="sidebar-open-button"
+                >
+                    <TbLayoutSidebarRightExpand size={'1.8em'} />
+                </div>
+            </div>
             <div
+                className='sidebar-resizer'
                 onMouseDown={handleDrag}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: '-3px',
-                    width: '6px',
-                    height: '100%',
-                    cursor: 'ew-resize',
-                    background: 'transparent',
-                    zIndex: '1',
-                    pointerEvents: collapsed ? 'none' : 'all'
-                }}
+                style={{ pointerEvents: collapsed ? 'none' : 'all' }}
             />
             <aside
                 ref={innerRef}
@@ -120,9 +118,12 @@ export const SidebarMenu: FC = () => {
                     transitionDuration
                 }}
             >
-                <Tabs tabs={tabs} />
+                <Tabs tabs={tabs} tabBarStartExtraElt={
+                    <div className='sidebar-close-button' onClick={openClose} style={{ display: 'flex', cursor: 'pointer', paddingBottom: '2px' }}>
+                        <TbLayoutSidebarRightCollapse size={'2em'} />
+                    </div>
+                } />
             </aside>
         </div>
-
     );
 };
