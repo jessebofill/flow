@@ -5,7 +5,6 @@ import { appDb } from '../database';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
 import { DataTypeNames } from '../types/types';
 
-
 export function getConnections(edges: Edge[], nodeId: string, handleId: string) {
     return edges.filter((edge) => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId);
 }

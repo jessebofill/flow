@@ -9,6 +9,7 @@ import type { ComponentType } from 'react';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
 import { toast } from 'sonner';
 import { Tags } from './tags';
+import { EventNotifier, Events } from '../EventNotifier';
 
 export type NodeInstanceRegistry = Map<string, NodeBase<HandleDefs>>;
 
@@ -58,6 +59,7 @@ export function registerNodeType<T extends NodeClass>(nodeClass: T, isUserNode?:
     if (nodeClass.isBangable) nodeClass.tags.push(Tags.Action);
     else nodeClass.tags.push(Tags.NotAction);
     if (isUserNode) nodeClass.tags.push(Tags.User);
+    EventNotifier.dispatch(Events.UpdateNodeTypes);
 }
 
 export function createNodeFromClassDef(NodeClass: NodeClass, pos?: XYPosition): Node<CustomNodeDataProps> {

@@ -1,6 +1,5 @@
 import type { FC } from 'react';
 import { useContext, useRef, useState } from 'react';
-import { coreNodeTypes } from '../const/nodeTypes';
 import { BiAddToQueue } from 'react-icons/bi';
 import { FaTag } from 'react-icons/fa6';
 import Tippy from '@tippyjs/react';
@@ -45,17 +44,13 @@ export const NodeListHeader: FC<{}> = () => {
 
 const TagSelector: FC<object> = () => {
     const options = tags;
-    const { setNodeList } = useContext(NodeListContext);
+    const { tag: selectedTag, setTag } = useContext(NodeListContext);
     const [open, setOpen] = useState(false);
-    const [selected, setSelected] = useState(options[0]);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const handleBlur = (e: React.FocusEvent) => {
         const next = e.relatedTarget as HTMLElement | null;
-
-        if (!next || !dropdownRef.current?.contains(next)) {
-            setOpen(false);
-        }
+        if (!next || !dropdownRef.current?.contains(next)) setOpen(false);
     };
 
     return (
@@ -74,7 +69,7 @@ const TagSelector: FC<object> = () => {
                         zIndex: '1001'
                     }}
                     onClick={() => setOpen((prev) => !prev)} onBlurCapture={handleBlur}>
-                    {selected}
+                    {selectedTag}
                     <FaTag />
                 </button>
             </div>
@@ -96,12 +91,11 @@ const TagSelector: FC<object> = () => {
                     {options.map((option) =>
                         <div
                             key={option}
-                            className={`option ${selected === option ? 'selected' : ''}`}
+                            className={`option ${selectedTag === option ? 'selected' : ''}`}
                             style={{ padding: '3px 10px' }}
                             onMouseDown={() => {
-                                setSelected(option);
+                                setTag(option);
                                 setOpen(false);
-                                setNodeList(() => Object.values(coreNodeTypes).filter(node => node.tags.includes(option)));
                             }}
                         >
                             {option}
