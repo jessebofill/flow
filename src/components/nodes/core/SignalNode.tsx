@@ -24,7 +24,7 @@ export class SignalNode extends NodeBase<typeof handles> {
     protected actionButtonText: string = 'Send';
     protected timeoutId = 0;
 
-    transform = (id: string) => {
+    protected transform(id: string) {
         if (!isBangInHandleId(id)) return null;
 
         const delay = this.state.delaySec ?? 0;

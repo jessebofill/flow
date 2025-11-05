@@ -3,18 +3,17 @@ import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets } from '../../const/utils';
 import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix } from '../../const/const';
-import { DataTypeNames, type DataTypeName, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
+import { DataTypeNames, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from '../../const/nodeTypes';
 import { NodeTitleEditor } from '../NodeTitleEditor';
 import type { Tags } from '../../const/tags';
+import { toast } from 'sonner';
 
-const dataTypeColorMap: { [K in DataTypeName]: string } = {
-    bang: '#ef47f1',
-    boolean: '#fafc77',
-    number: '#4eb3ff'
-};
+let transformCalls = 0;
+const callLimit = 2000;
+const timeSpan = 10000;
 
 export function defineHandles<T extends HandleDefs>(defs: T): T {
     return defs;
@@ -55,6 +54,7 @@ export type NodeBaseProps = Pick<NodeProps<Node<CustomNodeDataProps>>, 'id' | 'd
     isVirtual: boolean;
     stateSnapshot: StateSnapshot;
 }
+
 export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBaseProps, State<Defs>> {
     declare static tags: Tags[];
     static contextType = GraphStateContext;
@@ -163,6 +163,18 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         this.setState(prev => ({ ...prev }));
     }
 
+    private transformSafe(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null {
+        if (!transformCalls) {
+            setTimeout(() => {
+                if (transformCalls >= callLimit) toast.error(`${callLimit} calls occurred in within ${timeSpan / 1000}s period. Graph likely contains an inifinite loop.`);
+                else if (transformCalls >= callLimit * 0.35) toast.warning(`${callLimit * 0.35} calls occurred within ${timeSpan / 1000}s. Graph may contain an inifinite loop.`)
+                transformCalls = 0;
+            }, timeSpan);
+        }
+        transformCalls++;
+        return this.transform(id);
+    }
+
     private setStateAsync<S extends State<Defs>, K extends keyof S>(
         state: ((prevState: Readonly<S>, props: Readonly<typeof this.props>) => Pick<S, K> | S | null) | (Pick<S, K> | S | null)
     ): Promise<void> {
@@ -173,7 +185,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
             });
         } else {
             return new Promise<void>(resolve => {
-                this.setState(state as Readonly<State<Defs>>, resolve);
+                setTimeout(() => this.setState(state as Readonly<State<Defs>>, resolve), 0);
             });
         }
     }
@@ -185,7 +197,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         if (handleId !== isActiveHandleId && !this.state[isActiveHandleId]) return;
         console.log('setr', handleId, value, this.id)
         await this.setStateAsync({ [handleId as keyof State<Defs>]: value ?? 0 });
-        const output = this.transform(handleId);
+        const output = this.transformSafe(handleId);
         if (output !== null) await this.setOutput(output);
     };
 
@@ -219,7 +231,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
 
     private async bang(bangedOnHandleId: string) {
         if (!this.state[isActiveHandleId]) return;
-        const output = this.transform(bangedOnHandleId);
+        const output = this.transformSafe(bangedOnHandleId);
         console.log(`${this.id}: banged with `, output, bangedOnHandleId)
         if (output !== null && bangedOnHandleId === bangInHandleId) {
             await this.setOutput(output);
@@ -236,7 +248,6 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                 this.handleDefs[handleId];
         const isExtraOut = this.getExtraOutIds().includes(handleId);
         const isOut = handleId === mainOutputHandleId || handleId === bangOutHandleId || isExtraOut;
-        const color = dataTypeColorMap[handleDef.dataType];
 
         return (
             <div key={handleId as string} ref={this.ref} style={{ display: 'flex', flexDirection: isOut ? 'row' : 'row-reverse', height: '3em', gap: '5px', alignItems: 'center', alignSelf: isOut ? 'flex-end' : 'flex-start' }} >
@@ -298,7 +309,6 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                             width: '10px'
                         }}
                         onConnect={connection => {
-                            console.log('connection', connection.sourceHandle, connection.targetHandle, this.id)
                             if (connection.source === nodeCreatorNodeId) return;
                             if (connection.sourceHandle === null || connection.sourceHandle === undefined) throw new Error('Connecting source handle id did not exist');
                             if (connection.targetHandle === null || connection.targetHandle === undefined) throw new Error('Connecting target handle id did not exist');
@@ -308,17 +318,12 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                         }}
                     />
                 </Tippy>
-
             </div>
         );
     };
 
     protected renderContent(): ReactNode {
-        // console.log('stat', this.state)
-        // return <div>Test</div>;
         const output = this.state[mainOutputHandleId];
-        //@ts-ignore
-        // return <div>{String(output)}</div>;
         return <div>{output !== undefined ? String(output) : false}</div>;
     }
 
@@ -334,14 +339,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         const rightBang = this._isBangable && this.getHandleElement(bangOutHandleId);
         const extraOuts = this.getExtraOutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
-            <div style={{
-                // boxShadow: 'rgb(105 121 248 / 24%) 0px 0px 20px 0px', 
-                // borderRadius: 8,
-                // minWidth: '200px',
-                // background: '#27282d',
-                // border: '1px solid #6a61d8',
-                width: '100%'
-            }}>
+            <div style={{ width: '100%' }}>
                 <div
                     className='header'
                     style={{

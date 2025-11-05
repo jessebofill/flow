@@ -40,7 +40,7 @@ export class ClockPulseNode extends NodeBase<typeof handles> {
         }
     }
 
-    transform = (id: string) => {
+    protected transform(id: string) {
         if (!isBangInHandleId(id)) {
             if (this.running) {
                 this.stop();
