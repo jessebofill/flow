@@ -1,9 +1,10 @@
 import { type Connection, type Edge, type Node } from '@xyflow/react';
-import { globalNodeInstanceRegistry } from './nodeTypes';
+import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from './nodeTypes';
 import { bangInHandleId, nodeCreatorNodeId } from './const';
 import { appDb } from '../database';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
-import { DataTypeNames } from '../types/types';
+import { DataTypeNames, type HandleDefs } from '../types/types';
+import type { GraphSnapshot, NodeBase, NodeBaseProps } from '../components/nodes/NodeBase';
 
 export function getConnections(edges: Edge[], nodeId: string, handleId: string) {
     return edges.filter((edge) => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId);
@@ -74,7 +75,7 @@ export function validateConnection(connection: Connection | Edge, edges: Edge[])
     if (targetHandle === null || targetHandle === undefined) throw new Error('Target node had no hanlde id to connect to');
 
     if (source === nodeCreatorNodeId) {
-        if (sourceHandle === bangInHandleId ) return getNodeHandleType(target, targetHandle) === DataTypeNames.Bang;
+        if (sourceHandle === bangInHandleId) return getNodeHandleType(target, targetHandle) === DataTypeNames.Bang;
         return true;
         // const existingTargets = getConnectedTargets(edges, source, sourceHandle);
         // if (existingTargets.length <= 0) return true;
@@ -91,5 +92,35 @@ export async function onAppLoad() {
     });
 }
 
+export function retrieveGraph(isVirtual: boolean, graphId: string, graphStateId: string, replaceParentId?: string) {
+    const stateId = graphStateId || graphId;
+    const graph = appDb.cache.graphs[graphId];
+    const graphState = appDb.cache.graphStates[stateId];
+    if (!graph) throw new Error(`Graph ${graphId} was not found in the database cache`);
+    if (!graphState) throw new Error(`Graph state ${stateId} was not found in the database cache`);
+    const nodeInstanceRegistry: NodeInstanceRegistry = new Map<string, NodeBase<HandleDefs>>();
+    const edges = graph.edges.map(edge => {
+        const newEdge = { ...edge };
+        if (replaceParentId && newEdge.target === nodeCreatorNodeId) newEdge.target = replaceParentId;
+        if (replaceParentId && newEdge.source === nodeCreatorNodeId) newEdge.source = replaceParentId;
+        return newEdge;
+    })
+
+    const nodes = Object.entries(graphState.nodes).map(([nodeId, nodeData]) => {
+        const graphSnapshot: GraphSnapshot = { ...nodeData.initState, edges };
+        const props: NodeBaseProps = {
+            id: nodeId,
+            data: {
+                nodeInstanceRegistry,
+                graphSnapshot,
+                isVirtual
+            }
+        };
+        if (!isVirtual) props.position = nodeData.position ?? { x: 0, y: 0 };
+        return [nodeData.defNodeName, props] as const;
+    });
+
+    return { nodeInstanceRegistry, edges, nodes };
+}
 
 

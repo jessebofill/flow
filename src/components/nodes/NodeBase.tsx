@@ -1,5 +1,5 @@
-import { Position, type Node, Handle, type NodeProps, type Edge } from '@xyflow/react';
-import { Component, createRef, type ContextType, type ReactNode } from 'react';
+import { Position, type Node, Handle, type NodeProps, type Edge, type XYPosition } from '@xyflow/react';
+import { Component, createRef, type ContextType, type ReactNode, type RefObject } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets } from '../../const/utils';
 import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix } from '../../const/const';
@@ -10,6 +10,8 @@ import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from '../../con
 import { NodeTitleEditor } from '../NodeTitleEditor';
 import type { Tags } from '../../const/tags';
 import { toast } from 'sonner';
+import { ContextMenu } from '../ContextMenu';
+import { NodeContextMenuItems } from '../NodeContextMenuItems';
 
 let transformCalls = 0;
 const callLimit = 2000;
@@ -42,19 +44,23 @@ type State<Defs extends Record<string, HandleDef>> = {
 };
 export type CustomNodeDataProps = {
     nodeInstanceRegistry: NodeInstanceRegistry;
+    isVirtual: boolean;
+    graphSnapshot?: GraphSnapshot;
 }
 
-export type StateSnapshot = {
+export type GraphSnapshot = {
+    edges: Edge[];
     react: object;
     other: object;
-    edges: Edge[];
 }
 
 export type NodeBaseProps = Pick<NodeProps<Node<CustomNodeDataProps>>, 'id' | 'data'> & {
-    isVirtual: boolean;
-    stateSnapshot: StateSnapshot;
+    position?: XYPosition;
 }
 
+/**
+ * ! Do not initialize savable state directly in implementing class declarations. Use 'declare' to define shape and set in 'setDefaults' 
+ */
 export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBaseProps, State<Defs>> {
     declare static tags: Tags[];
     static contextType = GraphStateContext;
@@ -80,10 +86,14 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
     constructor(props: NodeBaseProps) {
         super(props);
         this.id = props.id;
-        this.isVirtualInstance = props.isVirtual ?? false;
+        this.isVirtualInstance = props.data.isVirtual ?? false;
         this.nodeInstanceRegistry = props.data.nodeInstanceRegistry;
         if (this.isVirtualInstance) this.nodeInstanceRegistry.set(this.id, this);
-        this.initState(props.isVirtual ? props.stateSnapshot : undefined);
+        this.initState(props.data.graphSnapshot);
+        console.log(`loading node ${this.name}
+id: ${this.id}
+stateId: ${this.saveableState?.graphStateId}`);
+        console.log(this.saveableState)
     }
 
     get name() {
@@ -94,14 +104,14 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         return (this.constructor as NodeClass).isBangable;
     }
 
-    private initState(stateSnapshot?: StateSnapshot) {
+    private initState(graphSnapshot?: GraphSnapshot) {
         this.setDefaults();
         this.state = { ...this.state, [isActiveHandleId]: true };
 
-        if (stateSnapshot) {
-            this.state = { ...this.state, ...stateSnapshot.react as State<Defs> };
-            this.saveableState = { ...this.saveableState, ...stateSnapshot.other };
-            this.virtualEdges = stateSnapshot.edges;
+        if (graphSnapshot) {
+            this.state = { ...this.state, ...graphSnapshot.react as State<Defs> };
+            this.saveableState = { ...this.saveableState, ...graphSnapshot.other };
+            this.virtualEdges = graphSnapshot.edges;
         }
     }
 
@@ -250,7 +260,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         const isOut = handleId === mainOutputHandleId || handleId === bangOutHandleId || isExtraOut;
 
         return (
-            <div key={handleId as string} ref={this.ref} style={{ display: 'flex', flexDirection: isOut ? 'row' : 'row-reverse', height: '3em', gap: '5px', alignItems: 'center', alignSelf: isOut ? 'flex-end' : 'flex-start' }} >
+            <div key={handleId as string} style={{ display: 'flex', flexDirection: isOut ? 'row' : 'row-reverse', height: '3em', gap: '5px', alignItems: 'center', alignSelf: isOut ? 'flex-end' : 'flex-start' }} >
                 {!isOut && handleId !== bangInHandleId &&
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                         <NodeInput
@@ -339,7 +349,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         const rightBang = this._isBangable && this.getHandleElement(bangOutHandleId);
         const extraOuts = this.getExtraOutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
-            <div style={{ width: '100%' }}>
+            <div style={{ width: '100%' }} ref={this.ref}>
                 <div
                     className='header'
                     style={{
@@ -413,6 +423,9 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                         {rightBang}
                     </div>
                 </div>}
+                <ContextMenu elementContextMenuRef={this.ref} arrow={undefined} direction='right' portal={false}>
+                    <NodeContextMenuItems nodeId={this.id} type={this.name}/>
+                </ContextMenu>
             </div>
         );
     }
@@ -425,7 +438,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
                     if (node.id !== this.id) return node;
                     const x = node.position.x - (node.measured?.width ?? 0) / 2;
                     const y = node.position.y - 10;
-                    return { ...node, position: { x, y }, style: { visibility: 'visible' } };
+                    return { ...node, position: { x, y }, style: { visibility: 'visible', opacity: 1 } };
                 })
             });
         }, 1);

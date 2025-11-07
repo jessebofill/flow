@@ -220,7 +220,7 @@ body {
     border-width: 2px;
     border-style: solid;
     color: var(--xy-node-color, var(--xy-node-color-default));
-    transition: box-shadow 0.4s, border .3s;
+    transition: box-shadow 0.4s, border .3s, opacity .3s;
 }
 
 .react-flow__node .header {
@@ -618,7 +618,7 @@ input:checked+.slider .dot {
 /* og */
 input {
     background: var(--dark-accent-color);
-    border: 1.5px solid #6a61d8;
+    border: 1.5px solid var(--xy-node-border-color);
     border-radius: 3px;
 }
 

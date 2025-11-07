@@ -3,7 +3,7 @@ import { useContext, useRef, useState } from 'react';
 import { BiAddToQueue } from 'react-icons/bi';
 import { FaTag } from 'react-icons/fa6';
 import Tippy from '@tippyjs/react';
-import { CreateNodeCallback } from '../contexts/NodeCreatorContext';
+import { NodeCreatorCallbacks } from '../contexts/NodeCreatorContext';
 import { NodeListContext } from '../contexts/NodeListContext';
 import { tags } from '../const/tags';
 import { DraggableNodeListPreview } from './NodeListPreview';
@@ -19,7 +19,7 @@ export const NodeList: FC<object> = () => {
 };
 
 export const NodeListHeader: FC<{}> = () => {
-    const { createNode } = useContext(CreateNodeCallback);
+    const { createNode } = useContext(NodeCreatorCallbacks);
 
     return (
         <div style={{ display: 'flex', gap: '10px' }}>

@@ -1,7 +1,7 @@
 import { type Edge } from '@xyflow/react';
-import { bangInHandleId, bangOutHandleId, nodeCreatorNodeId, variInHandleIdPrefix, variOutHandleIdPrefix } from '../../../const/const';
+import { bangInHandleId, bangOutHandleId, variInHandleIdPrefix, variOutHandleIdPrefix } from '../../../const/const';
 import { coreNodeTypes, registerNodeType, type NodeInstanceRegistry } from '../../../const/nodeTypes';
-import { getConnectedSources, getConnectedTargets } from '../../../const/utils';
+import { getConnectedSources, getConnectedTargets, retrieveGraph } from '../../../const/utils';
 import { appDb, type GraphState, type GraphStateNode } from '../../../database';
 import { isBangInHandleId, NodeBase, type NodeBaseProps } from '../NodeBase';
 import { DataTypeNames, type HandleDefs } from '../../../types/types';
@@ -11,9 +11,13 @@ export class ProxyNode extends NodeBase<{}> {
     protected handleDefs: HandleDefs = {};
     private internalEdges: Edge[] = [];
     private internalNodeInstanceRegistry!: NodeInstanceRegistry;
+    declare saveableState: { existingGraphStateId?: string };
     constructor(props: NodeBaseProps) {
         super(props);
         this.load();
+        /** save the node id as graph state id after loading, so that if this node gets saved in another graph it can know
+         * which state to use when being retored */
+        if (!this.saveableState.existingGraphStateId) this.saveableState.existingGraphStateId = this.id;
     }
 
     protected transform(id: string) {
@@ -33,8 +37,16 @@ export class ProxyNode extends NodeBase<{}> {
         const { graphId, handleDefs, actionLabel } = appDb.cache.userNodes[this.name];
         this.handleDefs = handleDefs;
         if (actionLabel) this.actionButtonText = actionLabel;
-        const graphStateId = this.isVirtualInstance ? this.id : graphId;
-        const internalRegistry = this.instantiateVirtualNodes(graphId, graphStateId);
+        /**
+         * virtual instence should always use node id for graphStateId, as the node can be instanced with the premade id.
+         * otherewise if rendering, node will have a new unique id, so check if it had existing graphStateId in its savable state.
+         * (ex. when proxy node is rendered within a restored graph: loading graph/ editing node that contains this proxy)
+         * if no savable state use the graphId which is the base state saved when the node was created.
+         * (this case just means instancing proxy node normally)
+         */
+        const graphStateId = this.isVirtualInstance ? this.id : this.saveableState.existingGraphStateId ?? graphId;
+        const { edges, nodeInstanceRegistry: internalRegistry } = this.instantiateVirtualNodes(graphId, graphStateId);
+        this.internalEdges = edges;
         this.internalNodeInstanceRegistry = internalRegistry;
         internalRegistry.set(this.id, this);
         this.mergeNodeInstanceRegistries(internalRegistry);
@@ -117,35 +129,14 @@ export class ProxyNode extends NodeBase<{}> {
     }
 
     instantiateVirtualNodes(graphId: string, graphStateId?: string) {
-        const stateId = graphStateId ?? graphId;
-        const graph = appDb.cache.graphs[graphId];
-        const graphState = appDb.cache.graphStates[stateId];
-        if (!graph) throw new Error(`Graph ${graphId} was not found in the database cache`);
-        if (!graphState) throw new Error(`Graph state ${stateId} was not found in the database cache`);
-        const nodeInstanceRegistry: NodeInstanceRegistry = new Map<string, NodeBase<HandleDefs>>();
-        const edges = graph.edges.map(edge => {
-            const newEdge = { ...edge };
-            if (newEdge.target === nodeCreatorNodeId) newEdge.target = this.id;
-            if (newEdge.source === nodeCreatorNodeId) newEdge.source = this.id;
-            return newEdge;
-        })
-        this.internalEdges = edges;
-
-        Object.entries(graphState.nodes).forEach(([nodeId, nodeData]) => {
-            console.log('def name', nodeData.defNodeName)
-            const NodeClass = Object.entries(coreNodeTypes).find(([identifier]) => identifier === nodeData.defNodeName)?.[1];
+        const { nodes, edges, nodeInstanceRegistry } = retrieveGraph(true, graphId, graphStateId ?? graphId, this.id);
+        nodes.forEach(([defNodeName, props]) => {
+            const NodeClass = Object.entries(coreNodeTypes).find(([identifier]) => identifier === defNodeName)?.[1];
             if (!NodeClass) throw new Error('Could not find the node class to instantiate when loading saved graph. Was its defNodeName changed?');
-
-            const stateSnapshot = { ...nodeData.initState, edges };
-            const props: NodeBaseProps = {
-                data: { nodeInstanceRegistry },
-                id: nodeId,
-                stateSnapshot,
-                isVirtual: true
-            };
-            return new NodeClass(props);
+            new NodeClass(props);
         });
-        return nodeInstanceRegistry;
+
+        return { nodeInstanceRegistry, edges };
     }
 
     saveSubGraphState() {

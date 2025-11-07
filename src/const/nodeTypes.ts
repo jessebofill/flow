@@ -71,10 +71,11 @@ export function createNodeFromClassDef(NodeClass: NodeClass, pos?: XYPosition): 
         id: nodeId,
         position: pos ?? { x: 0, y: 0 },
         data: {
-            nodeInstanceRegistry: globalNodeInstanceRegistry
+            nodeInstanceRegistry: globalNodeInstanceRegistry,
+            isVirtual: false
         },
         type: rfIdentifier,
-        style: { visibility: 'hidden' }
+        style: { visibility: 'hidden', opacity: 0 }
     }
 }
 

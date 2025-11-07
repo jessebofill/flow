@@ -3,11 +3,11 @@ import { useCallback, useContext, useEffect, useState, type CSSProperties, type 
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets, getIslandOfNode, getNodeHandleType } from '../../const/utils';
 import { useNewNodeCreatorState, type NodeCreatorHandleData } from '../../hooks/useNewNodeCreatorState';
-import { DataTypeNames, type HandleData } from '../../types/types';
+import { DataTypeNames, type HandleData, type HandleDefs } from '../../types/types';
 import { NodeTitleEditor } from '../NodeTitleEditor';
 import { saveUserNode, globalNodeInstanceRegistry, createNodeFromClassDef, allNodeTypes } from '../../const/nodeTypes';
 import { v4 as uuid } from 'uuid';
-import { NodeCreatorContext } from '../../contexts/NodeCreatorContext';
+import { NodeCreatorContext, NodeCreatorStatus } from '../../contexts/NodeCreatorContext';
 import { LuSave, LuX } from 'react-icons/lu';
 import { bangInHandleId } from '../../const/const';
 import { ProxyNode } from './core/ProxyNode';
@@ -20,22 +20,31 @@ const handleStyle: CSSProperties = {
     width: '15px',
 };
 
-export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
+export type NodeCreatorType = Node<{
+    editing?: boolean;
+    initialState?: {
+        name: string;
+        handles: HandleDefs;
+        actionLabel?: string;
+    }
+}>;
+
+export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }) => {
     const { masterEdges: edges, masterNodes: nodes } = useContext(GraphStateContext);
-    const { setIsCreatingNode } = useContext(NodeCreatorContext);
+    const { setNodeCreatorStatus } = useContext(NodeCreatorContext);
     const { setNodes, fitView } = useReactFlow();
-    const { inputs, outputs, setInputs, setOutputs, generateHandleId, getDataType } = useNewNodeCreatorState();
+    const { inputs, outputs, setInputs, setOutputs, generateHandleId, getDataType } = useNewNodeCreatorState(data.initialState?.handles);
     const [isBangConnected, setIsBangConnected] = useState(false);
-    const [title, setTitle] = useState('');
-    const [actionName, setActionName] = useState('Action');
+    const [title, setTitle] = useState(data.initialState?.name ?? '');
+    const [actionName, setActionName] = useState(data.initialState?.actionLabel ?? 'Action');
     const updateInternals = useUpdateNodeInternals();
 
     const isHandleConnected = useCallback((handleId: string) => edges.some(edge => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId), [edges, nodeId]);
 
     useEffect(() => {
-        setIsCreatingNode(true);
-        return () => setIsCreatingNode(false);
-    }, [setIsCreatingNode])
+        setNodeCreatorStatus(data.editing ? NodeCreatorStatus.Editing : NodeCreatorStatus.Creating);
+        return () => setNodeCreatorStatus(NodeCreatorStatus.None);
+    }, [data.editing, setNodeCreatorStatus])
 
     useEffect(() => setIsBangConnected(isHandleConnected(bangInHandleId)), [isHandleConnected])
 
@@ -88,7 +97,7 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
         const islandEdges = getConnectedEdges(island, edges);
         const proxyNodes: ProxyNode[] = [];
 
-        const nodeState = island.filter(node => node.id !== nodeId).map(node => {
+        const nodeState = island.filter(node => node.id !== nodeId).map((node): [string, GraphStateNode] => {
             const nodeInstance = globalNodeInstanceRegistry.get(node.id);
             if (!nodeInstance) throw new Error('Could not find node instance in registry to save it state');
             if (nodeInstance instanceof ProxyNode) proxyNodes.push(nodeInstance);
@@ -97,7 +106,7 @@ export const NodeCreator: FC<NodeProps<Node>> = ({ id: nodeId }: NodeProps) => {
                 react: nodeInstance.state,
                 other: nodeInstance.saveableState
             };
-            return [node.id, { defNodeName: nodeInstance.name, initState: state } as GraphStateNode];
+            return [node.id, { defNodeName: nodeInstance.name, initState: state, position: node.position }];
         })
 
         const graphState: GraphState = {

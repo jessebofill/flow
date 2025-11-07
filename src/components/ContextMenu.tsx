@@ -1,54 +1,44 @@
-import React, { useCallback, useContext, type FC, type HTMLAttributes } from 'react';
-import { useReactFlow } from '@xyflow/react';
-import { WatchViewContext } from '../contexts/WatchViewContext';
-import { v4 as uuid } from 'uuid';
+import { useState, type FCChildren, type RefObject } from 'react';
+import { useMenuState, ControlledMenu, type ControlledMenuProps } from '@szhsin/react-menu';
 
-interface ContextMenuProps extends HTMLAttributes<HTMLDivElement> {
-    id: string;
-    top: number;
-    left: number;
-    right: number;
-    bottom: number;
+interface ContextMenuProps extends ControlledMenuProps {
+    handleMenuOpenRef?: RefObject<((x: number, y: number) => void) | null>;
+    elementContextMenuRef?: RefObject<HTMLElement | null>;
 }
 
-export const ContextMenu: FC<ContextMenuProps> = ({ id, top, left, right, bottom, ...props }) => {
-    const { getNode, setNodes, addNodes } = useReactFlow();
-    const { watched, setWatched } = useContext(WatchViewContext);
+export const ContextMenu: FCChildren<ContextMenuProps> = ({ handleMenuOpenRef, elementContextMenuRef, children, ...props }) => {
+    const [menuProps, toggleMenu] = useMenuState({ transition: true });
+    const [anchorPoint, setAnchorPoint] = useState({ x: 0, y: 0 });
+    const openMenu = (x: number, y: number) => {
+        setAnchorPoint({ x, y });
+        toggleMenu(true);
+    }
 
-    const watchNode = useCallback(() => setWatched(prev => [...prev, id]), [id, setWatched]);
+    if (handleMenuOpenRef) handleMenuOpenRef.current = openMenu;
 
-    const duplicateNode = useCallback(() => {
-        const node = getNode(id);
-        if (!node) throw new Error('Could not find node by id to duplicate');
-
-        const position = {
-            x: node.position.x + 50,
-            y: node.position.y + 50,
-        };
-
-        addNodes({
-            ...node,
-            selected: false,
-            dragging: false,
-            id: uuid(),
-            position,
-        });
-    }, [id, getNode, addNodes]);
-
-    const deleteNode = useCallback(() => setNodes((nodes) => nodes.filter((node) => node.id !== id)), [id, setNodes]);
+    if (elementContextMenuRef?.current) {
+        elementContextMenuRef.current.oncontextmenu = (e) => {
+            e.preventDefault();
+            openMenu(e.clientX, e.clientY);
+        }
+    }
 
     return (
-        <div
-            style={{ top, left, right, bottom }}
-            className="context-menu"
+        <ControlledMenu
+            {...menuProps}
+            // portal={true}
+            anchorPoint={anchorPoint}
+            onClose={() => toggleMenu(false)}
+            direction='top'
+            position='auto'
+            align='center'
+            gap={15}
+            viewScroll='close'
+            arrow={true}
+            menuStyle={{ zIndex: 10000 }}
             {...props}
         >
-            <p style={{ margin: '0.5em' }}>
-                <small>node: {id}</small>
-            </p>
-            {!watched.includes(id) && <button onClick={watchNode}>Watch Output</button>}
-            <button onClick={duplicateNode}>Duplicate</button>
-            <button onClick={deleteNode}>Delete</button>
-        </div>
+            {children}
+        </ControlledMenu>
     );
-}
+};

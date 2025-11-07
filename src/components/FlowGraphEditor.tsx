@@ -1,24 +1,27 @@
-import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type NodeMouseHandler, type Viewport, type IsValidConnection, useViewport, SelectionMode, useReactFlow } from '@xyflow/react';
-import { type FC, useContext, useCallback, useRef, useState, useEffect } from 'react';
+import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type Viewport, type IsValidConnection, useViewport, SelectionMode, useReactFlow } from '@xyflow/react';
+import { type FC, useContext, useCallback, useRef, useEffect } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
 import { allNodeTypes } from '../const/nodeTypes';
 import { bangInHandleId, basicEdgeTypeName, nodeCreatorNodeId, nodeCreatorTypeName } from '../const/const';
-import { ContextMenu } from './ContextMenu';
 import { getNodeHandleType, validateConnection } from '../const/utils';
 import { edgeTypes } from '../const/edgeTypes';
 import type { TBasicEdge } from './BasicEdge';
-import { CreateNodeCallback, NodeCreatorContext } from '../contexts/NodeCreatorContext';
+import { NodeCreatorCallbacks, NodeCreatorContext } from '../contexts/NodeCreatorContext';
 import { SidebarMenu } from './SidebarMenu';
 import { ConnectionLine } from './ConnectionLine';
 import { useDroppable } from '@dnd-kit/core';
 import { DragAndDropOverlay } from './DragAndDropOverlay';
+import { toast } from 'sonner';
+import type { NodeCreatorType } from './nodes/NodeCreator';
+import { appDb } from '../database';
+import { useLoadGraph } from '../hooks/useLoadGraph';
 
 export const FlowGraphEditor: FC<object> = () => {
     const { masterNodes, masterEdges, setMasterNodes, setMasterEdges } = useContext(GraphStateContext);
-    const { isCreatingNode } = useContext(NodeCreatorContext);
+    const { isNodeCreatorOpen } = useContext(NodeCreatorContext);
     const { fitView } = useReactFlow();
     const viewport = useViewport();
-    const [menu, setMenu] = useState(null);
+    const loadGraph = useLoadGraph();
     const ref = useRef<HTMLDivElement>(null);
     const edgeReconnectSuccessful = useRef(true);
     const { setNodeRef } = useDroppable({ id: 'xyflow' });
@@ -101,28 +104,6 @@ export const FlowGraphEditor: FC<object> = () => {
         edgeReconnectSuccessful.current = true;
     }, [setMasterEdges]);
 
-    const onNodeContextMenu: NodeMouseHandler = useCallback(
-        (event, node) => {
-            // Prevent native context menu from showing
-            event.preventDefault();
-
-            // Calculate position of the context menu. We want to make sure it
-            // doesn't get positioned off-screen.
-            const pane = ref.current.getBoundingClientRect();
-            setMenu({
-                id: node.id,
-                top: event.clientY < pane.height - 200 && event.clientY,
-                left: event.clientX < pane.width - 200 && event.clientX,
-                right: event.clientX >= pane.width - 200 && pane.width - event.clientX,
-                bottom:
-                    event.clientY >= pane.height - 200 && pane.height - event.clientY,
-            });
-        },
-        [setMenu],
-    );
-
-    const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
-
     const setNodeCreator = useCallback((viewport: Viewport, add?: boolean) => {
         const pane = ref.current!.getBoundingClientRect();
         const inset = 15; // pixels from left edge of screen
@@ -150,11 +131,15 @@ export const FlowGraphEditor: FC<object> = () => {
         };
 
         setMasterNodes(nodes => {
-            if (add && !isCreatingNode) return [...nodes, nodeCreator];
-            if (nodes.some(node => node.type === nodeCreatorTypeName)) return [...nodes.filter(n => n.type !== nodeCreatorTypeName), nodeCreator];
+            if (add && !isNodeCreatorOpen) return [...nodes, nodeCreator];
+            const prevNodeCreator = nodes.find(node => node.type === nodeCreatorTypeName);
+            if (prevNodeCreator) {
+                nodeCreator.data = { ...prevNodeCreator.data };
+                return [...nodes.filter(n => n.type !== nodeCreatorTypeName), nodeCreator];
+            }
             return nodes;
         });
-    }, [isCreatingNode, setMasterNodes]);
+    }, [isNodeCreatorOpen, setMasterNodes]);
 
     useEffect(() => {
         if (!ref.current) return;
@@ -168,7 +153,7 @@ export const FlowGraphEditor: FC<object> = () => {
     const isValidConnection: IsValidConnection = useCallback((connection) => validateConnection(connection, masterEdges), [masterEdges]);
 
     const createNode = useCallback(() => {
-        if (isCreatingNode) return;
+        if (isNodeCreatorOpen) return toast.warning('Node creator is already open')
         fitView({
             maxZoom: 1.1,
             minZoom: 0.5,
@@ -178,7 +163,27 @@ export const FlowGraphEditor: FC<object> = () => {
             interpolate: 'smooth'
         });
         setTimeout(() => setNodeCreator(viewport, true), 100);
-    }, [fitView, isCreatingNode, setNodeCreator, viewport]);
+    }, [fitView, isNodeCreatorOpen, setNodeCreator, viewport]);
+
+
+    const editNode = useCallback((rfTypeIdentifier: string) => {
+        if (isNodeCreatorOpen) return toast.warning('Node creator is already open')
+        const { graphId, handleDefs, actionLabel } = appDb.cache.userNodes[rfTypeIdentifier];
+        const nodeCreator: NodeCreatorType = {
+            id: nodeCreatorNodeId,
+            type: nodeCreatorTypeName,
+            position: { x: 0, y: 0 },
+            data: {
+                editing: true,
+                initialState: {
+                    name: rfTypeIdentifier,
+                    handles: handleDefs,
+                    actionLabel
+                }
+            }
+        }
+        loadGraph(graphId, nodeCreator);
+    }, [isNodeCreatorOpen, loadGraph])
 
     return (
         <div className="dndflow">
@@ -209,13 +214,11 @@ export const FlowGraphEditor: FC<object> = () => {
                     connectOnClick={false}
                     proOptions={{ hideAttribution: true }}
                     edgesReconnectable={true}
-                    onNodeContextMenu={onNodeContextMenu}
-                    onPaneClick={onPaneClick}
                     onViewportChange={setNodeCreator}
                     isValidConnection={isValidConnection}
-                    minZoom={isCreatingNode ? 0.5 : 0.3}
-                    maxZoom={isCreatingNode ? 1.1 : 5}
-                    autoPanOnConnect={!isCreatingNode}
+                    minZoom={isNodeCreatorOpen ? 0.5 : 0.3}
+                    maxZoom={isNodeCreatorOpen ? 1.1 : 5}
+                    autoPanOnConnect={!isNodeCreatorOpen}
                     autoPanOnNodeDrag
                 >
                     {/* <Controls /> */}
@@ -226,13 +229,12 @@ export const FlowGraphEditor: FC<object> = () => {
                         <WatchView />
                     </Panel> */}
                     {/* <MiniMap/> */}
-                    {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
                     <Background />
                 </ReactFlow>
             </div>
-            <CreateNodeCallback.Provider value={{ createNode }}>
+            <NodeCreatorCallbacks.Provider value={{ createNode, editNode }}>
                 <SidebarMenu />
-            </CreateNodeCallback.Provider>
+            </NodeCreatorCallbacks.Provider>
             <DragAndDropOverlay />
         </div>
     );

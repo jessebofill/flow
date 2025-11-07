@@ -6,7 +6,7 @@ import.meta.glob('./components/nodes/core/*.tsx', { eager: true });
 
 createRoot(document.getElementById('root')!).render(
     // <StrictMode>
-        <div className='app' style={{ width: '100vw', height: '100vh' }}>
+        <div className='app szh-menu-container--theme-dark' style={{ width: '100vw', height: '100vh' }}>
             <App />
         </div>
     // </StrictMode>,

@@ -1,17 +1,23 @@
 import Dexie from 'dexie';
 import type { HandleDefs } from './types/types';
-import type { Edge } from '@xyflow/react';
+import type { Edge, XYPosition } from '@xyflow/react';
 
 const graphPrimaryKey = 'graphId';
 const graphStatePrimaryKey = 'stateId'; //use associated graph id for top level or proxy node id for sub graphs
 const createdNodePrimaryKey = 'rfTypeIdentifier';
 
+//graph is just represented by edge connections
 export interface Graph {
     edges: Edge[];
 };
 
+/**
+ * graph state is represented by nodes in a graph with there associated state.
+ * this is stored separately from graph since sub graphs (nested proxy nodes) may share the same graph but have their own associated state.
+ */
 export interface GraphStateNode {
     defNodeName: string;
+    position: XYPosition;
     initState: {
         react: object;
         other: object;

@@ -1,13 +1,22 @@
 import { createContext } from 'react';
 
+export enum NodeCreatorStatus {
+    None,
+    Creating,
+    Editing
+}
+
+
 export interface NodeCreatorContextData {
-    isCreatingNode: boolean;
-    setIsCreatingNode: React.Dispatch<React.SetStateAction<boolean>>;
+    nodeCreatorStatus: NodeCreatorStatus;
+    setNodeCreatorStatus: React.Dispatch<React.SetStateAction<NodeCreatorStatus>>;
+    isNodeCreatorOpen: boolean;
 };
 
 export const NodeCreatorContext = createContext<NodeCreatorContextData>({
-    isCreatingNode: false,
-    setIsCreatingNode: () => { },
+    nodeCreatorStatus: NodeCreatorStatus.None,
+    setNodeCreatorStatus: () => { },
+    isNodeCreatorOpen: false
 });
 
-export const CreateNodeCallback = createContext({ createNode: () => { } });
+export const NodeCreatorCallbacks = createContext({ createNode: () => { }, editNode: (rfTypeIdentifier: string) => { } });
