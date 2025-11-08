@@ -11,7 +11,7 @@ import { NodeCreatorContext, NodeCreatorStatus } from '../../contexts/NodeCreato
 import { LuSave, LuX } from 'react-icons/lu';
 import { bangInHandleId } from '../../const/const';
 import { ProxyNode } from './core/ProxyNode';
-import type { GraphState, GraphStateNode } from '../../database';
+import type { SavedGraphNode } from '../../database';
 import { toast } from 'sonner';
 import { ModalContext } from '../../contexts/ModalContext';
 
@@ -107,12 +107,12 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
         const island = getIslandOfNode(nodeId, nodes, edges);
         if (!island.length) throw new Error('Could not find island of node network to create');
         const islandEdges = getConnectedEdges(island, edges);
-        const proxyNodes: ProxyNode[] = [];
 
-        const nodeState = island.filter(node => node.id !== nodeId).map((node): [string, GraphStateNode] => {
+        const nodeState = island.filter(node => node.id !== nodeId).map((node): [string, SavedGraphNode] => {
             const nodeInstance = globalNodeInstanceRegistry.get(node.id);
             if (!nodeInstance) throw new Error('Could not find node instance in registry to save it state');
-            if (nodeInstance instanceof ProxyNode) proxyNodes.push(nodeInstance);
+            if (nodeInstance instanceof ProxyNode) nodeInstance.saveSubGraphState();
+
             // console.log('instance and proxy class', nodeInstance, ProxyNode)
             const state = {
                 react: nodeInstance.state,
@@ -120,13 +120,10 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
             };
             return [node.id, { defNodeName: nodeInstance.name, initState: state, position: node.position }];
         })
-
-        const graphState: GraphState = {
-            nodes: Object.fromEntries(nodeState)
-        }
-
-        proxyNodes.forEach(node => node.saveSubGraphState());
-        const ClassDef = saveUserNode(indentifier, isBangConnected, handleDefs, graphId, { edges: islandEdges }, graphState, actionName);
+        const savedNodes =Object.fromEntries(nodeState)
+        
+        // proxyNodes.forEach(node => node.saveSubGraphState());
+        const ClassDef = saveUserNode(indentifier, isBangConnected, handleDefs, graphId, { edges: islandEdges, nodes: savedNodes}, actionName);
         if (isEditing) return setNodes(nodes => nodes.filter((node) => !editingNodes.includes(node.id)));
 
         setNodes(nodes => {

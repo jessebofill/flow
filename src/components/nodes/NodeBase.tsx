@@ -45,6 +45,7 @@ type State<Defs extends Record<string, HandleDef>> = {
 export type CustomNodeDataProps = {
     nodeInstanceRegistry: NodeInstanceRegistry;
     isVirtual: boolean;
+    isInSubGraph: boolean;
     graphSnapshot?: GraphSnapshot;
 }
 
@@ -69,6 +70,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
     saveableState: object = {};
     protected nodeInstanceRegistry: NodeInstanceRegistry;
     protected isVirtualInstance: boolean = false;
+    protected isInSubGraph = false;
     private virtualEdges: Edge[] = [];
     protected abstract handleDefs: Defs;
     /**
@@ -87,13 +89,14 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         super(props);
         this.id = props.id;
         this.isVirtualInstance = props.data.isVirtual ?? false;
+        this.isInSubGraph = props.data.isInSubGraph;
         this.nodeInstanceRegistry = props.data.nodeInstanceRegistry;
         if (this.isVirtualInstance) this.nodeInstanceRegistry.set(this.id, this);
         this.initState(props.data.graphSnapshot);
         console.log(`loading node ${this.name}
 id: ${this.id}
-stateId: ${this.saveableState?.graphStateId}`);
-        console.log(this.saveableState)
+stateId:`,this.saveableState?.initialGraphState);
+        // console.log(this.saveableState)
     }
 
     get name() {
@@ -205,7 +208,7 @@ stateId: ${this.saveableState?.graphStateId}`);
      */
     private async setInput<K extends keyof Defs>(handleId: K, value: HandleTypeFromDefs<Defs, K> | undefined) {
         if (handleId !== isActiveHandleId && !this.state[isActiveHandleId]) return;
-        console.log('setr', handleId, value, this.id)
+        // console.log('setr', handleId, value, this.id)
         await this.setStateAsync({ [handleId as keyof State<Defs>]: value ?? 0 });
         const output = this.transformSafe(handleId);
         if (output !== null) await this.setOutput(output);
@@ -221,7 +224,7 @@ stateId: ${this.saveableState?.graphStateId}`);
     private async executeTargetCallbacks(sourceHandleId: string, withEdges?: Edge[]): Promise<void> {
         const edges = withEdges ?? (this.isVirtualInstance ? this.virtualEdges : this.context.masterEdges);
         const connectedTargets = getConnectedTargets(edges, this.id, sourceHandleId);
-        console.log('targets', sourceHandleId, connectedTargets)
+        // console.log('targets', sourceHandleId, connectedTargets)
         for (const target of connectedTargets) {
             if (!target.targetHandleId) throw new Error('The connected target did not have an identifiable handle');
             // console.log(this.id,'exe target', target.targetNodeI

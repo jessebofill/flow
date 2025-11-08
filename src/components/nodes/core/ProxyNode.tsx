@@ -2,7 +2,7 @@ import { type Edge } from '@xyflow/react';
 import { bangInHandleId, bangOutHandleId, variInHandleIdPrefix, variOutHandleIdPrefix } from '../../../const/const';
 import { coreNodeTypes, registerNodeType, type NodeInstanceRegistry } from '../../../const/nodeTypes';
 import { getConnectedSources, getConnectedTargets, retrieveGraph } from '../../../const/utils';
-import { appDb, type GraphState, type GraphStateNode } from '../../../database';
+import { appDb, type SavedNodeState } from '../../../database';
 import { isBangInHandleId, NodeBase, type NodeBaseProps } from '../NodeBase';
 import { DataTypeNames, type HandleDefs } from '../../../types/types';
 
@@ -11,13 +11,10 @@ export class ProxyNode extends NodeBase<{}> {
     protected handleDefs: HandleDefs = {};
     private internalEdges: Edge[] = [];
     private internalNodeInstanceRegistry!: NodeInstanceRegistry;
-    declare saveableState: { existingGraphStateId?: string };
+    declare saveableState: { initialGraphState: Record<string, SavedNodeState> };
     constructor(props: NodeBaseProps) {
         super(props);
         this.load();
-        /** save the node id as graph state id after loading, so that if this node gets saved in another graph it can know
-         * which state to use when being retored */
-        if (!this.saveableState.existingGraphStateId) this.saveableState.existingGraphStateId = this.id;
     }
 
     protected transform(id: string) {
@@ -37,34 +34,22 @@ export class ProxyNode extends NodeBase<{}> {
         const { graphId, handleDefs, actionLabel } = appDb.cache.userNodes[this.name];
         this.handleDefs = handleDefs;
         if (actionLabel) this.actionButtonText = actionLabel;
-        /**
-         * virtual instence should always use node id for graphStateId, as the node can be instanced with the premade id.
-         * otherewise if rendering, node will have a new unique id, so check if it had existing graphStateId in its savable state.
-         * (ex. when proxy node is rendered within a restored graph: loading graph/ editing node that contains this proxy)
-         * if no savable state use the graphId which is the base state saved when the node was created.
-         * (this case just means instancing proxy node normally)
-         */
-        const graphStateId = this.isVirtualInstance ? this.id : this.saveableState.existingGraphStateId ?? graphId;
-        const { edges, nodeInstanceRegistry: internalRegistry } = this.instantiateVirtualNodes(graphId, graphStateId);
+        const { edges, nodeInstanceRegistry: internalRegistry } = this.instantiateVirtualNodes(graphId);
         this.internalEdges = edges;
         this.internalNodeInstanceRegistry = internalRegistry;
         internalRegistry.set(this.id, this);
         this.mergeNodeInstanceRegistries(internalRegistry);
-        // console.log('reg', this.nodeInstanceRegistry)
-        this.initProxyState();
+        if (!this.isInSubGraph) this.initProxyState();
     }
 
     private initProxyState() {
         const inputHandleIds = Object.entries(this.handleDefs).filter(([id, def]) => id.startsWith(variInHandleIdPrefix) && def.dataType !== DataTypeNames.Bang).map(([id]) => id);
         const outputHandleIds = Object.keys(this.handleDefs).filter((id) => id.startsWith(variOutHandleIdPrefix));
-        // console.log(outputHandleIds, this)
         const state: { [id: string]: unknown } = {};
-        inputHandleIds.forEach((inputId, index) => {
-            // console.log('get targets', index, this.internalEdges, this.id, inputId)
+        inputHandleIds.forEach((inputId) => {
             const { targetNodeId, targetHandleId } = getConnectedTargets(this.internalEdges, this.id, inputId)[0];
             const targetInstance = this.nodeInstanceRegistry.get(targetNodeId)!;
-            // console.log('get targets', targetHandleId, inputId, this)
-            console.log(`proxy: ${this.constructor.name} got state: ${JSON.stringify(targetInstance.state[targetHandleId!])} for target ${targetInstance.constructor.name}`)
+            console.log(`proxy: ${this.constructor.name} got state: ${JSON.stringify(targetInstance.state[targetHandleId!])} for target ${targetInstance.constructor.name} ${targetInstance.id}`)
             state[inputId] = targetInstance.state[targetHandleId!];
         });
         outputHandleIds.forEach(outputId => {
@@ -128,8 +113,8 @@ export class ProxyNode extends NodeBase<{}> {
         });
     }
 
-    instantiateVirtualNodes(graphId: string, graphStateId?: string) {
-        const { nodes, edges, nodeInstanceRegistry } = retrieveGraph(true, graphId, graphStateId ?? graphId, this.id);
+    instantiateVirtualNodes(graphId: string) {
+        const { nodes, edges, nodeInstanceRegistry } = retrieveGraph(true, graphId, this.id, this.saveableState.initialGraphState);
         nodes.forEach(([defNodeName, props]) => {
             const NodeClass = Object.entries(coreNodeTypes).find(([identifier]) => identifier === defNodeName)?.[1];
             if (!NodeClass) throw new Error('Could not find the node class to instantiate when loading saved graph. Was its defNodeName changed?');
@@ -141,18 +126,15 @@ export class ProxyNode extends NodeBase<{}> {
 
     saveSubGraphState() {
         const nodeStateEntries = [...this.internalNodeInstanceRegistry.values()].filter(nodeInstance => nodeInstance.id !== this.id).map(nodeInstance => {
-            const state = {
-                react: nodeInstance.state,
-                other: nodeInstance.saveableState
+            if (nodeInstance instanceof ProxyNode) nodeInstance.saveSubGraphState();
+            const state: SavedNodeState = {
+                react: structuredClone(nodeInstance.state),
+                other: structuredClone(nodeInstance.saveableState)
             };
 
-            return [nodeInstance.id, { defNodeName: nodeInstance.name, initState: state } as GraphStateNode];
-        })
-
-        const graphState: GraphState = {
-            nodes: Object.fromEntries(nodeStateEntries)
-        };
-        appDb.putGraphState(this.id, graphState);
+            return [nodeInstance.id, state] as const;
+        });
+        this.saveableState.initialGraphState = Object.fromEntries(nodeStateEntries);
     }
 
     static registerUserNodeType(defNodeName: string, isBangable: boolean) {

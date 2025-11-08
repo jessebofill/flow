@@ -3,32 +3,25 @@ import type { HandleDefs } from './types/types';
 import type { Edge, XYPosition } from '@xyflow/react';
 
 const graphPrimaryKey = 'graphId';
-const graphStatePrimaryKey = 'stateId'; //use associated graph id for top level or proxy node id for sub graphs
 const createdNodePrimaryKey = 'rfTypeIdentifier';
 
-//graph is just represented by edge connections
-export interface Graph {
-    edges: Edge[];
-};
+export interface SavedNodeState {
+    react: object;
+    other: object;
+}
 
-/**
- * graph state is represented by nodes in a graph with there associated state.
- * this is stored separately from graph since sub graphs (nested proxy nodes) may share the same graph but have their own associated state.
- */
-export interface GraphStateNode {
+export interface SavedGraphNode {
     defNodeName: string;
     position: XYPosition;
-    initState: {
-        react: object;
-        other: object;
-    }
+    initState: SavedNodeState;
 };
 
-export interface GraphState {
+export interface SavedGraph {
+    edges: Edge[];
     nodes: {
-        [id: string]: GraphStateNode;
+        [id: string]: SavedGraphNode;
     }
-}
+};
 
 export interface CreatedNode {
     [graphPrimaryKey]: string;
@@ -37,12 +30,8 @@ export interface CreatedNode {
     actionLabel?: string;
 };
 
-type DbGraph = Graph & {
+type DbGraph = SavedGraph & {
     [graphPrimaryKey]: string;
-};
-
-type DbGraphState = GraphState & {
-    [graphStatePrimaryKey]: string;
 };
 
 type DbCreatedNode = CreatedNode & {
@@ -51,25 +40,21 @@ type DbCreatedNode = CreatedNode & {
 
 interface DbCache {
     userNodes: Record<string, CreatedNode>;
-    graphs: Record<string, Graph>;
-    graphStates: Record<string, GraphState>;
+    graphs: Record<string, SavedGraph>;
 };
 
 class AppDatabase extends Dexie {
     graphStore!: Dexie.Table<DbGraph, string>;
-    graphStateStore!: Dexie.Table<DbGraphState, string>;
     userNodesStore!: Dexie.Table<DbCreatedNode, string>;
     cache: DbCache = {
         userNodes: {},
         graphs: {},
-        graphStates: {}
     }
 
     constructor() {
         super('FlowDatabase');
         this.version(1).stores({
             graphStore: graphPrimaryKey,
-            graphStateStore: graphStatePrimaryKey,
             userNodesStore: createdNodePrimaryKey
         });
     }
@@ -79,20 +64,14 @@ class AppDatabase extends Dexie {
         await this.userNodesStore.put({ rfTypeIdentifier, ...node });
     }
 
-    async putGraph(graphId: string, graphData: Graph): Promise<void> {
+    async putGraph(graphId: string, graphData: SavedGraph): Promise<void> {
         this.cache.graphs[graphId] = graphData;
-        console.log(`Saved graph: ${graphId} ${JSON.stringify(this.cache.graphs[graphId])}`)
+        // console.log(`Saved graph: ${graphId} ${JSON.stringify(this.cache.graphs[graphId])}`)
         await this.graphStore.put({ graphId, ...graphData });
-    }
-    async putGraphState(stateId: string, graphState: GraphState): Promise<void> {
-        this.cache.graphStates[stateId] = graphState;
-        console.log(`Saved g state: ${stateId} ${JSON.stringify(this.cache.graphStates[stateId])}`)
-        await this.graphStateStore.put({ stateId, ...graphState });
     }
 
     async syncCache() {
         this.cache.userNodes = {};
-        this.cache.graphStates = {};
         this.cache.graphs = {};
 
         await this.userNodesStore.each(node => {
@@ -103,11 +82,6 @@ class AppDatabase extends Dexie {
         await this.graphStore.each(graph => {
             const { graphId, ...rest } = graph;
             this.cache.graphs[graphId] = rest;
-        });
-
-        await this.graphStateStore.each(graphState => {
-            const { stateId, ...rest } = graphState;
-            this.cache.graphStates[stateId] = rest;
         });
     }
 }

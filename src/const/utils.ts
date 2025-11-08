@@ -1,7 +1,7 @@
 import { type Connection, type Edge, type Node } from '@xyflow/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from './nodeTypes';
 import { bangInHandleId, nodeCreatorNodeId } from './const';
-import { appDb } from '../database';
+import { appDb, type SavedNodeState } from '../database';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
 import { DataTypeNames, type HandleDefs } from '../types/types';
 import type { GraphSnapshot, NodeBase, NodeBaseProps } from '../components/nodes/NodeBase';
@@ -92,12 +92,12 @@ export async function onAppLoad() {
     });
 }
 
-export function retrieveGraph(isVirtual: boolean, graphId: string, graphStateId: string, replaceParentId?: string) {
-    const stateId = graphStateId || graphId;
+export function retrieveGraph(isVirtual: boolean, graphId: string, replaceParentId?: string, replaceState?: Record<string, SavedNodeState>) {
+    // const stateId = graphStateId || graphId;
     const graph = appDb.cache.graphs[graphId];
-    const graphState = appDb.cache.graphStates[stateId];
+    // const graphState = appDb.cache.graphStates[stateId];
     if (!graph) throw new Error(`Graph ${graphId} was not found in the database cache`);
-    if (!graphState) throw new Error(`Graph state ${stateId} was not found in the database cache`);
+    // if (!graphState) throw new Error(`Graph state ${stateId} was not found in the database cache`);
     const nodeInstanceRegistry: NodeInstanceRegistry = new Map<string, NodeBase<HandleDefs>>();
     const edges = graph.edges.map(edge => {
         const newEdge = { ...edge };
@@ -106,21 +106,22 @@ export function retrieveGraph(isVirtual: boolean, graphId: string, graphStateId:
         return newEdge;
     })
 
-    const nodes = Object.entries(graphState.nodes).map(([nodeId, nodeData]) => {
-        const graphSnapshot: GraphSnapshot = { ...nodeData.initState, edges };
+    const nodes = Object.entries(graph.nodes).map(([nodeId, nodeData]) => {
+        const overrideState = replaceState && replaceState[nodeId];
+        const graphSnapshot: GraphSnapshot = { ...structuredClone(overrideState ?? nodeData.initState), edges };
         const props: NodeBaseProps = {
             id: nodeId,
             data: {
                 nodeInstanceRegistry,
                 graphSnapshot,
-                isVirtual
+                isVirtual,
+                isInSubGraph: true
             }
         };
-        if (!isVirtual) props.position = nodeData.position ?? { x: 0, y: 0 };
+        if (!isVirtual) props.position = nodeData.position;
         return [nodeData.defNodeName, props] as const;
     });
 
     return { nodeInstanceRegistry, edges, nodes };
 }
-
 

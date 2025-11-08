@@ -6,7 +6,7 @@ export const useLoadGraph = () => {
     const { addNodes, addEdges, fitView } = useReactFlow();
     return useCallback((graphId: string, insertNodes: Node) => {
 
-        const { nodes, edges } = retrieveGraph(false, graphId, graphId);
+        const { nodes, edges } = retrieveGraph(false, graphId);
         const rfNodes: Node[] = nodes.map(([defNodeName, props]) => {
             const { position, ...node } = props;
             return {

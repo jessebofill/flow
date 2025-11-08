@@ -1,8 +1,8 @@
 import { type Node, type NodeProps, type XYPosition } from '@xyflow/react';
 import type { HandleDefs, NodeClass } from '../types/types';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 import type { CustomNodeDataProps, NodeBase } from '../components/nodes/NodeBase';
-import { appDb, type Graph, type GraphState } from '../database';
+import { appDb, type SavedGraph } from '../database';
 import { nodeCreatorTypeName } from './const';
 import { NodeCreator } from '../components/nodes/NodeCreator';
 import type { ComponentType } from 'react';
@@ -66,23 +66,23 @@ export function createNodeFromClassDef(NodeClass: NodeClass, pos?: XYPosition): 
     const res = Object.entries(coreNodeTypes).find(([_, nodeClass]) => nodeClass === NodeClass);
     if (!res) throw new Error('Could not find class instance in node types')
     const [rfIdentifier, ClassDef] = res;
-    const nodeId = uuidv4();
+    const nodeId = uuid();
     return {
         id: nodeId,
         position: pos ?? { x: 0, y: 0 },
         data: {
             nodeInstanceRegistry: globalNodeInstanceRegistry,
-            isVirtual: false
+            isVirtual: false,
+            isInSubGraph: false
         },
         type: rfIdentifier,
         style: { visibility: 'hidden', opacity: 0 }
     }
 }
 
-export function saveUserNode(rfTypeIdentifier: string, isBangable: boolean, handleDefs: HandleDefs, graphId: string, graph: Graph, graphState: GraphState, actionLabel?: string) {
+export function saveUserNode(rfTypeIdentifier: string, isBangable: boolean, handleDefs: HandleDefs, graphId: string, graph: SavedGraph, actionLabel?: string, isUpdate?: boolean) {
     const writes = Promise.all([
         appDb.putUserNode(rfTypeIdentifier, { graphId, handleDefs, isBangable, actionLabel }),
-        appDb.putGraphState(graphId, graphState),
         appDb.putGraph(graphId, graph)
     ]);
 
