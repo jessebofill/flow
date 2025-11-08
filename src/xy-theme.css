@@ -817,3 +817,17 @@ body {
 .context-menu button:hover {
     background: white;
 }
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    background-color: #14141459;
+    backdrop-filter: blur(5px);
+}
+.modal-content {
+    border-radius: 8px;
+    padding: 20px;
+    background-color: var(--xy-node-background-color);
+    margin: auto;
+}

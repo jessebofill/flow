@@ -4,12 +4,13 @@ import { LuPencilLine } from 'react-icons/lu';
 interface NodeTitleEditorProps {
     title: string;
     setTitle: (title: string) => void;
+    showEditIndicator?: boolean;
     animateWidth?: number;
     reverse?: boolean;
     buttonMargin?: string;
 }
 
-export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, animateWidth, reverse, buttonMargin }) => {
+export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, showEditIndicator, animateWidth, reverse, buttonMargin }) => {
     const [focused, setFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const spanRef = useRef<HTMLSpanElement>(null);
@@ -65,6 +66,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, ani
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
             />
+            {showEditIndicator && '*'}
             <div
                 style={{
                     position: 'absolute',

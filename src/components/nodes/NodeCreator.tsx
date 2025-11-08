@@ -13,6 +13,7 @@ import { bangInHandleId } from '../../const/const';
 import { ProxyNode } from './core/ProxyNode';
 import type { GraphState, GraphStateNode } from '../../database';
 import { toast } from 'sonner';
+import { ModalContext } from '../../contexts/ModalContext';
 
 const handleStyle: CSSProperties = {
     position: 'relative',
@@ -31,20 +32,30 @@ export type NodeCreatorType = Node<{
 
 export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }) => {
     const { masterEdges: edges, masterNodes: nodes } = useContext(GraphStateContext);
-    const { setNodeCreatorStatus } = useContext(NodeCreatorContext);
+    const { nodeCreatorStatus, setNodeCreatorStatus } = useContext(NodeCreatorContext);
+    const { showModal } = useContext(ModalContext);
     const { setNodes, fitView } = useReactFlow();
     const { inputs, outputs, setInputs, setOutputs, generateHandleId, getDataType } = useNewNodeCreatorState(data.initialState?.handles);
     const [isBangConnected, setIsBangConnected] = useState(false);
     const [title, setTitle] = useState(data.initialState?.name ?? '');
+    const [editingNodes, setEditingNodes] = useState<string[]>([]);
     const [actionName, setActionName] = useState(data.initialState?.actionLabel ?? 'Action');
     const updateInternals = useUpdateNodeInternals();
-
+    const isEditing = nodeCreatorStatus === NodeCreatorStatus.Editing;
     const isHandleConnected = useCallback((handleId: string) => edges.some(edge => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId), [edges, nodeId]);
 
     useEffect(() => {
         setNodeCreatorStatus(data.editing ? NodeCreatorStatus.Editing : NodeCreatorStatus.Creating);
         return () => setNodeCreatorStatus(NodeCreatorStatus.None);
     }, [data.editing, setNodeCreatorStatus])
+
+    useEffect(() => {
+        if (isEditing) {
+            const island = getIslandOfNode(nodeId, nodes, edges);
+            if (!island.length) throw new Error('Could not find island of node network');
+            setEditingNodes(island.map(node => node.id));
+        }
+    }, [nodeCreatorStatus])
 
     useEffect(() => setIsBangConnected(isHandleConnected(bangInHandleId)), [isHandleConnected])
 
@@ -73,7 +84,8 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
         updateInternals(nodeId);
     }, [edges]);
 
-    const close = useCallback(() => setNodes((nodes) => nodes.filter((node) => node.id !== nodeId)), [nodeId, setNodes]);
+    const close = useCallback(() => setNodes((nodes) => nodes.filter((node) => isEditing ? !editingNodes.includes(node.id) : node.id !== nodeId)),
+        [editingNodes, isEditing, nodeId, setNodes]);
 
     const onSave = useCallback(() => {
         const indentifier = title;
@@ -93,7 +105,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
         const handleDefs = Object.fromEntries([...inputs, ...outputs].filter(handleData => 'dataType' in handleData)
             .map(({ id, ...handleDef }) => [id, handleDef]));
         const island = getIslandOfNode(nodeId, nodes, edges);
-        if (!island.length) throw new Error('Could not find island of node network to create')
+        if (!island.length) throw new Error('Could not find island of node network to create');
         const islandEdges = getConnectedEdges(island, edges);
         const proxyNodes: ProxyNode[] = [];
 
@@ -114,8 +126,9 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
         }
 
         proxyNodes.forEach(node => node.saveSubGraphState());
-
         const ClassDef = saveUserNode(indentifier, isBangConnected, handleDefs, graphId, { edges: islandEdges }, graphState, actionName);
+        if (isEditing) return setNodes(nodes => nodes.filter((node) => !editingNodes.includes(node.id)));
+
         setNodes(nodes => {
             const nodesExcludingIsland = nodes.filter(node => !island.includes(node));
             return [...nodesExcludingIsland, createNodeFromClassDef(ClassDef)];
@@ -130,7 +143,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                 ease: t => t * (2 - t),
                 interpolate: 'smooth'
             }), 100);
-    }, [title, outputs, inputs, nodeId, nodes, edges, isBangConnected, actionName, setNodes, fitView]);
+    }, [title, outputs, inputs, nodeId, nodes, edges, isBangConnected, actionName, isEditing, setNodes, editingNodes, fitView]);
 
     return (
         <div
@@ -155,8 +168,11 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                     borderTopRightRadius: 8,
                 }}
             >
-                <NodeTitleEditor title={title} setTitle={setTitle} />
+                <NodeTitleEditor title={title} showEditIndicator={isEditing && title !== data.initialState?.name} setTitle={setTitle} />
                 <div style={{ display: 'flex', height: '100%', gap: '5px' }}>
+                    {nodeCreatorStatus === NodeCreatorStatus.Editing &&
+                        <div>Editing {data.initialState?.name}</div>
+                    }
                     <button
                         onClick={onSave}
                         style={{
