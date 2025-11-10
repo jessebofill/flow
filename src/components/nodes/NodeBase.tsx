@@ -426,7 +426,7 @@ stateId:`,this.saveableState?.initialGraphState);
                         {rightBang}
                     </div>
                 </div>}
-                <ContextMenu elementContextMenuRef={this.ref} arrow={undefined} direction='right' portal={false}>
+                <ContextMenu elementContextMenuRef={this.ref} arrow={undefined} direction='right' portal={true}>
                     <NodeContextMenuItems nodeId={this.id} type={this.name}/>
                 </ContextMenu>
             </div>

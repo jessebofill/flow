@@ -4,10 +4,9 @@ import { FlowGraphEditor } from './components/FlowGraphEditor';
 import { ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import 'tippy.js/dist/tippy.css'; // still needed for base layout
-import './xy-theme.css'
 import '@szhsin/react-menu/dist/index.css';
-import '@szhsin/react-menu/dist/theme-dark.css';
 import '@szhsin/react-menu/dist/transitions/zoom.css'
+import './xy-theme.css'
 import { WatchViewProvider } from './components/contextProviders/WatchViewProvider';
 import { onAppLoad } from './const/utils';
 import { NodeCreatorProvider } from './components/contextProviders/NodeCreatorProvider';

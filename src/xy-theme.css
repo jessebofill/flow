@@ -827,24 +827,58 @@ body {
     background-color: #14141459;
     backdrop-filter: blur(5px);
 }
+
 .modal-content {
     border-radius: 8px;
     padding: 20px;
     background-color: var(--xy-node-background-color);
     max-width: 600px;
 }
+
 .modal-content header {
     font-size: 24px;
     color: #85848b;
 }
+
 .modal-content p {
     color: #b6b6bc;
 }
+
 .modal-content .modal-buttons {
     display: flex;
     gap: 20px;
     justify-content: space-evenly;
 }
+
 .modal-content .modal-buttons button {
     width: 100%;
+}
+
+.szh-menu {
+    color: #cad1d8;
+    background-color: #22262c;
+    border: 1px solid #333;
+    box-shadow: 0 2px 9px 3px rgba(0, 0, 0, 0.25);
+}
+
+.szh-menu__arrow {
+    background-color: #22262c;
+    border-left-color: #333;
+    border-top-color: #333;
+}
+
+.szh-menu__item--hover {
+    background-color: #31363c;
+}
+
+.szh-menu__item--focusable {
+    background-color: inherit;
+}
+
+.szh-menu__item--disabled {
+    color: #666;
+}
+
+.szh-menu__divider {
+    background-color: #3a3a3a;
 }
