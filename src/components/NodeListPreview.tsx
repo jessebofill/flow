@@ -42,7 +42,7 @@ export const DraggableNodeListPreview: FC<NodeListPreviewProps> = ({ nodeClass, 
                         <MenuItem onClick={() => editNode(nodeClass.defNodeName)}>Edit</MenuItem>
                         <MenuItem onClick={() => console.log('Delete', nodeClass.defNodeName)}>Delete</MenuItem>
                         <SubMenu label='Graph Id'>
-                            <MenuItem>{appDb.cache.userNodes[nodeClass.defNodeName].graphId}</MenuItem>
+                            <MenuItem>{appDb.cache.userNodes[nodeClass.defNodeName]?.graphId}</MenuItem>
                         </SubMenu>
                     </>
                 }

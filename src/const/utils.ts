@@ -125,3 +125,34 @@ export function retrieveGraph(isVirtual: boolean, graphId: string, replaceParent
     return { nodeInstanceRegistry, edges, nodes };
 }
 
+export function getGraphsAndNodesWithDep(rfTypeIdentifier: string) {
+    const graphsWithDep = Object.entries(appDb.cache.graphs)
+        .filter(([_, graph]) => Object.values(graph.nodes).some(node => node.defNodeName === rfTypeIdentifier))
+        .map(([graphId]) => graphId);
+    const nodesEntriesWithDep = Object.entries(appDb.cache.userNodes)
+        .filter(([_, createdNode]) => graphsWithDep.includes(createdNode.graphId));
+    const nodesWithDep = nodesEntriesWithDep.map(([nodeKey]) => nodeKey);
+    const nonNodeGraphsWithDep: string[] = [];
+    const nodeGraphsWithDep: string[] = [];
+    graphsWithDep.forEach(graphId => nodesEntriesWithDep.some(([_, node]) => node.graphId === graphId) ?
+        nodeGraphsWithDep.push(graphId) : nodeGraphsWithDep.push(graphId));
+    return { allGraphsWithDep: graphsWithDep, nodeGraphsWithDep, nonNodeGraphsWithDep, nodesWithDep };
+}
+
+export function nodeContainsNestedDep(nodeToCheckIdentifier: string, depIdentifier: string): boolean {
+    const userNode = appDb.cache.userNodes[nodeToCheckIdentifier];
+    if (!userNode) return false;
+    const graph = appDb.cache.graphs[userNode.graphId];
+    const containedTypes = Object.values(graph.nodes).map(node => node.defNodeName);
+    return containedTypes.includes(depIdentifier) || containedTypes.some(typeIndentifier => nodeContainsNestedDep(typeIndentifier, depIdentifier));
+}
+
+export async function updateGraphDepIdentifier(graphId: string, oldIdentifier: string, newIdentifier: string) {
+    const graph = appDb.cache.graphs[graphId];
+    Object.values(graph.nodes).forEach(node => {
+        if (node.defNodeName === oldIdentifier) node.defNodeName = newIdentifier;
+    });
+
+    await appDb.putGraph(graphId, graph);
+}
+

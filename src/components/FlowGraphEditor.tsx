@@ -1,7 +1,8 @@
 import { type NodeChange, applyNodeChanges, type EdgeChange, type Edge, type Node, applyEdgeChanges, type Connection, addEdge, ReactFlow, Background, type Viewport, type IsValidConnection, useViewport, SelectionMode, useReactFlow } from '@xyflow/react';
 import { type FC, useContext, useCallback, useRef, useEffect } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
-import { allNodeTypes } from '../const/nodeTypes';
+import { allNodeTypes, globalNodeInstanceRegistry } from '../const/nodeTypes';
+import { nodeContainsNestedDep } from '../const/utils';
 import { bangInHandleId, basicEdgeTypeName, nodeCreatorNodeId, nodeCreatorTypeName } from '../const/const';
 import { getNodeHandleType, validateConnection } from '../const/utils';
 import { edgeTypes } from '../const/edgeTypes';
@@ -167,7 +168,25 @@ export const FlowGraphEditor: FC<object> = () => {
 
 
     const editNode = useCallback((rfTypeIdentifier: string) => {
-        if (isNodeCreatorOpen) return toast.warning('Node creator is already open')
+        if (isNodeCreatorOpen) return toast.warning('Node creator is already open');
+        const instancedNodeTypes = [... new Set(masterNodes.map(node => globalNodeInstanceRegistry.get(node.id)!.name))];
+        const isTypeInstanced = instancedNodeTypes.includes(rfTypeIdentifier);
+        const typesWithDep = instancedNodeTypes.filter(type => nodeContainsNestedDep(type, rfTypeIdentifier));
+        if (isTypeInstanced) {
+            if (!typesWithDep.length) {
+                toast.warning(`Cannot edit "${rfTypeIdentifier}" while it is instanced in a grpah. Please remove it first.`);
+            } else {
+                toast.warning(`Cannot edit "${rfTypeIdentifier}" because the graph contains instances of it and nodes that depend on it. Please remove
+                    "${rfTypeIdentifier}", ${typesWithDep.map(type => `"${type}"`).join(', ')} first.`);
+            }
+            return;
+        }
+        if (typesWithDep.length) {
+            toast.warning(`Cannot edit "${rfTypeIdentifier}" because the graph contains nodes that depend on it. Please remove
+                ${typesWithDep.map(type => `"${type}"`).join(', ')} first.`);
+            return;
+        }
+
         const { graphId, handleDefs, actionLabel } = appDb.cache.userNodes[rfTypeIdentifier];
         const nodeCreator: NodeCreatorType = {
             id: nodeCreatorNodeId,
@@ -183,7 +202,7 @@ export const FlowGraphEditor: FC<object> = () => {
             }
         }
         loadGraph(graphId, nodeCreator);
-    }, [isNodeCreatorOpen, loadGraph])
+    }, [isNodeCreatorOpen, loadGraph, masterNodes])
 
     return (
         <div className="dndflow">

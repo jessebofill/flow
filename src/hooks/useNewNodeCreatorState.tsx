@@ -20,11 +20,13 @@ class NodeCreatorHandleState {
     }
 
     useInitial(handles: HandleDefs, isOut: boolean) {
-        const prefix = isOut ? variOutHandleIdPrefix : variInHandleIdPrefix;
         const dataArrayKey = isOut ? 'outputs' : 'inputs';
+        const prefix = isOut ? variOutHandleIdPrefix : variInHandleIdPrefix;
+        const entries = Object.entries(handles).filter(([handleId]) => handleId.startsWith(prefix));
+        if (!entries.length) return this[dataArrayKey] = [{ id: this.generateHandleId(isOut) }];
+
         const nextKey = isOut ? 'nextOutput' : 'nextInput';
         const toNumber = (handleId: string) => Number(handleId.replace(prefix, ''));
-        const entries = Object.entries(handles).filter(([handleId]) => handleId.startsWith(prefix));
         const sorted = entries.sort(([handleId1], [handleId2]) => toNumber(handleId1) - toNumber(handleId2));
         this[dataArrayKey] = sorted.map(([handleId, handle]) => ({ id: handleId, ...handle }));
         const lastEntry = entries.at(-1)?.[0];

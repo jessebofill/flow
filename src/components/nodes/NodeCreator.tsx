@@ -1,17 +1,17 @@
 import { type Node, type NodeProps, getConnectedEdges, Handle, Position, useReactFlow, useUpdateNodeInternals } from '@xyflow/react';
 import { useCallback, useContext, useEffect, useState, type CSSProperties, type FC } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
-import { getConnectedSources, getConnectedTargets, getIslandOfNode, getNodeHandleType } from '../../const/utils';
+import { getConnectedSources, getConnectedTargets, getGraphsAndNodesWithDep, getIslandOfNode, getNodeHandleType } from '../../const/utils';
 import { useNewNodeCreatorState, type NodeCreatorHandleData } from '../../hooks/useNewNodeCreatorState';
 import { DataTypeNames, type HandleData, type HandleDefs } from '../../types/types';
 import { NodeTitleEditor } from '../NodeTitleEditor';
-import { saveUserNode, globalNodeInstanceRegistry, createNodeFromClassDef, allNodeTypes } from '../../const/nodeTypes';
+import { saveUserNode, globalNodeInstanceRegistry, createNodeFromClassDef, allNodeTypes, updateUserNode } from '../../const/nodeTypes';
 import { v4 as uuid } from 'uuid';
 import { NodeCreatorContext, NodeCreatorStatus } from '../../contexts/NodeCreatorContext';
 import { LuSave, LuX } from 'react-icons/lu';
 import { bangInHandleId } from '../../const/const';
 import { ProxyNode } from './core/ProxyNode';
-import type { SavedGraphNode } from '../../database';
+import { appDb, type SavedGraphNode } from '../../database';
 import { toast } from 'sonner';
 import { ModalContext } from '../../contexts/ModalContext';
 
@@ -31,23 +31,29 @@ export type NodeCreatorType = Node<{
 }>;
 
 export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }) => {
+    const prevName = data.initialState?.name;
     const { masterEdges: edges, masterNodes: nodes } = useContext(GraphStateContext);
-    const { nodeCreatorStatus, setNodeCreatorStatus } = useContext(NodeCreatorContext);
+    const { nodeCreatorStatus, setNodeCreatorStatus, setEditingNodeType } = useContext(NodeCreatorContext);
     const { showModal } = useContext(ModalContext);
     const { setNodes, fitView } = useReactFlow();
     const { inputs, outputs, setInputs, setOutputs, generateHandleId, getDataType } = useNewNodeCreatorState(data.initialState?.handles);
     const [isBangConnected, setIsBangConnected] = useState(false);
-    const [title, setTitle] = useState(data.initialState?.name ?? '');
+    const [title, setTitle] = useState(prevName ?? '');
     const [editingNodes, setEditingNodes] = useState<string[]>([]);
     const [actionName, setActionName] = useState(data.initialState?.actionLabel ?? 'Action');
     const updateInternals = useUpdateNodeInternals();
     const isEditing = nodeCreatorStatus === NodeCreatorStatus.Editing;
+
     const isHandleConnected = useCallback((handleId: string) => edges.some(edge => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId), [edges, nodeId]);
 
     useEffect(() => {
         setNodeCreatorStatus(data.editing ? NodeCreatorStatus.Editing : NodeCreatorStatus.Creating);
-        return () => setNodeCreatorStatus(NodeCreatorStatus.None);
-    }, [data.editing, setNodeCreatorStatus])
+        setEditingNodeType(data.editing ? data.initialState?.name ?? '' : null);
+        return () => {
+            setNodeCreatorStatus(NodeCreatorStatus.None);
+            setEditingNodeType(null);
+        }
+    }, [data.editing, data.initialState?.name, setEditingNodeType, setNodeCreatorStatus]);
 
     useEffect(() => {
         if (isEditing) {
@@ -55,6 +61,8 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
             if (!island.length) throw new Error('Could not find island of node network');
             setEditingNodes(island.map(node => node.id));
         }
+        //only set this initially. to track which nodes orginally a part of the editied node.
+        //runs when the node creator status changes to editing
     }, [nodeCreatorStatus])
 
     useEffect(() => setIsBangConnected(isHandleConnected(bangInHandleId)), [isHandleConnected])
@@ -84,24 +92,30 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
         updateInternals(nodeId);
     }, [edges]);
 
-    const close = useCallback(() => setNodes((nodes) => nodes.filter((node) => isEditing ? !editingNodes.includes(node.id) : node.id !== nodeId)),
-        [editingNodes, isEditing, nodeId, setNodes]);
+    const close = () => setNodes((nodes) => nodes.filter((node) => isEditing ? !editingNodes.includes(node.id) : node.id !== nodeId));
 
-    const onSave = useCallback(() => {
-        const indentifier = title;
+
+    const checkReqs = () => {
         if (outputs.length <= 1 && inputs.length <= 1) {
             toast.info(`Created node requires some connections.`);
-            return;
+            return false;
         }
-        if (!indentifier) {
+        if (!title) {
             toast.info(`Created node requires a name.`);
-            return;
+            return false;
         }
-        if (indentifier in allNodeTypes) {
-            toast.info(`Node with name "${indentifier}" already exists. Please use a unique name.`);
-            return;
+        if (title in allNodeTypes && !(isEditing && title === prevName)) {
+            toast.info(`Node with name "${title}" already exists. Please use a unique name.`);
+            return false;
         }
-        const graphId = uuid();
+        return true;
+    }
+
+    const onSave = () => {
+        const indentifier = title;
+        const graphId: string | undefined = isEditing ? appDb.cache.userNodes[prevName ?? '']?.graphId : uuid();
+        if (!graphId) throw new Error(`Could not find existing use node ${prevName} in the cache`);
+
         const handleDefs = Object.fromEntries([...inputs, ...outputs].filter(handleData => 'dataType' in handleData)
             .map(({ id, ...handleDef }) => [id, handleDef]));
         const island = getIslandOfNode(nodeId, nodes, edges);
@@ -120,11 +134,15 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
             };
             return [node.id, { defNodeName: nodeInstance.name, initState: state, position: node.position }];
         })
-        const savedNodes =Object.fromEntries(nodeState)
-        
+        const createdNode = { graphId, isBangable: isBangConnected, handleDefs, actionLabel: actionName };
+        const graph = { edges: islandEdges, nodes: Object.fromEntries(nodeState) };
         // proxyNodes.forEach(node => node.saveSubGraphState());
-        const ClassDef = saveUserNode(indentifier, isBangConnected, handleDefs, graphId, { edges: islandEdges, nodes: savedNodes}, actionName);
-        if (isEditing) return setNodes(nodes => nodes.filter((node) => !editingNodes.includes(node.id)));
+        if (isEditing) {
+            updateUserNode(indentifier, createdNode, graph, prevName !== indentifier ? prevName : undefined)
+            setNodes(nodes => nodes.filter((node) => !editingNodes.includes(node.id)));
+            return;
+        }
+        const ClassDef = saveUserNode(indentifier, createdNode, graph);
 
         setNodes(nodes => {
             const nodesExcludingIsland = nodes.filter(node => !island.includes(node));
@@ -140,7 +158,9 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                 ease: t => t * (2 - t),
                 interpolate: 'smooth'
             }), 100);
-    }, [title, outputs, inputs, nodeId, nodes, edges, isBangConnected, actionName, isEditing, setNodes, editingNodes, fitView]);
+    };
+
+    const onEditSave = () => checkReqs() && showModal((close) => <SaveEditModal name={prevName!} newName={title} close={close} onConfirm={onSave} />);
 
     return (
         <div
@@ -165,13 +185,13 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                     borderTopRightRadius: 8,
                 }}
             >
-                <NodeTitleEditor title={title} showEditIndicator={isEditing && title !== data.initialState?.name} setTitle={setTitle} />
+                <NodeTitleEditor title={title} showEditIndicator={isEditing && title !== prevName} setTitle={setTitle} />
                 <div style={{ display: 'flex', height: '100%', gap: '5px' }}>
                     {nodeCreatorStatus === NodeCreatorStatus.Editing &&
-                        <div>Editing {data.initialState?.name}</div>
+                        <div>Editing {prevName}</div>
                     }
                     <button
-                        onClick={onSave}
+                        onClick={isEditing ? onEditSave : () => checkReqs() && onSave()}
                         style={{
                             background: 'transparent',
                             padding: 0,
@@ -289,6 +309,42 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                 </div>
             </div>
         </div>
+    );
+};
 
+interface SaveEditModalProps {
+    name: string;
+    newName: string;
+    onConfirm: () => void;
+    close: () => void;
+}
+
+const SaveEditModal: FC<SaveEditModalProps> = ({ name, newName, onConfirm, close }) => {
+    const { nonNodeGraphsWithDep, nodesWithDep } = getGraphsAndNodesWithDep(name);
+    const numberThatDependOn = nodesWithDep.length + nonNodeGraphsWithDep.length;
+    const hasNodeAndOtherGraphs = nodesWithDep.length && nonNodeGraphsWithDep.length;
+    const nodeString = nodesWithDep.map(name => `"${name}"`).join(', ');
+
+    return (
+        <div>
+            <header>
+                Update {name}
+            </header>
+            <p>
+                {`Are you sure you want to update this node? ${name !== newName ? `"${name}" will be renamed to "${newName}".` : ''}
+                ${numberThatDependOn ? `${nodeString} ${hasNodeAndOtherGraphs ? 'and' : ''}${nonNodeGraphsWithDep.length ? `${nonNodeGraphsWithDep.length} graphs ` : ''}depend${numberThatDependOn === 1 ? 's' : ''} on this, and these changes will likely cause ${numberThatDependOn === 1 ? 'it' : 'them'} to break.` : ''}`}
+            </p>
+            <div className='modal-buttons'>
+                <button onClick={() => {
+                    onConfirm();
+                    close();
+                }}>
+                    Confirm
+                </button>
+                <button onClick={close}>
+                    Cancel
+                </button>
+            </div>
+        </div>
     );
 };

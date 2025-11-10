@@ -63,6 +63,10 @@ class AppDatabase extends Dexie {
         this.cache.userNodes[rfTypeIdentifier] = node;
         await this.userNodesStore.put({ rfTypeIdentifier, ...node });
     }
+    async removeUserNode(rfTypeIdentifier: string): Promise<void> {
+        delete this.cache.userNodes[rfTypeIdentifier];
+        await this.userNodesStore.delete(rfTypeIdentifier);
+    }
 
     async putGraph(graphId: string, graphData: SavedGraph): Promise<void> {
         this.cache.graphs[graphId] = graphData;
