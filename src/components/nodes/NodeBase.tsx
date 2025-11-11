@@ -1,5 +1,5 @@
 import { Position, type Node, Handle, type NodeProps, type Edge, type XYPosition } from '@xyflow/react';
-import { Component, createRef, type ContextType, type ReactNode, type RefObject } from 'react';
+import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets } from '../../const/utils';
 import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix } from '../../const/const';
@@ -7,11 +7,11 @@ import { DataTypeNames, type DataTypes, type HandleDef, type HandleDefs, type No
 import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from '../../const/nodeTypes';
-import { NodeTitleEditor } from '../NodeTitleEditor';
 import type { Tags } from '../../const/tags';
 import { toast } from 'sonner';
 import { ContextMenu } from '../ContextMenu';
 import { NodeContextMenuItems } from '../NodeContextMenuItems';
+import { NodeTitle } from '../NodeTitle';
 
 let transformCalls = 0;
 const callLimit = 2000;
@@ -67,7 +67,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
     static contextType = GraphStateContext;
     declare context: ContextType<typeof GraphStateContext>;
     id: string;
-    saveableState: object = {};
+    saveableState: object & { label?: string } = {};
     protected nodeInstanceRegistry: NodeInstanceRegistry;
     protected isVirtualInstance: boolean = false;
     protected isInSubGraph = false;
@@ -79,7 +79,6 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
      */
     protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null;
     protected actionButtonText = 'Run';
-    protected label?: string;
     static isBangable = false;
     protected hideIsActiveHandle = false;
     // protected bangHandleDefs: HandleDefs = { [bangInHandleId]: { dataType: 'bang' }, [bangOutHandleId]: { dataType: 'bang' } };
@@ -95,7 +94,7 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         this.initState(props.data.graphSnapshot);
         console.log(`loading node ${this.name}
 id: ${this.id}
-stateId:`,this.saveableState?.initialGraphState);
+stateId:`, this.saveableState?.initialGraphState);
         // console.log(this.saveableState)
     }
 
@@ -365,10 +364,17 @@ stateId:`,this.saveableState?.initialGraphState);
                         borderTopRightRadius: 6,
                     }}
                 >
-                    <div style={{ textAlign: 'left' }}>
-                        {this.name}
-                    </div>
-                    {/* <NodeTitleEditor title={this.label || this.name} setTitle={label => (this.label = label) || setTimeout(() => this.forceRender(), 1)}/> */}
+                    <NodeTitle
+                        name={this.name}
+                        label={this.saveableState.label}
+                        onChange={title => {
+                            const label = title.trim();
+                            if (label) {
+                                if (label === this.name) this.saveableState.label = undefined;
+                                else this.saveableState.label = label;
+                            }
+                        }}
+                    />
                 </div>
                 <div style={{ padding: '10px 0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
@@ -428,7 +434,7 @@ stateId:`,this.saveableState?.initialGraphState);
                     </div>
                 </div>}
                 <ContextMenu elementContextMenuRef={this.ref} arrow={undefined} direction='right' portal={true}>
-                    <NodeContextMenuItems nodeId={this.id} type={this.name}/>
+                    <NodeContextMenuItems nodeId={this.id} type={this.name} />
                 </ContextMenu>
             </div>
         );

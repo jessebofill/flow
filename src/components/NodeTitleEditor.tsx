@@ -4,17 +4,21 @@ import { LuPencilLine } from 'react-icons/lu';
 interface NodeTitleEditorProps {
     title: string;
     setTitle: (title: string) => void;
+    fallback?: string;
     showEditIndicator?: boolean;
     animateWidth?: number;
     reverse?: boolean;
     buttonMargin?: string;
 }
 
-export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, showEditIndicator, animateWidth, reverse, buttonMargin }) => {
+export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fallback, showEditIndicator, animateWidth, reverse, buttonMargin }) => {
     const [focused, setFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const spanRef = useRef<HTMLSpanElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
     const [textWidth, setTextWidth] = useState(0);
+    const [buttonWidth, setButtonWidth] = useState(0);
+    const _buttonMargin = buttonMargin ?? '10px';
 
     useLayoutEffect(() => {
         if (spanRef.current) {
@@ -23,6 +27,11 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
         }
     }, [title, focused, animateWidth]);
 
+    useEffect(() => { if (buttonRef.current) {
+        console.log('hahahha ref', buttonRef.current)
+        setButtonWidth(buttonRef.current.offsetWidth)
+ } }, []);
+console.log('bw', buttonWidth, buttonRef)
     useEffect(() => {
         if (focused && inputRef.current) {
             inputRef.current.focus();
@@ -30,8 +39,14 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
         }
     }, [focused]);
 
+    useEffect(() => {
+        if (!focused && fallback && !title) {
+            setTitle(fallback);
+        }
+    }, [fallback, focused, setTitle, title]);
+
     return (!reverse ?
-        <div className='title-editor' style={{ position: 'relative', display: 'inline-block' }}>
+        <div className='title-editor' style={{ position: 'relative', display: 'inline-block', marginRight: `calc(${buttonWidth}px + ${_buttonMargin})` }}>
             <span
                 ref={spanRef}
                 style={{
@@ -70,7 +85,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
             <div
                 style={{
                     position: 'absolute',
-                    marginLeft: title ? buttonMargin ?? '10px' : 0,
+                    marginLeft: title ? _buttonMargin : 0,
                     display: 'flex',
                     left: textWidth,
                     top: 0,
@@ -80,6 +95,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
                 }}
             >
                 <button
+                    ref={buttonRef}
                     style={{
                         cursor: 'pointer',
                         padding: '5px',
@@ -87,8 +103,6 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        // width: '2.5rem',
-                        background: 'none'
                     }}
                     onClick={() => setFocused(true)}
                 >
@@ -96,7 +110,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
                 </button>
             </div>
         </div> :
-        <div style={{ position: 'relative', display: 'inline-block' }}>
+        <div className='title-editor' style={{ position: 'relative', display: 'inline-block', marginLeft: `calc(${buttonWidth}px + ${_buttonMargin})` }}>
             <span
                 ref={spanRef}
                 style={{
@@ -134,7 +148,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
             <div
                 style={{
                     position: 'absolute',
-                    marginRight: title ? buttonMargin ?? '10px' : 0,
+                    marginRight: title ? _buttonMargin : 0,
                     display: 'flex',
                     right: textWidth,
                     top: 0,
@@ -144,6 +158,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
                 }}
             >
                 <button
+                    ref={buttonRef}
                     style={{
                         cursor: 'pointer',
                         padding: '5px',
@@ -151,8 +166,6 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        // width: '2.5rem',
-                        background: 'none'
                     }}
                     onClick={() => setFocused(true)}
                 >

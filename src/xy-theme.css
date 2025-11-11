@@ -747,12 +747,14 @@ input[type="checkbox"]:checked {
     transition: background .25s;
 }
 
+.react-flow__node .title-editor button:hover:not(.node-creator button),
 .modal-buttons button:hover,
 button.highlight-hover:hover,
 .tabs button.main:hover {
     background-color: var(--xy-bang-button-color);
 }
 
+.react-flow__node .title-editor button:not(.node-creator button),
 .modal-buttons button,
 button.highlight-hover,
 .tabs button.main {
@@ -989,4 +991,8 @@ body {
 .node-creator button,
 .title-editor {
     pointer-events: auto;
+}
+
+.title-editor button {
+    background-color: transparent;
 }

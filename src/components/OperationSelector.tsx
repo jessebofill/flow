@@ -27,6 +27,7 @@ export function OperationSelector<Ops extends BooleanOp | MathOp | CountOp | Com
                     bottom: 'calc(100% + 5px)',
                     right: 0,
                     display: 'flex',
+                    gap: '2px',
                     padding: 0,
                     margin: 0,
                     zIndex: 1000,
