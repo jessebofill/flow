@@ -41,7 +41,9 @@ export function NodeInput<Props extends NodeInputProps>({ dataType, value, label
         case DataTypeNames.Bang:
             return (
                 <button
+                    className='node-handle'
                     onClick={setValue}
+                    disabled={disabled}
                 >
                     {label || 'Run'}
                 </button>

@@ -274,7 +274,7 @@ stateId:`,this.saveableState?.initialGraphState);
                                 setValue: handleDef.dataType === DataTypeNames.Bang ? () => this.bang(handleId) :
                                     (v: unknown) => handleId === isActiveHandleId ? this.setInput(isActiveHandleId, v as never) :
                                         this.setInput(handleId as InputHandleId<Defs>, v as HandleTypeFromDefs<Defs, typeof handleId>),
-                                disabled: getConnectedSources(this.context.masterEdges, this.id, handleId).length > 0 ||
+                                disabled: (handleDef.dataType !== DataTypeNames.Bang && getConnectedSources(this.context.masterEdges, this.id, handleId).length) ||
                                     !this.state[isActiveHandleId] && handleId !== isActiveHandleId
                             } as NodeInputProps}
                         />
@@ -352,7 +352,7 @@ stateId:`,this.saveableState?.initialGraphState);
         const rightBang = this._isBangable && this.getHandleElement(bangOutHandleId);
         const extraOuts = this.getExtraOutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
-            <div style={{ width: '100%' }} ref={this.ref}>
+            <div className={this.state[isActiveHandleId] ? '' : 'disabled'} style={{ width: '100%' }} ref={this.ref}>
                 <div
                     className='header'
                     style={{
@@ -411,6 +411,7 @@ stateId:`,this.saveableState?.initialGraphState);
                     </div>
                     <button
                         className='action'
+                        disabled={!this.state[isActiveHandleId]}
                         style={{
                             width: '100%',
                             borderTopLeftRadius: 0,

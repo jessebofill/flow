@@ -22,6 +22,9 @@ body {
     --destructive-base-color: #af1550;
     --destructive-highlight-color: #f6024b;
 
+    --input-disabled-color: #7b7887;
+    --input-disabled-accent-color: #473d6e;
+
     --xy-node-boxshadow:
         0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d,
         0px 0.51px 1.01px 0px #0000001a;
@@ -229,18 +232,24 @@ body {
 
 .react-flow__node .header {
     background-color: var(--main-accent-color);
-    /* text-shadow: 0 0 20px black; */
-    /* color: #d7dcff; */
+    transition: background-color .4s;
+}
+
+.react-flow__node .disabled .header {
+    background-color: var(--input-disabled-accent-color);
 }
 
 .react-flow__node button.action {
     background-color: var(--dark-accent-color);
-    /* color: #c9bfff; */
     border-color: transparent;
     outline: none;
-    transition: background-color .5s;
 }
 
+.react-flow__node button.action:disabled {
+    background-color: var(--dark-accent-color) !important;
+}
+
+button.node-handle:hover,
 .react-flow__node button.action:hover {
     background-color: var(--xy-bang-button-color);
 }
@@ -585,10 +594,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--dark-accent-color);
     transition: 0.4s;
     border-radius: 34px;
-    border: 1.5px solid var(--xy-node-border-color);
 }
 
 .slider .dot {
@@ -598,15 +605,6 @@ body {
     transition: 0.3s;
     border-radius: 50%;
     display: block;
-    /* position: absolute;
-    content: "";
-    height: 17.5px;
-    width: 17.5px;
-    left: 0px;
-    bottom: 0px;
-    background-color: #d1cedc;
-    transition: 0.3s;
-    border-radius: 50%; */
 }
 
 input:checked+.slider {
@@ -617,10 +615,30 @@ input:checked+.slider .dot {
     transform: translateX(13px);
 }
 
-/* og */
+input:disabled+.slider {
+    background-color: var(--input-disabled-accent-color);
+    border-color: var(--input-disabled-accent-color);
+}
+
+input:not(:checked):disabled+.slider {
+    background-color: var(--dark-accent-color);
+}
+
+input:disabled+.slider .dot {
+    background-color: var(--input-disabled-color);
+}
+
+.slider,
+button.node-handle,
 input {
-    background: var(--dark-accent-color);
-    border: 1.5px solid var(--xy-node-border-color);
+    background-color: var(--dark-accent-color);
+    border-color: var(--xy-node-border-color);
+    border-style: solid;
+    border-width: 1.5px;
+}
+
+input {
+    transition: color 0.4s, border-color 0.4s;
     border-radius: 3px;
 }
 
@@ -628,15 +646,25 @@ input:focus {
     outline: 2px solid var(--xy-theme-selected3);
 }
 
+button.node-handle:disabled,
+input:disabled {
+    color: var(--input-disabled-color);
+    border-color: var(--input-disabled-accent-color);
+}
+
+button.node-handle:focus {
+    outline: none;
+}
+button.node-handle:disabled {
+    background-color: var(--dark-accent-color) !important;
+}
+
 input[type="checkbox"]:not(:checked) {
     background: var(--dark-accent-color);
-    /* light gray background */
     border: 1px solid var(--xy-node-border-color);
-    /* custom border */
     width: 16px;
     height: 16px;
     appearance: none;
-    /* removes default styling */
     border-radius: 3px;
     cursor: pointer;
 }
@@ -723,13 +751,12 @@ input[type="checkbox"]:checked {
 button.highlight-hover:hover,
 .tabs button.main:hover {
     background-color: var(--xy-bang-button-color);
-    outline: none;
 }
 
-.modal-buttons button:hover,
+.modal-buttons button,
 button.highlight-hover,
 .tabs button.main {
-    transition: background-color .5s;
+    transition: background-color .5s, color .4s;
     outline: none !important;
 }
 
@@ -776,7 +803,7 @@ button {
     font-family: inherit;
     background-color: var(--main-accent-color);
     cursor: pointer;
-    transition: border-color .6s, background-color .5s;
+    transition: border-color .6s, background-color .5s, color .4s;
 }
 
 button:hover {
@@ -958,6 +985,7 @@ body {
     padding: 2px;
     width: 24px;
 }
+
 .node-creator button,
 .title-editor {
     pointer-events: auto;
