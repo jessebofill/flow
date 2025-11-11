@@ -71,7 +71,10 @@ export const SidebarMenu: FC = () => {
     };
 
     useEffect(() => {
-        const handleDown = () => setMouseDown(true);
+        const handleDown = (e: MouseEvent) => {
+            if (e.target instanceof HTMLDivElement && e.target.classList.contains('sidebar-open-button')) return;
+            setMouseDown(true);
+        };
         const handleUp = () => setMouseDown(false);
 
         window.addEventListener('mousedown', handleDown, true);
