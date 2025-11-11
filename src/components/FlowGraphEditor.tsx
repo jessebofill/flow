@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import type { NodeCreatorType } from './nodes/NodeCreator';
 import { appDb } from '../database';
 import { useLoadGraph } from '../hooks/useLoadGraph';
+import { EventNotifier, Events } from '../EventNotifier';
 
 export const FlowGraphEditor: FC<object> = () => {
     const { masterNodes, masterEdges, setMasterNodes, setMasterEdges } = useContext(GraphStateContext);
@@ -36,6 +37,7 @@ export const FlowGraphEditor: FC<object> = () => {
                 setMasterEdges(prevEdges => prevEdges.filter(edge => !removedIds.includes(edge.source) && !removedIds.includes(edge.target)));
             }
             setMasterNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot));
+            setTimeout(() => EventNotifier.dispatch(Events.NodesChange), 1);
         },
         [setMasterEdges, setMasterNodes]
     );
@@ -105,31 +107,35 @@ export const FlowGraphEditor: FC<object> = () => {
         edgeReconnectSuccessful.current = true;
     }, [setMasterEdges]);
 
-    const setNodeCreator = useCallback((viewport: Viewport, add?: boolean) => {
+    const getNodeCreatorPos = (viewport: Viewport) => {
         const pane = ref.current!.getBoundingClientRect();
         const inset = 15; // pixels from left edge of screen
         const width = pane.width - inset * 2;
         const height = pane.height - inset * 2;
-        const canvasX = (inset - viewport.x) / viewport.zoom;
-        const canvasY = (inset - viewport.y) / viewport.zoom;
-        const nodeCreator = {
+        const x = (inset - viewport.x) / viewport.zoom;
+        const y = (inset - viewport.y) / viewport.zoom;
+        return {
             id: nodeCreatorNodeId,
             type: nodeCreatorTypeName,
-            position: { x: canvasX, y: canvasY },
+            position: { x, y },
             draggable: false,
-            // selectable: false,
+            selectable: false,
             focusable: false,
             style: {
                 zIndex: '-1000',
                 transform: `scale(${1 / viewport.zoom})`,
-                left: canvasX,
-                top: canvasY,
+                left: x,
+                top: y,
                 height: `${height}px`,
                 width: `${width}px`,
                 cursor: 'grab'
             },
-            data: {},
+            data: {}
         };
+    };
+
+    const setNodeCreator = useCallback((viewport: Viewport, add?: boolean) => {
+        const nodeCreator = getNodeCreatorPos(viewport);
 
         setMasterNodes(nodes => {
             if (add && !isNodeCreatorOpen) return [...nodes, nodeCreator];
@@ -188,21 +194,19 @@ export const FlowGraphEditor: FC<object> = () => {
         }
 
         const { graphId, handleDefs, actionLabel } = appDb.cache.userNodes[rfTypeIdentifier];
-        const nodeCreator: NodeCreatorType = {
-            id: nodeCreatorNodeId,
-            type: nodeCreatorTypeName,
-            position: { x: 0, y: 0 },
-            data: {
-                editing: true,
-                initialState: {
-                    name: rfTypeIdentifier,
-                    handles: handleDefs,
-                    actionLabel
-                }
+        const nodeCreator: NodeCreatorType = getNodeCreatorPos(viewport);
+
+        nodeCreator.data = {
+            editing: true,
+            initialState: {
+                name: rfTypeIdentifier,
+                handles: handleDefs,
+                actionLabel
             }
         }
-        loadGraph(graphId, nodeCreator);
-    }, [isNodeCreatorOpen, loadGraph, masterNodes])
+
+        loadGraph(graphId, { insertNodes: [nodeCreator] });
+    }, [isNodeCreatorOpen, loadGraph, masterNodes, viewport])
 
     return (
         <div className="dndflow">

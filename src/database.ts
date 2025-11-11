@@ -17,10 +17,12 @@ export interface SavedGraphNode {
 };
 
 export interface SavedGraph {
+    name?: string;
     edges: Edge[];
     nodes: {
         [id: string]: SavedGraphNode;
     }
+    timestamp?: number;
 };
 
 export interface CreatedNode {
@@ -63,15 +65,22 @@ class AppDatabase extends Dexie {
         this.cache.userNodes[rfTypeIdentifier] = node;
         await this.userNodesStore.put({ rfTypeIdentifier, ...node });
     }
+
     async removeUserNode(rfTypeIdentifier: string): Promise<void> {
         delete this.cache.userNodes[rfTypeIdentifier];
         await this.userNodesStore.delete(rfTypeIdentifier);
     }
 
     async putGraph(graphId: string, graphData: SavedGraph): Promise<void> {
+        graphData.timestamp = Date.now();
         this.cache.graphs[graphId] = graphData;
         // console.log(`Saved graph: ${graphId} ${JSON.stringify(this.cache.graphs[graphId])}`)
         await this.graphStore.put({ graphId, ...graphData });
+    }
+
+    async removeGraph(graphId: string): Promise<void> {
+        delete this.cache.graphs[graphId];
+        await this.graphStore.delete(graphId);
     }
 
     async syncCache() {

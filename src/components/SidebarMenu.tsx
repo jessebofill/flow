@@ -4,6 +4,8 @@ import { AiOutlineNodeIndex } from 'react-icons/ai';
 import { IoMdEye } from 'react-icons/io';
 import { type TabData, Tabs } from './Tabs';
 import { TbLayoutSidebarRightCollapse, TbLayoutSidebarRightExpand } from 'react-icons/tb';
+import { PiTreeStructure } from 'react-icons/pi';
+import { GraphManager, GraphManagerHeader } from './GraphManager';
 
 export const SidebarMenu: FC = () => {
     const [width, setWidth] = useState(240);
@@ -27,11 +29,19 @@ export const SidebarMenu: FC = () => {
             header: <NodeListHeader />
         },
         {
-            id: 'node-list2',
+            id: 'watchlist',
             label: 'Watchlist',
             icon: <IoMdEye />,
             content: <div />,
             header: <div />
+        },
+        {
+            id: 'graph',
+            label: 'Graph Manager',
+            // icon: <PiGraph />,
+            icon: <PiTreeStructure />,
+            content: <GraphManager />,
+            header: <GraphManagerHeader />
         }
     ];
 

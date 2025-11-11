@@ -114,7 +114,7 @@ export class ProxyNode extends NodeBase<{}> {
     }
 
     instantiateVirtualNodes(graphId: string) {
-        const { nodes, edges, nodeInstanceRegistry } = retrieveGraph(true, graphId, this.id, this.saveableState.initialGraphState);
+        const { nodes, edges, nodeInstanceRegistry } = retrieveGraph(true, graphId, false, this.id, this.saveableState.initialGraphState);
         nodes.forEach(([defNodeName, props]) => {
             const NodeClass = Object.entries(coreNodeTypes).find(([identifier]) => identifier === defNodeName)?.[1];
             if (!NodeClass) throw new Error('Could not find the node class to instantiate when loading saved graph. Was its defNodeName changed?');

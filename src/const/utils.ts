@@ -5,6 +5,7 @@ import { appDb, type SavedNodeState } from '../database';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
 import { DataTypeNames, type HandleDefs } from '../types/types';
 import type { GraphSnapshot, NodeBase, NodeBaseProps } from '../components/nodes/NodeBase';
+import { v4 as uuid } from 'uuid';
 
 export function getConnections(edges: Edge[], nodeId: string, handleId: string) {
     return edges.filter((edge) => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId);
@@ -92,25 +93,29 @@ export async function onAppLoad() {
     });
 }
 
-export function retrieveGraph(isVirtual: boolean, graphId: string, replaceParentId?: string, replaceState?: Record<string, SavedNodeState>) {
-    // const stateId = graphStateId || graphId;
+export function retrieveGraph(isVirtual: boolean, graphId: string, randomizeIds?: boolean, replaceParentId?: string, replaceState?: Record<string, SavedNodeState>) {
     const graph = appDb.cache.graphs[graphId];
-    // const graphState = appDb.cache.graphStates[stateId];
     if (!graph) throw new Error(`Graph ${graphId} was not found in the database cache`);
-    // if (!graphState) throw new Error(`Graph state ${stateId} was not found in the database cache`);
-    const nodeInstanceRegistry: NodeInstanceRegistry = new Map<string, NodeBase<HandleDefs>>();
+    const nodeInstanceRegistry: NodeInstanceRegistry = isVirtual ? new Map<string, NodeBase<HandleDefs>>() : globalNodeInstanceRegistry;
+
+    const replaceNodeId = (prevId: string, newId: string, edge: { target: string, source: string }) => {
+        if (edge.target === prevId) edge.target = newId;
+        if (edge.source === prevId) edge.source = newId;
+    }
     const edges = graph.edges.map(edge => {
         const newEdge = { ...edge };
-        if (replaceParentId && newEdge.target === nodeCreatorNodeId) newEdge.target = replaceParentId;
-        if (replaceParentId && newEdge.source === nodeCreatorNodeId) newEdge.source = replaceParentId;
+        if (randomizeIds) newEdge.id = uuid();
+        if (replaceParentId) replaceNodeId(nodeCreatorNodeId, replaceParentId, newEdge);
         return newEdge;
     })
 
     const nodes = Object.entries(graph.nodes).map(([nodeId, nodeData]) => {
+        const id = randomizeIds ? uuid() : nodeId;
         const overrideState = replaceState && replaceState[nodeId];
+        if (randomizeIds) edges.forEach(edge => replaceNodeId(nodeId, id, edge));
         const graphSnapshot: GraphSnapshot = { ...structuredClone(overrideState ?? nodeData.initState), edges };
         const props: NodeBaseProps = {
-            id: nodeId,
+            id,
             data: {
                 nodeInstanceRegistry,
                 graphSnapshot,

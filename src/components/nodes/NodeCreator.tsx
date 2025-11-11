@@ -96,23 +96,24 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
 
 
     const checkReqs = () => {
+        const indentifier = title.trim();
         if (outputs.length <= 1 && inputs.length <= 1) {
             toast.info(`Created node requires some connections.`);
             return false;
         }
-        if (!title) {
+        if (!indentifier) {
             toast.info(`Created node requires a name.`);
             return false;
         }
-        if (title in allNodeTypes && !(isEditing && title === prevName)) {
-            toast.info(`Node with name "${title}" already exists. Please use a unique name.`);
+        if (indentifier in allNodeTypes && !(isEditing && indentifier === prevName)) {
+            toast.info(`Node with name "${indentifier}" already exists. Please use a unique name.`);
             return false;
         }
         return true;
     }
 
     const onSave = () => {
-        const indentifier = title;
+        const indentifier = title.trim();
         const graphId: string | undefined = isEditing ? appDb.cache.userNodes[prevName ?? '']?.graphId : uuid();
         if (!graphId) throw new Error(`Could not find existing use node ${prevName} in the cache`);
 
@@ -160,7 +161,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
             }), 100);
     };
 
-    const onEditSave = () => checkReqs() && showModal((close) => <SaveEditModal name={prevName!} newName={title} close={close} onConfirm={onSave} />);
+    const onEditSave = () => checkReqs() && showModal((close) => <SaveEditModal name={prevName!} newName={title.trim()} close={close} onConfirm={onSave} />);
 
     return (
         <div
@@ -185,7 +186,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                     borderTopRightRadius: 8,
                 }}
             >
-                <NodeTitleEditor title={title} showEditIndicator={isEditing && title !== prevName} setTitle={setTitle} />
+                <NodeTitleEditor title={title} showEditIndicator={isEditing && title.trim() !== prevName} setTitle={setTitle} />
                 <div style={{ display: 'flex', height: '100%', gap: '5px' }}>
                     {nodeCreatorStatus === NodeCreatorStatus.Editing &&
                         <div>Editing {prevName}</div>

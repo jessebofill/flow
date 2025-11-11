@@ -18,6 +18,10 @@ body {
     --main-accent-color: #7513ec;
     --dark-accent-color: #150024;
 
+    --selection-hover-color: #4c4957;
+    --destructive-base-color: #af1550;
+    --destructive-highlight-color: #f6024b;
+
     --xy-node-boxshadow:
         0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d,
         0px 0.51px 1.01px 0px #0000001a;
@@ -230,7 +234,7 @@ body {
 }
 
 .react-flow__node button.action {
-    background-color: #140221;
+    background-color: var(--dark-accent-color);
     /* color: #c9bfff; */
     border-color: transparent;
     outline: none;
@@ -613,13 +617,15 @@ input:checked+.slider .dot {
     transform: translateX(13px);
 }
 
-
-
 /* og */
 input {
     background: var(--dark-accent-color);
     border: 1.5px solid var(--xy-node-border-color);
     border-radius: 3px;
+}
+
+input:focus {
+    outline: 2px solid var(--xy-theme-selected3);
 }
 
 input[type="checkbox"]:not(:checked) {
@@ -702,7 +708,7 @@ input[type="checkbox"]:checked {
 }
 
 .dropdown .option:hover {
-    background: #4c4957;
+    background: var(--selection-hover-color);
 }
 
 .dropdown .option.selected {
@@ -713,14 +719,25 @@ input[type="checkbox"]:checked {
     transition: background .25s;
 }
 
+.modal-buttons button:hover,
+button.highlight-hover:hover,
 .tabs button.main:hover {
-    background: var(--xy-bang-button-color);
+    background-color: var(--xy-bang-button-color);
     outline: none;
 }
 
+.modal-buttons button:hover,
+button.highlight-hover,
 .tabs button.main {
-    transition: background .5s;
+    transition: background-color .5s;
     outline: none !important;
+}
+
+.tabs button.main {
+    width: 43px;
+    height: 33px;
+    padding: 0;
+    font-size: 19px;
 }
 
 .tabs .header {
@@ -748,16 +765,18 @@ input[type="checkbox"]:checked {
 }
 
 button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 8px;
     border: 1.5px solid transparent;
-    padding: 0.6em 1.2em;
+    padding: 0.5em 1em;
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
-    background-color: #1a1a1a;
     background-color: var(--main-accent-color);
     cursor: pointer;
-    transition: border-color .6s;
+    transition: border-color .6s, background-color .5s;
 }
 
 button:hover {
@@ -768,6 +787,22 @@ button.active-tab,
 button:focus,
 button:focus-visible {
     outline: 2px solid var(--xy-theme-selected3);
+}
+
+button.destructive {
+    background-color: var(--destructive-base-color);
+}
+
+button.destructive:hover {
+    background-color: var(--destructive-highlight-color);
+}
+
+button:disabled {
+    background-color: var(--main-accent-color) !important;
+}
+
+.destructive-text {
+    color: var(--destructive-highlight-color);
 }
 
 @media (prefers-color-scheme: light) {
@@ -879,6 +914,51 @@ body {
     color: #666;
 }
 
+.szh-menu__item svg {
+    transform: translateX(10px);
+}
+
 .szh-menu__divider {
     background-color: #3a3a3a;
+}
+
+.graph-manager {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.graph-manager .list-row,
+.graph-manager .sort-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 8px;
+    text-align: left;
+    border-radius: 3px;
+    transition: background-color .3s;
+}
+
+.graph-manager .sort-header {
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    color: #838087;
+}
+
+.graph-manager .sort-header:hover,
+.graph-manager .list-row:hover {
+    background-color: var(--selection-hover-color);
+}
+
+.graph-manager .list-row button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    width: 24px;
+}
+.node-creator button,
+.title-editor {
+    pointer-events: auto;
 }

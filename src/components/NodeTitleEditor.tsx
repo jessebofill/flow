@@ -31,7 +31,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, sho
     }, [focused]);
 
     return (!reverse ?
-        <div style={{ position: 'relative', display: 'inline-block' }}>
+        <div className='title-editor' style={{ position: 'relative', display: 'inline-block' }}>
             <span
                 ref={spanRef}
                 style={{

@@ -10,5 +10,7 @@ export class EventNotifier {
 }
 
 export enum Events {
-    UpdateNodeTypes = 'update-node-types'
+    UpdateNodeTypes = 'update-node-types',
+    UpdateGraphList = 'update-graph-list',
+    NodesChange = 'nodes-change'
 }

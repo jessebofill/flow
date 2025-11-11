@@ -22,7 +22,7 @@ export const NodeListHeader: FC<{}> = () => {
     const { createNode } = useContext(NodeCreatorCallbacks);
 
     return (
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ flex: '1' }}>
                 <TagSelector />
             </div>
@@ -32,10 +32,8 @@ export const NodeListHeader: FC<{}> = () => {
                 arrow={false}
                 animation="fade"
                 duration={[400, 250]}>
-                <button
-                    className='main'
-                    onClick={createNode}>
-                    <BiAddToQueue />
+                <button className='main' onClick={createNode}>
+                    <BiAddToQueue style={{ transform: 'translateY(-1px)' }} />
                 </button>
             </Tippy>
         </div>

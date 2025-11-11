@@ -7,6 +7,7 @@ import { NodeCreatorCallbacks } from '../contexts/NodeCreatorContext';
 import { Tags } from '../const/tags';
 import { appDb } from '../database';
 import { ContextMenu } from './ContextMenu';
+import { TbEdit, TbTrashX } from 'react-icons/tb';
 
 type NodeListPreviewProps = {
     nodeClass: NodeClass;
@@ -39,8 +40,14 @@ export const DraggableNodeListPreview: FC<NodeListPreviewProps> = ({ nodeClass, 
                 </MenuHeader>
                 {isUserNode &&
                     <>
-                        <MenuItem onClick={() => editNode(nodeClass.defNodeName)}>Edit</MenuItem>
-                        <MenuItem onClick={() => console.log('Delete', nodeClass.defNodeName)}>Delete</MenuItem>
+                        <MenuItem onClick={() => editNode(nodeClass.defNodeName)} style={{ justifyContent: 'space-between' }}>
+                            Edit
+                            <TbEdit />
+                        </MenuItem>
+                        <MenuItem onClick={() => console.log('Delete', nodeClass.defNodeName)} style={{ justifyContent: 'space-between' }}>
+                            Delete
+                            <TbTrashX />
+                        </MenuItem>
                         <SubMenu label='Graph Id'>
                             <MenuItem>{appDb.cache.userNodes[nodeClass.defNodeName]?.graphId}</MenuItem>
                         </SubMenu>
