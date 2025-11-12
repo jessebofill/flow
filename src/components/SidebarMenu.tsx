@@ -25,6 +25,7 @@ export const SidebarMenu: FC = () => {
             id: 'node-list',
             label: 'Nodes',
             icon: <AiOutlineNodeIndex />,
+            // icon: <LuGitCompare />,
             content: <NodeList />,
             header: <NodeListHeader />
         },

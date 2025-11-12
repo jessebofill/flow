@@ -3,7 +3,7 @@ import { type FC, useContext, useCallback, useRef, useEffect } from 'react';
 import { GraphStateContext } from '../contexts/GraphStateContext';
 import { allNodeTypes, globalNodeInstanceRegistry } from '../const/nodeTypes';
 import { nodeContainsNestedDep } from '../const/utils';
-import { bangInHandleId, basicEdgeTypeName, nodeCreatorNodeId, nodeCreatorTypeName } from '../const/const';
+import { bangInHandleId, basicEdgeTypeName, isConnectingClassName, nodeCreatorNodeId, nodeCreatorTypeName, rfWrapperClassName } from '../const/const';
 import { getNodeHandleType, validateConnection } from '../const/utils';
 import { edgeTypes } from '../const/edgeTypes';
 import type { TBasicEdge } from './BasicEdge';
@@ -212,7 +212,7 @@ export const FlowGraphEditor: FC<object> = () => {
         <div className="dndflow">
             <div
                 ref={setNodeRef}
-                className='reactflow-wrapper'
+                className={rfWrapperClassName}
             // style={{ width: '100vw', height: '100vh' }}
             >
                 <ReactFlow
@@ -225,6 +225,8 @@ export const FlowGraphEditor: FC<object> = () => {
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    onConnectStart={() => document.querySelector(`.${rfWrapperClassName}`)?.classList.add(isConnectingClassName)}
+                    onConnectEnd={() => document.querySelector(`.${rfWrapperClassName}`)?.classList.remove(isConnectingClassName)}
                     onReconnectStart={onReconnectStart}
                     onReconnect={onReconnect}
                     onReconnectEnd={onReconnectEnd}

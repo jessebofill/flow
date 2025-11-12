@@ -293,6 +293,7 @@ button.node-handle:hover,
     box-shadow: var(--xy-node-boxshadow);
 }
 
+.react-flow__node.connected-highlight,
 .react-flow__node.selectable:hover,
 .react-flow__node.draggable:hover {
     border-color: #8190ff;
@@ -317,7 +318,7 @@ button.node-handle:hover,
 }
 
 .react-flow__edge .react-flow__edge-path {
-    transition: opacity .25s;
+    transition: opacity .25s, stroke .3s, filter .3s;
     stroke: var(--data-type-color);
     stroke-width: 1.5px;
 }
@@ -337,6 +338,10 @@ button.node-handle:hover,
     border-color: var(--data-type-color);
     border-width: 2px;
     transition: box-shadow .2s, opactity .2s, background-color .4s;
+}
+
+.highlighting:not(.connecting) .react-flow__handle.connected-highlight {
+    box-shadow: 0 0 10px 3px var(--data-type-color), 0 0 5px 0 inset var(--data-type-color);
 }
 
 .react-flow__handle.connected {
@@ -655,6 +660,7 @@ input:disabled {
 button.node-handle:focus {
     outline: none;
 }
+
 button.node-handle:disabled {
     background-color: var(--dark-accent-color) !important;
 }
@@ -995,4 +1001,18 @@ body {
 
 .title-editor button {
     background-color: transparent;
+}
+
+.highlighting:not(.connecting) .react-flow__node:not(.connected-highlight),
+.highlighting:not(.connecting) .react-flow__edge:not(.connected-highlight) {
+    opacity: 35% !important;
+}
+
+.highlighting:not(.connecting) .react-flow__edge:not(.connected-highlight) .react-flow__edge-path {
+    stroke: var(--xy-node-border-color);
+}
+
+.highlighting:not(.connecting) .react-flow__edge.connected-highlight .react-flow__edge-path {
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 8px var(--data-type-color))
 }

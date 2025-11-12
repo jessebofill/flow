@@ -27,11 +27,8 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fal
         }
     }, [title, focused, animateWidth]);
 
-    useEffect(() => { if (buttonRef.current) {
-        console.log('hahahha ref', buttonRef.current)
-        setButtonWidth(buttonRef.current.offsetWidth)
- } }, []);
-console.log('bw', buttonWidth, buttonRef)
+    useEffect(() => { if (buttonRef.current) setButtonWidth(buttonRef.current.offsetWidth) }, []);
+
     useEffect(() => {
         if (focused && inputRef.current) {
             inputRef.current.focus();

@@ -1,11 +1,12 @@
 import { type Connection, type Edge, type Node } from '@xyflow/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from './nodeTypes';
-import { bangInHandleId, nodeCreatorNodeId } from './const';
+import { bangInHandleId, connectedHighlightClassName, nodeCreatorNodeId, rfWrapperClassName, wrapperHighlightClassName } from './const';
 import { appDb, type SavedNodeState } from '../database';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
-import { DataTypeNames, type HandleDefs } from '../types/types';
+import { DataTypeNames, type CommonNodeData, type HandleDefs } from '../types/types';
 import type { GraphSnapshot, NodeBase, NodeBaseProps } from '../components/nodes/NodeBase';
 import { v4 as uuid } from 'uuid';
+import type { GraphStateContextData } from '../contexts/GraphStateContext';
 
 export function getConnections(edges: Edge[], nodeId: string, handleId: string) {
     return edges.filter((edge) => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId);
@@ -13,15 +14,15 @@ export function getConnections(edges: Edge[], nodeId: string, handleId: string) 
 export function getConnectedTargets(edges: Edge[], sourceNodeId: string, sourceHandleId: string) {
     return edges.filter((edge) => edge.source === sourceNodeId && edge.sourceHandle === sourceHandleId)
         .map((edge) => ({
-            targetNodeId: edge.target,
-            targetHandleId: edge.targetHandle,
+            nodeId: edge.target,
+            handleId: edge.targetHandle,
         }));
 }
 export function getConnectedSources(edges: Edge[], targetNodeId: string, targetHandleId: string) {
     return edges.filter((edge) => edge.target === targetNodeId && edge.targetHandle === targetHandleId)
         .map((edge) => ({
-            sourceNodeId: edge.source,
-            sourceHandleId: edge.sourceHandle,
+            nodeId: edge.source,
+            handleId: edge.sourceHandle,
         }));
 }
 
@@ -159,5 +160,37 @@ export async function updateGraphDepIdentifier(graphId: string, oldIdentifier: s
     });
 
     await appDb.putGraph(graphId, graph);
+}
+
+export function highlight(context: GraphStateContextData, handlesToHighlight: ReturnType<typeof getConnectedSources>, edgesToHighlight: string[]) {
+    const addClass = (className?: string) => (className ?? '').split(' ').concat([connectedHighlightClassName]).join(' ');
+    document.querySelector(`.${rfWrapperClassName}`)?.classList.add(wrapperHighlightClassName);
+    context.setMasterNodes(nodes => nodes.map(node => {
+        const connectedHandles = handlesToHighlight.filter(connected => connected.nodeId === node.id);
+        if (!connectedHandles.length) return node
+
+        const newNode: Node<CommonNodeData> = { ...node };
+        const highlightedHandles: string[] = [];
+        connectedHandles.forEach(connection => highlightedHandles.push(connection.handleId!));
+        newNode.className = addClass(node.className);
+        newNode.data = {
+            ...node.data,
+            highlightedHandles
+        }
+        return newNode;
+    }));
+    context.setMasterEdges(edges => edges.map(edge => edgesToHighlight.some(edgeId => edgeId === edge.id) ? { ...edge, className: addClass(edge.className) } : edge));
+}
+
+export function unhiglight(context: GraphStateContextData) {
+    document.querySelector(`.${rfWrapperClassName}`)?.classList.remove(wrapperHighlightClassName);
+    const removeClass = (className?: string) => (className ?? '').split(' ').filter(s => !s.includes(connectedHighlightClassName)).join(' ');
+    context.setMasterNodes(nodes => nodes.map(node => {
+        const newNode: Node<CommonNodeData> = { ...node };
+        newNode.className = removeClass(node.className);
+        delete newNode.data.highlightedHandles;
+        return newNode;
+    }));
+    context.setMasterEdges(edges => edges.map(edge => ({ ...edge, className: removeClass(edge.className) })));
 }
 

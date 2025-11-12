@@ -47,15 +47,15 @@ export class ProxyNode extends NodeBase<{}> {
         const outputHandleIds = Object.keys(this.handleDefs).filter((id) => id.startsWith(variOutHandleIdPrefix));
         const state: { [id: string]: unknown } = {};
         inputHandleIds.forEach((inputId) => {
-            const { targetNodeId, targetHandleId } = getConnectedTargets(this.internalEdges, this.id, inputId)[0];
-            const targetInstance = this.nodeInstanceRegistry.get(targetNodeId)!;
-            console.log(`proxy: ${this.constructor.name} got state: ${JSON.stringify(targetInstance.state[targetHandleId!])} for target ${targetInstance.constructor.name} ${targetInstance.id}`)
-            state[inputId] = targetInstance.state[targetHandleId!];
+            const { nodeId, handleId } = getConnectedTargets(this.internalEdges, this.id, inputId)[0];
+            const targetInstance = this.nodeInstanceRegistry.get(nodeId)!;
+            console.log(`proxy: ${this.constructor.name} got state: ${JSON.stringify(targetInstance.state[handleId!])} for target ${targetInstance.constructor.name} ${targetInstance.id}`)
+            state[inputId] = targetInstance.state[handleId!];
         });
         outputHandleIds.forEach(outputId => {
-            const { sourceNodeId, sourceHandleId } = getConnectedSources(this.internalEdges, this.id, outputId)[0];
-            const sourceInstance = this.nodeInstanceRegistry.get(sourceNodeId)!;
-            state[outputId] = sourceInstance.state[sourceHandleId!];
+            const { nodeId, handleId } = getConnectedSources(this.internalEdges, this.id, outputId)[0];
+            const sourceInstance = this.nodeInstanceRegistry.get(nodeId)!;
+            state[outputId] = sourceInstance.state[handleId!];
         });
 
         this.state = { ...this.state, ...state };

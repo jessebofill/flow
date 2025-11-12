@@ -1,9 +1,9 @@
 import { Position, type Node, Handle, type NodeProps, type Edge, type XYPosition } from '@xyflow/react';
 import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
-import { getConnectedSources, getConnectedTargets } from '../../const/utils';
-import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix } from '../../const/const';
-import { DataTypeNames, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
+import { getConnectedSources, getConnectedTargets, getConnections, highlight, unhiglight } from '../../const/utils';
+import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix, rfWrapperClassName, connectedHighlightClassName } from '../../const/const';
+import { DataTypeNames, type CommonNodeData, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from '../../const/nodeTypes';
@@ -12,10 +12,12 @@ import { toast } from 'sonner';
 import { ContextMenu } from '../ContextMenu';
 import { NodeContextMenuItems } from '../NodeContextMenuItems';
 import { NodeTitle } from '../NodeTitle';
+import { TbLink } from 'react-icons/tb';
 
 let transformCalls = 0;
 const callLimit = 2000;
 const timeSpan = 10000;
+
 
 export function defineHandles<T extends HandleDefs>(defs: T): T {
     return defs;
@@ -47,17 +49,17 @@ export type CustomNodeDataProps = {
     isVirtual: boolean;
     isInSubGraph: boolean;
     graphSnapshot?: GraphSnapshot;
-}
+} & CommonNodeData;
 
 export type GraphSnapshot = {
     edges: Edge[];
     react: object;
     other: object;
-}
+};
 
 export type NodeBaseProps = Pick<NodeProps<Node<CustomNodeDataProps>>, 'id' | 'data'> & {
     position?: XYPosition;
-}
+};
 
 /**
  * ! Do not initialize savable state directly in implementing class declarations. Use 'declare' to define shape and set in 'setDefaults' 
@@ -225,9 +227,9 @@ stateId:`, this.saveableState?.initialGraphState);
         const connectedTargets = getConnectedTargets(edges, this.id, sourceHandleId);
         // console.log('targets', sourceHandleId, connectedTargets)
         for (const target of connectedTargets) {
-            if (!target.targetHandleId) throw new Error('The connected target did not have an identifiable handle');
+            if (!target.handleId) throw new Error('The connected target did not have an identifiable handle');
             // console.log(this.id,'exe target', target.targetNodeI
-            await this.executeTargetCallback(sourceHandleId, target.targetNodeId, target.targetHandleId);
+            await this.executeTargetCallback(sourceHandleId, target.nodeId, target.handleId);
         }
     }
 
@@ -307,7 +309,7 @@ stateId:`, this.saveableState?.initialGraphState);
                     animation="fade"
                     duration={[400, 250]}>
                     <Handle
-                        className={`${handleDef.dataType} ${this.isHandleConnected(handleId) ? 'connected' : ''}`}
+                        className={`${handleDef.dataType} ${this.props.data.highlightedHandles?.includes(handleId) ? connectedHighlightClassName : ''} ${this.isHandleConnected(handleId) ? 'connected' : ''}`}
                         type={isOut ? 'source' : 'target'}
                         position={isOut ? Position.Right : Position.Left}
                         id={handleId}
@@ -320,6 +322,8 @@ stateId:`, this.saveableState?.initialGraphState);
                             height: '10px',
                             width: '10px'
                         }}
+                        onMouseOver={() => this.highlightConnectedTohandle(handleId)}
+                        onMouseOut={() => unhiglight(this.context)}
                         onConnect={connection => {
                             if (connection.source === nodeCreatorNodeId) return;
                             if (connection.sourceHandle === null || connection.sourceHandle === undefined) throw new Error('Connecting source handle id did not exist');
@@ -375,6 +379,21 @@ stateId:`, this.saveableState?.initialGraphState);
                             }
                         }}
                     />
+                    <div
+                        onMouseOver={() => this.highlightAllConnected()}
+                        onMouseOut={() => unhiglight(this.context)}
+                        style={{
+                            height: '30px',
+                            width: '30px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transform: 'translateX(10px)',
+                            cursor: 'auto'
+                        }}
+                    >
+                        <TbLink />
+                    </div>
                 </div>
                 <div style={{ padding: '10px 0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
@@ -456,5 +475,41 @@ stateId:`, this.saveableState?.initialGraphState);
 
     componentWillUnmount() {
         globalNodeInstanceRegistry.delete(this.id);
+    }
+
+    private getConnectionsToHandle(handleId: string) {
+        const isOut = handleId === mainOutputHandleId || handleId === bangOutHandleId || this.getExtraOutIds().includes(handleId);
+        const edges = getConnections(this.context.masterEdges, this.id, handleId).map(edge => edge.id);
+        const handles = isOut ? getConnectedTargets(this.context.masterEdges, this.id, handleId) : getConnectedSources(this.context.masterEdges, this.id, handleId);
+        return { handles, edges };
+    }
+
+    private highlightConnectedTohandle(handleId: string) {
+        const { handles: handlesToHighlight, edges: edgesToHighlight } = this.getConnectionsToHandle(handleId);
+        if (!edgesToHighlight.length) return;
+        handlesToHighlight.push({ nodeId: this.id, handleId });
+        highlight(this.context, handlesToHighlight, edgesToHighlight);
+    }
+
+    private highlightAllConnected() {
+        const handleIds = Object.keys({
+            [isActiveHandleId]: 0,
+            ...this.handleDefs,
+            ...(this._isBangable ? { [bangInHandleId]: 0, [bangOutHandleId]: 0 } : {})
+        });
+
+        const { handles: handlesToHighlight, edges: edgesToHighlight } = handleIds.reduce((acc: ReturnType<typeof this.getConnectionsToHandle>, handleId) => {
+            const { handles, edges } = this.getConnectionsToHandle(handleId);
+            const handlesNext = [...acc.handles];
+            handles.forEach(handle => {
+                if (!handlesNext.some(alreadyHas => alreadyHas.nodeId === handle.nodeId && alreadyHas.handleId === handleId)) {
+                    handlesNext.push(handle);
+                }
+            });
+            if (edges.length) handlesNext.push({ nodeId: this.id, handleId });
+            return { handles: handlesNext, edges: [...acc.edges, ...edges] }
+        }, { handles: [], edges: [] });
+        if (!edgesToHighlight.length) return;
+        highlight(this.context, handlesToHighlight, edgesToHighlight);
     }
 }

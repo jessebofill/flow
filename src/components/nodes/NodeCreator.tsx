@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useState, type CSSProperties, type 
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets, getGraphsAndNodesWithDep, getIslandOfNode, getNodeHandleType } from '../../const/utils';
 import { useNewNodeCreatorState, type NodeCreatorHandleData } from '../../hooks/useNewNodeCreatorState';
-import { DataTypeNames, type HandleData, type HandleDefs } from '../../types/types';
+import { DataTypeNames, type CommonNodeData, type HandleData, type HandleDefs } from '../../types/types';
 import { NodeTitleEditor } from '../NodeTitleEditor';
 import { saveUserNode, globalNodeInstanceRegistry, createNodeFromClassDef, allNodeTypes, updateUserNode } from '../../const/nodeTypes';
 import { v4 as uuid } from 'uuid';
@@ -28,7 +28,7 @@ export type NodeCreatorType = Node<{
         handles: HandleDefs;
         actionLabel?: string;
     }
-}>;
+} & CommonNodeData>;
 
 export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }) => {
     const prevName = data.initialState?.name;
@@ -78,10 +78,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                 //handle has no connections. remove it, or keep as ghost if last handle
                 if (!connectedNodes.length) return (isLast) ? handle : [];
                 //handle has connections, ensure datatype is set. add new ghost handle if it's last one
-                const existingConnection = ('targetNodeId' in connectedNodes[0]) ?
-                    { nodeId: connectedNodes[0].targetNodeId, handleId: connectedNodes[0].targetHandleId } :
-                    { nodeId: connectedNodes[0].sourceNodeId, handleId: connectedNodes[0].sourceHandleId };
-                const existingType = getNodeHandleType(existingConnection.nodeId, existingConnection.handleId!);
+                const existingType = getNodeHandleType(connectedNodes[0].nodeId, connectedNodes[0].handleId!);
                 (handle as HandleData).dataType = existingType;
                 return isLast ? [handle, { id: generateHandleId(isOut) }] : handle;
             })

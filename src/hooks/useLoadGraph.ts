@@ -1,6 +1,7 @@
 import { useReactFlow, useViewport, type Node } from '@xyflow/react';
 import { useCallback, type CSSProperties } from 'react';
 import { retrieveGraph } from '../const/utils';
+import { rfWrapperClassName } from '../const/const';
 
 interface LoadGraphOptions {
     insertNodes?: Node[];
@@ -17,7 +18,7 @@ export const useLoadGraph = () => {
         const minY = Math.min(...nodes.map(([_, node]) => node.position!.y));
         const maxX = Math.max(...nodes.map(([_, node]) => node.position!.x));
         const maxY = Math.max(...nodes.map(([_, node]) => node.position!.y));
-        const pane = document.querySelector('.reactflow-wrapper')!;
+        const pane = document.querySelector(`.${rfWrapperClassName}`)!;
         const graphWidth = maxX - minX;
         const graphHeight = maxY - minY;
         const graphCenterX = minX + graphWidth / 2;
