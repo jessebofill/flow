@@ -137,7 +137,7 @@ stateId:`, this.saveableState?.initialGraphState);
     }
 
     /**Execute after output and those outputs connections get called but before onFinish callbacks */
-    protected onOutputChange(prevValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined, nextValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {
+    protected async onOutputChange(prevValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined, nextValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {
 
     }
 
@@ -208,9 +208,10 @@ stateId:`, this.saveableState?.initialGraphState);
      * Allow undefined values to change input for now. Just cast to 0. May need to change in future
      */
     private async setInput<K extends keyof Defs>(handleId: K, value: HandleTypeFromDefs<Defs, K> | undefined) {
-        if (handleId !== isActiveHandleId && !this.state[isActiveHandleId]) return;
         // console.log('setr', handleId, value, this.id)
-        await this.setStateAsync({ [handleId as keyof State<Defs>]: value ?? 0 });
+        if (handleId === isActiveHandleId) console.log('active', value, this.constructor.name, this.id)
+            await this.setStateAsync({ [handleId as keyof State<Defs>]: value ?? 0 });
+        if (handleId === isActiveHandleId || !this.state[isActiveHandleId]) return;
         const output = this.transformSafe(handleId);
         if (output !== null) await this.setOutput(output);
     };
@@ -219,7 +220,7 @@ stateId:`, this.saveableState?.initialGraphState);
         const prevVal = this.state[mainOutputHandleId];
         await this.setStateAsync(() => ({ [mainOutputHandleId]: value }));
         await this.executeTargetCallbacks(mainOutputHandleId);
-        this.onOutputChange(prevVal, value);
+        await this.onOutputChange(prevVal, value);
     };
 
     private async executeTargetCallbacks(sourceHandleId: string, withEdges?: Edge[]): Promise<void> {

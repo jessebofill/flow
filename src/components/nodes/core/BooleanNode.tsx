@@ -57,9 +57,9 @@ export class BooleanNode extends NodeBase<typeof handles> {
         };
     }
 
-    protected onOutputChange(prevValue: boolean | undefined, nextValue: boolean | undefined): void {
+    protected async onOutputChange(prevValue: boolean | undefined, nextValue: boolean | undefined) {
         if (nextValue) {
-            this.exeTargetCallbacks(this.handleDefToId(this.handleDefs[signalTrueId])!);
+            await this.exeTargetCallbacks(signalTrueId);
         }
     }
 
