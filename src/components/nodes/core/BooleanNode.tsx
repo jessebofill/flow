@@ -9,7 +9,7 @@ import { OperationSelector } from '../../OperationSelector';
 import { Tags } from '../../../const/tags';
 
 const signalTrueId = `${seqOutHandleIdPrefix}signalTrue`;
-const varaiadicOperandId = `${variadicInHandleIdPrefix}param`;
+const varaiadicOperandId = `${variadicInHandleIdPrefix}operand`;
 
 const handles = defineHandles({
     [varaiadicOperandId]: {

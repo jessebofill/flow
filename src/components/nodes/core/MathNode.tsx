@@ -8,7 +8,7 @@ import { defineHandles } from '../../../const/utils';
 import { DataTypeNames } from '../../../types/types';
 import { Tags } from '../../../const/tags';
 
-const varaiadicOperandId = `${variadicInHandleIdPrefix}param`;
+const varaiadicOperandId = `${variadicInHandleIdPrefix}operand`;
 
 const handles = defineHandles({
 
@@ -35,7 +35,7 @@ export class MathNode extends NodeBase<typeof handles> {
         };
 
         this.variadicHandleDefaults = {
-            [varaiadicOperandId]: 1
+            [varaiadicOperandId]: 0
         }
 
         this.saveableState = {

@@ -29,6 +29,16 @@ export class ChanceSuccessThresh extends NodeBase<typeof handles> {
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Try';
 
+    protected setDefaults(): void {
+        this.state = {
+            handles: {
+                min: 1,
+                max: 10,
+                pass: 5
+            }
+        };
+    }
+
     protected transform(id: string | null) {
         if (isBangInHandleId(id)) {
             const max = this.state.handles.max;

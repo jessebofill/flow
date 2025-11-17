@@ -18,6 +18,15 @@ export class NumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'Number';
     protected get handleDefs() { return handles };
 
+    protected setDefaults(): void {
+        this.state = {
+            handles: {
+                in: 0,
+                [mainOutputHandleId]: 0
+            }
+        };
+    }
+
     protected transform(): number | null | undefined {
         return this.state.handles.in;
     }

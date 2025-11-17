@@ -16,7 +16,15 @@ export class ToggleNode extends NodeBase<typeof handles> {
     static isBangable: boolean = true;
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Toggle';
-    
+
+    protected setDefaults(): void {
+        this.state = {
+            handles: {
+                [mainOutputHandleId]: false
+            }
+        };
+    }
+
     protected transform(id: string | null): boolean | null | undefined {
         if (isBangInHandleId(id)) {
             return !this.state.handles[mainOutputHandleId];
