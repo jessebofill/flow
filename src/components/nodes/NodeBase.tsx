@@ -100,7 +100,8 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
         if (this.isVirtualInstance) this.nodeInstanceRegistry.set(this.id, this);
         this.initState(props.data.graphSnapshot);
         console.log(`loading node ${this.name}
-id: ${this.id}
+            id: ${this.id}
+${/*@ts-ignore*/''}
 stateId:`, this.saveableState?.initialGraphState);
         // console.log(this.saveableState)
     }
@@ -221,6 +222,11 @@ stateId:`, this.saveableState?.initialGraphState);
     protected forceRender() {
         this.setState(prev => ({ ...prev }));
     }
+    
+    protected async transformInput(handleId?: string) {
+        const output = this.transformSafe(handleId ?? null);
+        if (output !== null) await this.setOutput(output);
+    };
 
     private generateVariadicId(handleGroupId: string) {
         const group = this.saveableState.variadicHandles![handleGroupId];
@@ -262,11 +268,6 @@ stateId:`, this.saveableState?.initialGraphState);
         await this.setStateAsync(prev => ({ handles: { ...prev.handles, [handleId as keyof State<Defs>]: value ?? 0 } }));
         if (handleId === isActiveHandleId || !this.state.handles[isActiveHandleId]) return;
         await this.transformInput(handleId as string);
-    };
-
-    private async transformInput(handleId?: string) {
-        const output = this.transformSafe(handleId ?? null);
-        if (output !== null) await this.setOutput(output);
     };
 
     private async setOutput(value: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {

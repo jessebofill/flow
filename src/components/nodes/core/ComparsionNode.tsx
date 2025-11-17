@@ -49,6 +49,10 @@ export class ComparisonNode extends NodeBase<typeof handles> {
     }
 
     protected renderExtra(): ReactNode {
+        const onOpChange = (op: ComparisonOp) => {
+            this.saveableState.operator = op;
+            this.transformInput();
+        };
         return (
             <OperationSelector
                 operators={[
@@ -60,7 +64,7 @@ export class ComparisonNode extends NodeBase<typeof handles> {
                     Operator.LessEqual
                 ]}
                 selected={this.saveableState.operator}
-                onChange={op => this.saveableState.operator = op}
+                onChange={onOpChange}
             />
         );
     }

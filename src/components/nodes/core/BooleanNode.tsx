@@ -63,8 +63,12 @@ export class BooleanNode extends NodeBase<typeof handles> {
     }
 
     protected renderExtra(): ReactNode {
+        const onOpChange = (op: BooleanOp) => {
+            this.saveableState.operator = op;
+            this.transformInput();
+        };
         return (
-            <OperationSelector operators={[Operator.And, Operator.Or]} selected={this.saveableState.operator} onChange={op => this.saveableState.operator = op} />
+            <OperationSelector operators={[Operator.And, Operator.Or]} selected={this.saveableState.operator} onChange={onOpChange} />
         );
     }
 }

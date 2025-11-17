@@ -49,8 +49,12 @@ export class MathNode extends NodeBase<typeof handles> {
     }
 
     protected renderExtra(): ReactNode {
+        const onOpChange = (op: MathOp) => {
+            this.saveableState.operator = op;
+            this.transformInput();
+        };
         return (
-            <OperationSelector operators={[Operator.Add, Operator.Subtract, Operator.Multiply, Operator.Divide]} selected={this.saveableState.operator} onChange={op => this.saveableState.operator = op} />
+            <OperationSelector operators={[Operator.Add, Operator.Subtract, Operator.Multiply, Operator.Divide]} selected={this.saveableState.operator} onChange={onOpChange} />
         );
     }
 }
