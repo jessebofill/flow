@@ -118,7 +118,7 @@ stateId:`, this.saveableState?.initialGraphState);
         this.setDefaults();
         this.state = {
             ...this.state,
-            handles: { ...this.state.handles, [isActiveHandleId]: true }
+            handles: { ...this.state?.handles, [isActiveHandleId]: true }
         };
 
         if (graphSnapshot) {
@@ -208,7 +208,7 @@ stateId:`, this.saveableState?.initialGraphState);
     }
 
     protected setDefaults() {
-        this.state = {} as State<Defs>;
+        this.state = { handles: {} };
     }
 
     protected async exeTargetCallbacks(handleId: string) {
@@ -222,7 +222,7 @@ stateId:`, this.saveableState?.initialGraphState);
     protected forceRender() {
         this.setState(prev => ({ ...prev }));
     }
-    
+
     protected async transformInput(handleId?: string) {
         const output = this.transformSafe(handleId ?? null);
         if (output !== null) await this.setOutput(output);
@@ -420,6 +420,7 @@ stateId:`, this.saveableState?.initialGraphState);
                         this.saveableState.variadicHandles![groupId].handleIds = handleIds;
                         await this.setStateAsync(prev => {
                             const entries = Object.entries(prev.handles).filter(([handleId]) => !handleId.startsWith(variadicInHandleIdPrefix) || handleIds.includes(handleId));
+                            console.log('e', entries)
                             return { handles: Object.fromEntries(entries) as { [Id in keyof Defs]?: TypeOfHandle<Defs[Id]> | undefined } };
                         });
                         this.transformInput();
@@ -428,6 +429,7 @@ stateId:`, this.saveableState?.initialGraphState);
 
                 const addHandle = (groupId: string) => {
                     const variadicId = this.generateVariadicId(groupId);
+                    console.log(variadicId, this.variadicHandleDefaults[groupId]);
                     this.setInput(variadicId, this.variadicHandleDefaults[groupId]);
                     return variadicId;
                 }

@@ -1,16 +1,14 @@
-import { mainOutputHandleId } from '../../../const/const';
+import { mainOutputHandleId, variadicInHandleIdPrefix } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
 import { NodeBase, type InputHandleId } from '../NodeBase';
 import { defineHandles } from '../../../const/utils';
 
-const handles = defineHandles({
+const varaiadicOperandId = `${variadicInHandleIdPrefix}operand`;
 
-    p1: {
-        dataType: DataTypeNames.Number
-    },
-    p2: {
-        dataType: DataTypeNames.Number
+const handles = defineHandles({
+    [varaiadicOperandId]: {
+        dataType: DataTypeNames.Number,
     },
     [mainOutputHandleId]: {
         dataType: DataTypeNames.Number
@@ -21,18 +19,15 @@ const handles = defineHandles({
 export class LastChangedNumber extends NodeBase<typeof handles> {
     static defNodeName = 'Last Changed Number';
     protected get handleDefs() { return handles };
-    prevVals: { p1: number; p2: number } = { p1: 0, p2: 0 };
 
     protected setDefaults(): void {
-        this.state = {
-            handles: {
-                p1: 0,
-                p2: 0
-            }
+        this.variadicHandleDefaults = {
+            [varaiadicOperandId]: 0
         };
     }
 
-    protected transform(id: InputHandleId<typeof this.handleDefs>) {
+    protected transform(id: InputHandleId<typeof this.handleDefs> | null) {
+        if (id === null) return null;
         return this.state.handles[id];
     }
 }
