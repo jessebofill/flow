@@ -1016,3 +1016,27 @@ body {
     stroke-width: 3px;
     filter: drop-shadow(0 0 8px var(--data-type-color))
 }
+
+@keyframes handleAnimation {
+    40% {
+        background-color: var(--data-type-color);
+        box-shadow: 0 0 10px 3px var(--data-type-color);
+    }
+}
+
+@keyframes edgeAnimation {
+    40% {
+        stroke-width: 4px;
+        filter: drop-shadow(0 0 5px var(--data-type-color))
+    }
+}
+
+.animate.react-flow__handle {
+    animation: handleAnimation .35s ease-out;
+    /* background-color: var(--data-type-color); */
+}
+
+.animate.react-flow__edge path {
+    animation: edgeAnimation .35s ease-out;
+    /* background-color: var(--data-type-color); */
+}

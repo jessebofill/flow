@@ -1,7 +1,7 @@
 import { Position, type Node, Handle, type NodeProps, type Edge, type XYPosition } from '@xyflow/react';
 import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
-import { getConnectedSources, getConnectedTargets, getConnections, highlight, unhiglight } from '../../const/utils';
+import { animateEdge, animateHandle, getConnectedSources, getConnectedTargets, getConnections, highlight, unhiglight } from '../../const/utils';
 import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, seqOutHandleIdPrefix, connectedHighlightClassName, variadicInHandleIdPrefix } from '../../const/const';
 import { DataTypeNames, type CommonNodeData, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';
@@ -281,9 +281,11 @@ stateId:`, this.saveableState?.initialGraphState);
         const edges = withEdges ?? (this.isVirtualInstance ? this.virtualEdges : this.context.masterEdges);
         const connectedTargets = getConnectedTargets(edges, this.id, sourceHandleId);
         // console.log('targets', sourceHandleId, connectedTargets)
+        animateHandle(this.id, sourceHandleId)
         for (const target of connectedTargets) {
             if (!target.handleId) throw new Error('The connected target did not have an identifiable handle');
-            // console.log(this.id,'exe target', target.targetNodeI
+            animateEdge(target.edgeId)
+            animateHandle(target.nodeId, target.handleId)
             await this.executeTargetCallback(sourceHandleId, target.nodeId, target.handleId);
         }
     }

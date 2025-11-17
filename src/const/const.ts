@@ -13,3 +13,4 @@ export const rfWrapperClassName = 'reactflow-wrapper';
 export const isConnectingClassName = 'connecting';
 export const connectedHighlightClassName = 'connected-highlight';
 export const wrapperHighlightClassName = 'highlighting';
+export const animateClassName = 'animate';

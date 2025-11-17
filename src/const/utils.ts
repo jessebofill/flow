@@ -1,6 +1,6 @@
 import { type Connection, type Edge, type Node } from '@xyflow/react';
 import { globalNodeInstanceRegistry, type NodeInstanceRegistry } from './nodeTypes';
-import { bangInHandleId, connectedHighlightClassName, nodeCreatorNodeId, rfWrapperClassName, wrapperHighlightClassName } from './const';
+import { animateClassName, bangInHandleId, connectedHighlightClassName, nodeCreatorNodeId, rfWrapperClassName, wrapperHighlightClassName } from './const';
 import { appDb, type SavedNodeState } from '../database';
 import { ProxyNode } from '../components/nodes/core/ProxyNode';
 import { DataTypeNames, type CommonNodeData, type HandleDefs } from '../types/types';
@@ -24,6 +24,7 @@ export function getConnectedTargets(edges: Edge[], sourceNodeId: string, sourceH
         .map((edge) => ({
             nodeId: edge.target,
             handleId: edge.targetHandle,
+            edgeId: edge.id
         }));
 }
 export function getConnectedSources(edges: Edge[], targetNodeId: string, targetHandleId: string) {
@@ -31,6 +32,7 @@ export function getConnectedSources(edges: Edge[], targetNodeId: string, targetH
         .map((edge) => ({
             nodeId: edge.source,
             handleId: edge.sourceHandle,
+            edgeId: edge.id
         }));
 }
 
@@ -202,3 +204,26 @@ export function unhiglight(context: GraphStateContextData) {
     context.setMasterEdges(edges => edges.map(edge => ({ ...edge, className: removeClass(edge.className) })));
 }
 
+export function animateHandle(nodeId: string, handleId: string) {
+    const elements = document.querySelectorAll(`.react-flow__handle[data-handleid="${handleId}"][data-nodeid="${nodeId}"]`);
+    elements.forEach(el => {
+        el.classList.add(animateClassName);
+        el.addEventListener(
+            'animationend',
+            () => el.classList.remove(animateClassName),
+            { once: true }
+        );
+    });
+}
+
+export function animateEdge(edgeId: string) {
+    const elements = document.querySelectorAll(`.react-flow__edge[data-id="${edgeId}"]`);
+    elements.forEach(el => {
+        el.classList.add(animateClassName);
+        el.addEventListener(
+            'animationend',
+            () => el.classList.remove(animateClassName),
+            { once: true }
+        );
+    });
+}
