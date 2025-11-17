@@ -3,7 +3,8 @@ import { mainOutputHandleId } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { OperationSelector } from '../../OperationSelector';
 import { Operator, opMap, type MathOp } from '../../../const/opDefines';
-import { defineHandles, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles } from '../../../const/utils';
 import { DataTypeNames } from '../../../types/types';
 import { Tags } from '../../../const/tags';
 
@@ -28,20 +29,22 @@ const handles = defineHandles({
 export class ModNode extends NodeBase<typeof handles> {
     static defNodeName = 'Modulus';
     static tags = [Tags.Operation];
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
 
     protected setDefaults(): void {
         this.state = {
-            p1: 1,
-            p2: 1,
-            offset: 0,
-            [mainOutputHandleId]: 0
+            handles: {
+                p1: 1,
+                p2: 1,
+                offset: 0,
+                [mainOutputHandleId]: 0
+            }
         };
     }
 
     protected transform() {
-        if (this.state.p1 === undefined || this.state.p2 === undefined) return;
-        const val = opMap['%'].operation(this.state.p1, this.state.p2);
-        return isNaN(val) ? undefined : val + (this.state.offset ?? 0);
+        if (this.state.handles.p1 === undefined || this.state.handles.p2 === undefined) return;
+        const val = opMap['%'].operation(this.state.handles.p1, this.state.handles.p2);
+        return isNaN(val) ? undefined : val + (this.state.handles.offset ?? 0);
     }
 }

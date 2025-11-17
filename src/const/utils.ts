@@ -8,6 +8,14 @@ import type { GraphSnapshot, NodeBase, NodeBaseProps } from '../components/nodes
 import { v4 as uuid } from 'uuid';
 import type { GraphStateContextData } from '../contexts/GraphStateContext';
 
+export function defineHandles<T extends HandleDefs>(defs: T): T {
+    return defs;
+}
+
+export function isBangInHandleId(id: unknown) {
+    return id === bangInHandleId;
+}
+
 export function getConnections(edges: Edge[], nodeId: string, handleId: string) {
     return edges.filter((edge) => edge.source === nodeId && edge.sourceHandle === handleId || edge.target === nodeId && edge.targetHandle === handleId);
 }

@@ -4,7 +4,8 @@ import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
 import { OperationSelector } from '../../OperationSelector';
 import { Operator, opMap, type ComparisonOp } from '../../../const/opDefines';
-import { defineHandles, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles } from '../../../const/utils';
 import { Tags } from '../../../const/tags';
 
 const handles = defineHandles({
@@ -23,14 +24,16 @@ const handles = defineHandles({
 export class ComparisonNode extends NodeBase<typeof handles> {
     static defNodeName = 'Comparison';
     static tags = [Tags.Operation];
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
     declare saveableState: { operator: ComparisonOp };
 
     protected setDefaults(): void {
         this.state = {
-            p1: 0,
-            p2: 1,
-            [mainOutputHandleId]: false
+            handles: {
+                p1: 0,
+                p2: 1,
+                [mainOutputHandleId]: false
+            }
         };
 
         this.saveableState = {
@@ -39,8 +42,8 @@ export class ComparisonNode extends NodeBase<typeof handles> {
     }
 
     protected transform(): boolean | null | undefined {
-        const p1 = this.state.p1;
-        const p2 = this.state.p2;
+        const p1 = this.state.handles.p1;
+        const p2 = this.state.handles.p2;
         if (p1 === undefined || p2 === undefined) return;
         return Boolean(opMap[this.saveableState.operator].operation(p1, p2));
     }

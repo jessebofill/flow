@@ -1,5 +1,6 @@
 import { registerNodeType } from '../../../const/nodeTypes';
-import { defineHandles, isBangInHandleId, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles, isBangInHandleId } from '../../../const/utils';
 import { mainOutputHandleId } from '../../../const/const';
 import { DataTypeNames } from '../../../types/types';
 const handles = defineHandles({
@@ -21,19 +22,21 @@ const handles = defineHandles({
 export class RNGNode extends NodeBase<typeof handles> {
     static defNodeName = 'RNG'
     static isBangable: boolean = true;
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Generate';
     protected setDefaults(): void {
         this.state = {
-            min: 1,
-            max: 10
+            handles: {
+                min: 1,
+                max: 10
+            }
         };
     }
 
-    protected transform(id: string) {
+    protected transform(id: string | null) {
         if (isBangInHandleId(id)) {
-            const max = this.state.max;
-            const min = this.state.min;
+            const max = this.state.handles.max;
+            const min = this.state.handles.min;
             if (min === undefined || max === undefined) return;
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }

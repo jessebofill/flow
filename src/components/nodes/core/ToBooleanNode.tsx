@@ -1,7 +1,8 @@
 import { mainOutputHandleId } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
-import { defineHandles, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles } from '../../../const/utils';
 
 const handles = defineHandles({
     input: {
@@ -15,15 +16,15 @@ const handles = defineHandles({
 @registerNodeType
 export class ToBooleanNode extends NodeBase<typeof handles> {
     static defNodeName = 'To Boolean';
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
 
     protected setDefaults(): void {
         this.state = {
-            input: 0
+            handles: { input: 0 }
         };
     }
 
     protected transform(): boolean | null | undefined {
-        return Boolean(this.state.input);
+        return Boolean(this.state.handles.input);
     }
 }

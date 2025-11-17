@@ -1,7 +1,8 @@
 import { mainOutputHandleId } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
-import { defineHandles, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles } from '../../../const/utils';
 
 const handles = defineHandles({
     input: {
@@ -15,15 +16,15 @@ const handles = defineHandles({
 @registerNodeType
 export class ToNumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'To Number';
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
 
     protected setDefaults(): void {
         this.state = {
-            input: false
+            handles: { input: false }
         };
     }
 
     protected transform(): number | null | undefined {
-        return Number(this.state.input);
+        return Number(this.state.handles.input);
     }
 }

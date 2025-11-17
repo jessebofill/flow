@@ -1,7 +1,8 @@
 import { mainOutputHandleId } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
-import { defineHandles, isBangInHandleId, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles, isBangInHandleId } from '../../../const/utils';
 
 const handles = defineHandles({
     in: {
@@ -16,18 +17,20 @@ const handles = defineHandles({
 export class SetNumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'Set Number';
     static isBangable = true;
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Set';
     protected setDefaults(): void {
         this.state = {
-            in: 0,
-            [mainOutputHandleId]: 0
+            handles: {
+                in: 0,
+                [mainOutputHandleId]: 0
+            }
         };
     }
 
-    protected transform(id: string) {
+    protected transform(id: string | null) {
         if (isBangInHandleId(id)) {
-            return this.state.in;
+            return this.state.handles.in;
         }
         return null;
     }

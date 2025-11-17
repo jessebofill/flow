@@ -1,7 +1,8 @@
 import { mainOutputHandleId } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
-import { defineHandles, isBangInHandleId, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles, isBangInHandleId } from '../../../const/utils';
 
 const handles = defineHandles({
     [mainOutputHandleId]: {
@@ -13,11 +14,12 @@ const handles = defineHandles({
 export class ToggleNode extends NodeBase<typeof handles> {
     static defNodeName = 'Toggle';
     static isBangable: boolean = true;
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Toggle';
-    protected transform(id: string): boolean | null | undefined {
+    
+    protected transform(id: string | null): boolean | null | undefined {
         if (isBangInHandleId(id)) {
-            return !this.state[mainOutputHandleId];
+            return !this.state.handles[mainOutputHandleId];
         }
     }
 }

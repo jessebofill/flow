@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react';
-import { mainOutputHandleId } from '../../../const/const';
+import { mainOutputHandleId, variadicInHandleIdPrefix } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { OperationSelector } from '../../OperationSelector';
 import { Operator, opMap, type MathOp } from '../../../const/opDefines';
-import { defineHandles, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles } from '../../../const/utils';
 import { DataTypeNames } from '../../../types/types';
 import { Tags } from '../../../const/tags';
 
+const varaiadicOperandId = `${variadicInHandleIdPrefix}param`;
+
 const handles = defineHandles({
 
-    p1: {
-        dataType: DataTypeNames.Number
-    },
-    p2: {
+    [varaiadicOperandId]: {
         dataType: DataTypeNames.Number
     },
     [mainOutputHandleId]: {
@@ -24,15 +24,19 @@ const handles = defineHandles({
 export class MathNode extends NodeBase<typeof handles> {
     static defNodeName = 'Math';
     static tags = [Tags.Operation];
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
     declare saveableState: { operator: MathOp };
 
     protected setDefaults(): void {
         this.state = {
-            p1: 0,
-            p2: 0,
-            [mainOutputHandleId]: 0
+            handles: {
+                [mainOutputHandleId]: 0
+            }
         };
+
+        this.variadicHandleDefaults = {
+            [varaiadicOperandId]: 1
+        }
 
         this.saveableState = {
             operator: Operator.Add
@@ -40,8 +44,8 @@ export class MathNode extends NodeBase<typeof handles> {
     }
 
     protected transform() {
-        if (this.state.p1 === undefined || this.state.p2 === undefined) return;
-        return opMap[this.saveableState.operator].operation(this.state.p1, this.state.p2);
+        const operands = Object.entries(this.state.handles).filter(([key]) => key.startsWith(varaiadicOperandId)).map(([_, value]) => value);
+        return opMap[this.saveableState.operator].operation(...operands as number[]);
     }
 
     protected renderExtra(): ReactNode {

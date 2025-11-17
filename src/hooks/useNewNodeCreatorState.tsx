@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { HandleData, HandleDefs } from '../types/types';
-import { variOutHandleIdPrefix, variInHandleIdPrefix } from '../const/const';
+import { seqOutHandleIdPrefix, seqInHandleIdPrefix } from '../const/const';
 
 export type NodeCreatorHandleData = HandleData | Omit<HandleData, 'dataType'>;
 
@@ -21,7 +21,7 @@ class NodeCreatorHandleState {
 
     useInitial(handles: HandleDefs, isOut: boolean) {
         const dataArrayKey = isOut ? 'outputs' : 'inputs';
-        const prefix = isOut ? variOutHandleIdPrefix : variInHandleIdPrefix;
+        const prefix = isOut ? seqOutHandleIdPrefix : seqInHandleIdPrefix;
         const entries = Object.entries(handles).filter(([handleId]) => handleId.startsWith(prefix));
         if (!entries.length) return this[dataArrayKey] = [{ id: this.generateHandleId(isOut) }];
 
@@ -44,7 +44,7 @@ class NodeCreatorHandleState {
     }
 
     generateHandleId(isOut?: boolean) {
-        return `${isOut ? variOutHandleIdPrefix : variInHandleIdPrefix}${isOut ? this.nextOutput++ : this.nextInput++}`;
+        return `${isOut ? seqOutHandleIdPrefix : seqInHandleIdPrefix}${isOut ? this.nextOutput++ : this.nextInput++}`;
     }
 }
 

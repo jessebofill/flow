@@ -1,7 +1,8 @@
 import { mainOutputHandleId } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
-import { defineHandles, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles } from '../../../const/utils';
 
 const handles = defineHandles({
     in: {
@@ -15,9 +16,9 @@ const handles = defineHandles({
 @registerNodeType
 export class NumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'Number';
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
 
     protected transform(): number | null | undefined {
-        return this.state.in;
+        return this.state.handles.in;
     }
 }

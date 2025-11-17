@@ -1,14 +1,16 @@
 import { type Edge } from '@xyflow/react';
-import { bangInHandleId, bangOutHandleId, variInHandleIdPrefix, variOutHandleIdPrefix } from '../../../const/const';
+import { bangInHandleId, bangOutHandleId, seqInHandleIdPrefix, seqOutHandleIdPrefix } from '../../../const/const';
 import { coreNodeTypes, registerNodeType, type NodeInstanceRegistry } from '../../../const/nodeTypes';
 import { getConnectedSources, getConnectedTargets, retrieveGraph } from '../../../const/utils';
 import { appDb, type SavedNodeState } from '../../../database';
-import { isBangInHandleId, NodeBase, type NodeBaseProps } from '../NodeBase';
+import { NodeBase, type NodeBaseProps } from '../NodeBase';
+import { isBangInHandleId } from '../../../const/utils';
 import { DataTypeNames, type HandleDefs } from '../../../types/types';
 
 export class ProxyNode extends NodeBase<{}> {
     static defNodeName = '';
-    protected handleDefs: HandleDefs = {};
+    declare protected _handleDefs: HandleDefs;
+    protected get handleDefs(): HandleDefs { return this._handleDefs ?? {} };
     private internalEdges: Edge[] = [];
     private internalNodeInstanceRegistry!: NodeInstanceRegistry;
     declare saveableState: { initialGraphState: Record<string, SavedNodeState> };
@@ -17,7 +19,8 @@ export class ProxyNode extends NodeBase<{}> {
         this.load();
     }
 
-    protected transform(id: string) {
+    protected transform(id: string | null) {
+        if (id === null) return null;
         if (isBangInHandleId(id)) {
             (async () => {
                 await this.exeTargetCallbacksWithEdges(bangInHandleId, this.internalEdges);
@@ -32,7 +35,7 @@ export class ProxyNode extends NodeBase<{}> {
 
     private load() {
         const { graphId, handleDefs, actionLabel } = appDb.cache.userNodes[this.name];
-        this.handleDefs = handleDefs;
+        this._handleDefs = handleDefs;
         if (actionLabel) this.actionButtonText = actionLabel;
         const { edges, nodeInstanceRegistry: internalRegistry } = this.instantiateVirtualNodes(graphId);
         this.internalEdges = edges;
@@ -43,22 +46,22 @@ export class ProxyNode extends NodeBase<{}> {
     }
 
     private initProxyState() {
-        const inputHandleIds = Object.entries(this.handleDefs).filter(([id, def]) => id.startsWith(variInHandleIdPrefix) && def.dataType !== DataTypeNames.Bang).map(([id]) => id);
-        const outputHandleIds = Object.keys(this.handleDefs).filter((id) => id.startsWith(variOutHandleIdPrefix));
-        const state: { [id: string]: unknown } = {};
+        const inputHandleIds = Object.entries(this._handleDefs).filter(([id, def]) => id.startsWith(seqInHandleIdPrefix) && def.dataType !== DataTypeNames.Bang).map(([id]) => id);
+        const outputHandleIds = Object.keys(this._handleDefs).filter((id) => id.startsWith(seqOutHandleIdPrefix));
+        const handlesState: { [id: string]: unknown } = {};
         inputHandleIds.forEach((inputId) => {
             const { nodeId, handleId } = getConnectedTargets(this.internalEdges, this.id, inputId)[0];
             const targetInstance = this.nodeInstanceRegistry.get(nodeId)!;
-            console.log(`proxy: ${this.constructor.name} got state: ${JSON.stringify(targetInstance.state[handleId!])} for target ${targetInstance.constructor.name} ${targetInstance.id}`)
-            state[inputId] = targetInstance.state[handleId!];
+            console.log(`proxy: ${this.constructor.name} got state: ${JSON.stringify(targetInstance.state.handles[handleId!])} for target ${targetInstance.constructor.name} ${targetInstance.id}`)
+            handlesState[inputId] = targetInstance.state.handles[handleId!];
         });
         outputHandleIds.forEach(outputId => {
             const { nodeId, handleId } = getConnectedSources(this.internalEdges, this.id, outputId)[0];
             const sourceInstance = this.nodeInstanceRegistry.get(nodeId)!;
-            state[outputId] = sourceInstance.state[handleId!];
+            handlesState[outputId] = sourceInstance.state.handles[handleId!];
         });
 
-        this.state = { ...this.state, ...state };
+        this.state = { ...this.state, handles: { ...this.state.handles, ...handlesState } };
     }
 
     private mergeNodeInstanceRegistries(internalNodeInstanceRegistry: NodeInstanceRegistry) {

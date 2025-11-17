@@ -2,7 +2,7 @@ import { Position, type Node, Handle, type NodeProps, type Edge, type XYPosition
 import { Component, createRef, type ContextType, type ReactNode } from 'react';
 import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets, getConnections, highlight, unhiglight } from '../../const/utils';
-import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, variOutHandleIdPrefix, rfWrapperClassName, connectedHighlightClassName } from '../../const/const';
+import { bangOutHandleId, mainOutputHandleId, bangInHandleId, isActiveHandleId, nodeCreatorNodeId, seqOutHandleIdPrefix, connectedHighlightClassName, variadicInHandleIdPrefix } from '../../const/const';
 import { DataTypeNames, type CommonNodeData, type DataTypes, type HandleDef, type HandleDefs, type NodeClass } from '../../types/types';
 import { NodeInput, type NodeInputProps } from '../NodeInput';
 import Tippy from '@tippyjs/react';
@@ -13,19 +13,11 @@ import { ContextMenu } from '../ContextMenu';
 import { NodeContextMenuItems } from '../NodeContextMenuItems';
 import { NodeTitle } from '../NodeTitle';
 import { TbLink } from 'react-icons/tb';
+import { VaridicHandleGroup } from '../VaridicHandleGroup';
 
 let transformCalls = 0;
 const callLimit = 2000;
 const timeSpan = 10000;
-
-
-export function defineHandles<T extends HandleDefs>(defs: T): T {
-    return defs;
-};
-
-export function isBangInHandleId(id: string) {
-    return id === bangInHandleId;
-}
 
 export type InputHandleId<Defs extends HandleDefs> = {
     [Id in keyof Defs]: Id extends typeof mainOutputHandleId
@@ -40,9 +32,11 @@ export type TransformId<Defs extends HandleDefs> = InputHandleId<Defs> | typeof 
 type HandleTypeFromDefs<T extends HandleDefs, Id extends keyof T> = DataTypes[T[Id]['dataType']];
 type TypeOfHandle<Handle extends HandleDef> = DataTypes[Handle['dataType']];
 type State<Defs extends Record<string, HandleDef>> = {
-    [Id in keyof Defs]?: TypeOfHandle<Defs[Id]>;
-} & {
-    [Id in typeof isActiveHandleId]?: TypeOfHandle<{ dataType: typeof DataTypeNames.Boolean }>;
+    handles: {
+        [Id in keyof Defs]?: TypeOfHandle<Defs[Id]>;
+    } & {
+        [Id in typeof isActiveHandleId]?: TypeOfHandle<{ dataType: typeof DataTypeNames.Boolean }>;
+    }
 };
 export type CustomNodeDataProps = {
     nodeInstanceRegistry: NodeInstanceRegistry;
@@ -61,6 +55,13 @@ export type NodeBaseProps = Pick<NodeProps<Node<CustomNodeDataProps>>, 'id' | 'd
     position?: XYPosition;
 };
 
+type VariadicHandleState = {
+    [groupId: string]: {
+        idTracker: number;
+        handleIds: string[];
+    }
+}
+
 /**
  * ! Do not initialize savable state directly in implementing class declarations. Use 'declare' to define shape and set in 'setDefaults' 
  */
@@ -69,17 +70,21 @@ export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBa
     static contextType = GraphStateContext;
     declare context: ContextType<typeof GraphStateContext>;
     id: string;
-    saveableState: object & { label?: string } = {};
+    saveableState: object & { label?: string; variadicHandles?: VariadicHandleState } = {};
+    variadicHandleDefaults: { [Id in keyof Defs]?: TypeOfHandle<Defs[Id]> } = {};
     protected nodeInstanceRegistry: NodeInstanceRegistry;
     protected isVirtualInstance: boolean = false;
     protected isInSubGraph = false;
     private virtualEdges: Edge[] = [];
+    // ! handleDefs must be a getter in order to access in super constructor.
     protected abstract handleDefs: Defs;
     /**
-     * Null means don't set output or bang next
-     * Pass either handle id of input that was set or bang handle id  or bangOutHandleId if is bang
+     * ! Do not call this method directly. Use transformSafe.
+     * Null id used to represent input transorm without specific id.
+     * Null return means don't set output or bang next.
+     * Pass either handle id of input that was set or bang handle id  or bangOutHandleId if is bang.
      */
-    protected abstract transform(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null;
+    protected abstract transform(id: keyof Defs | typeof bangOutHandleId | null): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null;
     protected actionButtonText = 'Run';
     static isBangable = false;
     protected hideIsActiveHandle = false;
@@ -110,13 +115,37 @@ stateId:`, this.saveableState?.initialGraphState);
 
     private initState(graphSnapshot?: GraphSnapshot) {
         this.setDefaults();
-        this.state = { ...this.state, [isActiveHandleId]: true };
+        this.state = {
+            ...this.state,
+            handles: { ...this.state.handles, [isActiveHandleId]: true }
+        };
 
         if (graphSnapshot) {
             this.state = { ...this.state, ...graphSnapshot.react as State<Defs> };
             this.saveableState = { ...this.saveableState, ...graphSnapshot.other };
             this.virtualEdges = graphSnapshot.edges;
         }
+
+        const variadicIds = this.getVariadicIds();
+        if (variadicIds.length) this.initVariadicHandlesState(variadicIds);
+    }
+
+    private initVariadicHandlesState(variadicGroupIds: string[]) {
+        if (!this.saveableState.variadicHandles) {
+            this.saveableState.variadicHandles = {};
+        }
+        variadicGroupIds.forEach(groupId => {
+            const groups = this.saveableState.variadicHandles!;
+            if (!groups[groupId]) {
+                groups[groupId] = {
+                    idTracker: 0,
+                    handleIds: []
+                };
+                const variadicId = this.generateVariadicId(groupId);
+                groups[groupId].handleIds.push(variadicId);
+                this.state = { ...this.state, handles: { ...this.state.handles, [variadicId]: this.variadicHandleDefaults[groupId] } };
+            }
+        });
     }
 
     onTargetConnected(sourceHandleId: string, targetNodeId: string, targetHandleId: string) {
@@ -126,7 +155,8 @@ stateId:`, this.saveableState?.initialGraphState);
     getHandleType(handleId: string) {
         if (handleId === isActiveHandleId) return DataTypeNames.Boolean;
         if (handleId === bangOutHandleId || handleId === bangInHandleId) return DataTypeNames.Bang;
-        const handle = this.handleDefs[handleId];
+        const variadicGroupId = this.parseVariadicId(handleId)?.handleGroupId;
+        const handle = this.handleDefs[variadicGroupId ?? handleId];
         if (handle === undefined) throw new Error('Could not find handle id defined for class');
         return handle.dataType;
     }
@@ -134,6 +164,17 @@ stateId:`, this.saveableState?.initialGraphState);
     isHandleConnected(handleId: string) {
         const edges = this.isVirtualInstance ? this.virtualEdges : this.context.masterEdges;
         return edges.some(edge => edge.source === this.id && edge.sourceHandle === handleId || edge.target === this.id && edge.targetHandle === handleId);
+    }
+
+    parseVariadicId(id: string): { handleGroupId: string; index: number } | null {
+        if (!id.startsWith(variadicInHandleIdPrefix)) return null;
+        const match = id.match(/^(.+?)(-?\d+)$/);
+        if (!match) return null;
+
+        return {
+            handleGroupId: match[1],
+            index: parseInt(match[2], 10)
+        };
     }
 
     /**Execute after output and those outputs connections get called but before onFinish callbacks */
@@ -146,15 +187,19 @@ stateId:`, this.saveableState?.initialGraphState);
     }
 
     protected getInputIds() {
-        return Object.keys(this.handleDefs).filter(id => !id.startsWith(variOutHandleIdPrefix) && id !== mainOutputHandleId);
+        return Object.keys(this.handleDefs).filter(id => !id.startsWith(seqOutHandleIdPrefix) && id !== mainOutputHandleId);
+    }
+
+    protected getVariadicIds() {
+        return Object.keys(this.handleDefs).filter(id => id.startsWith(variadicInHandleIdPrefix));
     }
 
     protected getExtraOutIds() {
-        return Object.keys(this.handleDefs).filter(id => id.startsWith(variOutHandleIdPrefix));
+        return Object.keys(this.handleDefs).filter(id => id.startsWith(seqOutHandleIdPrefix));
     }
 
     protected getExtraBangoutIds() {
-        return Object.entries(this.handleDefs).filter(([id, def]) => id.startsWith(variOutHandleIdPrefix) && def.dataType === DataTypeNames.Bang).map(entry => entry[0]);
+        return Object.entries(this.handleDefs).filter(([id, def]) => id.startsWith(seqOutHandleIdPrefix) && def.dataType === DataTypeNames.Bang).map(entry => entry[0]);
     }
 
     protected isBangOutputHandle(handleId: string) {
@@ -177,7 +222,12 @@ stateId:`, this.saveableState?.initialGraphState);
         this.setState(prev => ({ ...prev }));
     }
 
-    private transformSafe(id: keyof Defs | typeof bangOutHandleId): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null {
+    private generateVariadicId(handleGroupId: string) {
+        const group = this.saveableState.variadicHandles![handleGroupId];
+        return `${handleGroupId}${group.idTracker++}`;
+    }
+
+    private transformSafe(id: keyof Defs | typeof bangOutHandleId | null): HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined | null {
         if (!transformCalls) {
             setTimeout(() => {
                 if (transformCalls >= callLimit) toast.error(`${callLimit} calls occurred in within ${timeSpan / 1000}s period. Graph likely contains an inifinite loop.`);
@@ -209,16 +259,19 @@ stateId:`, this.saveableState?.initialGraphState);
      */
     private async setInput<K extends keyof Defs>(handleId: K, value: HandleTypeFromDefs<Defs, K> | undefined) {
         // console.log('setr', handleId, value, this.id)
-        if (handleId === isActiveHandleId) console.log('active', value, this.constructor.name, this.id)
-            await this.setStateAsync({ [handleId as keyof State<Defs>]: value ?? 0 });
-        if (handleId === isActiveHandleId || !this.state[isActiveHandleId]) return;
-        const output = this.transformSafe(handleId);
+        await this.setStateAsync(prev => ({ handles: { ...prev.handles, [handleId as keyof State<Defs>]: value ?? 0 } }));
+        if (handleId === isActiveHandleId || !this.state.handles[isActiveHandleId]) return;
+        await this.transformInput(handleId as string);
+    };
+
+    private async transformInput(handleId?: string) {
+        const output = this.transformSafe(handleId ?? null);
         if (output !== null) await this.setOutput(output);
     };
 
     private async setOutput(value: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {
-        const prevVal = this.state[mainOutputHandleId];
-        await this.setStateAsync(() => ({ [mainOutputHandleId]: value }));
+        const prevVal = this.state.handles[mainOutputHandleId];
+        await this.setStateAsync(prev => ({ handles: { ...prev.handles, [mainOutputHandleId]: value } }));
         await this.executeTargetCallbacks(mainOutputHandleId);
         await this.onOutputChange(prevVal, value);
     };
@@ -241,11 +294,11 @@ stateId:`, this.saveableState?.initialGraphState);
         if (!node) throw new Error(`The connected target node could not be found in the registry`);
 
         if (this.getHandleType(sourceHandleId) === DataTypeNames.Bang) await node.bang(targetHandleId);
-        else await node.setInput(targetHandleId, this.state[sourceHandleId] as HandleTypeFromDefs<typeof node.handleDefs, keyof typeof node.handleDefs>);
+        else await node.setInput(targetHandleId, this.state.handles[sourceHandleId]);
     };
 
     private async bang(bangedOnHandleId: string) {
-        if (!this.state[isActiveHandleId]) return;
+        if (!this.state.handles[isActiveHandleId]) return;
         const output = this.transformSafe(bangedOnHandleId);
         console.log(`${this.id}: banged with `, output, bangedOnHandleId)
         if (output !== null && bangedOnHandleId === bangInHandleId) {
@@ -257,13 +310,22 @@ stateId:`, this.saveableState?.initialGraphState);
         // }
     }
 
-    private getHandleElement(handleId: string) {
+    private getHandleElement(handleId: string, appendLabel?: string) {
+        const variadicGroupId = this.parseVariadicId(handleId)?.handleGroupId;
         const handleDef = handleId === bangInHandleId || handleId === bangOutHandleId ? { dataType: 'bang' } as const :
             handleId === isActiveHandleId ? { label: 'Active', dataType: 'boolean' } as const :
-                this.handleDefs[handleId];
+                this.handleDefs[variadicGroupId ?? handleId];
         const isExtraOut = this.getExtraOutIds().includes(handleId);
         const isOut = handleId === mainOutputHandleId || handleId === bangOutHandleId || isExtraOut;
-
+        const isDisabled = () => {
+            const isInactive = !this.state.handles[isActiveHandleId] && handleId !== isActiveHandleId;
+            let valueFromSource = false;
+            if (handleDef.dataType !== DataTypeNames.Bang) {
+                const sources = getConnectedSources(this.context.masterEdges, this.id, handleId);
+                valueFromSource = sources.length > 0 && sources[0].nodeId !== nodeCreatorNodeId;
+            }
+            return isInactive || valueFromSource;
+        };
         return (
             <div key={handleId as string} style={{ display: 'flex', flexDirection: isOut ? 'row' : 'row-reverse', height: '3em', gap: '5px', alignItems: 'center', alignSelf: isOut ? 'flex-end' : 'flex-start' }} >
                 {!isOut && handleId !== bangInHandleId &&
@@ -271,17 +333,16 @@ stateId:`, this.saveableState?.initialGraphState);
                         <NodeInput
                             {...{
                                 dataType: handleDef.dataType,
-                                value: this.state[handleId],
+                                value: this.state.handles[handleId],
                                 label: handleDef.label,
                                 setValue: handleDef.dataType === DataTypeNames.Bang ? () => this.bang(handleId) :
                                     (v: unknown) => handleId === isActiveHandleId ? this.setInput(isActiveHandleId, v as never) :
                                         this.setInput(handleId as InputHandleId<Defs>, v as HandleTypeFromDefs<Defs, typeof handleId>),
-                                disabled: (handleDef.dataType !== DataTypeNames.Bang && getConnectedSources(this.context.masterEdges, this.id, handleId).length) ||
-                                    !this.state[isActiveHandleId] && handleId !== isActiveHandleId
+                                disabled: isDisabled()
                             } as NodeInputProps}
                         />
                         {handleDef.label && handleDef.dataType !== DataTypeNames.Bang && <div>
-                            {handleDef.label}
+                            {appendLabel ? `${handleDef.label}${appendLabel}` : handleDef.label}
                         </div>}
                     </div>
                 }
@@ -294,7 +355,7 @@ stateId:`, this.saveableState?.initialGraphState);
                             borderRadius: '4px'
                         }}
                     >
-                        <div>{this.state[handleId] !== undefined ? String(this.state[handleId]) : false}</div>
+                        <div>{this.state.handles[handleId] !== undefined ? String(this.state.handles[handleId]) : false}</div>
                     </div>
                 }
                 <Tippy
@@ -340,7 +401,7 @@ stateId:`, this.saveableState?.initialGraphState);
     };
 
     protected renderContent(): ReactNode {
-        const output = this.state[mainOutputHandleId];
+        const output = this.state.handles[mainOutputHandleId];
         return <div>{output !== undefined ? String(output) : false}</div>;
     }
 
@@ -349,14 +410,48 @@ stateId:`, this.saveableState?.initialGraphState);
     }
 
     render() {
-        const inputs = this.getInputIds().map(handleId => (this.getHandleElement(handleId)));
+        const inputs = this.getInputIds().map(handleId => {
+            if (handleId.startsWith(variadicInHandleIdPrefix)) {
+                const groupId = handleId;
+                const { handleIds } = this.saveableState.variadicHandles![groupId];
+                const onChange = (handleIds: string[]) => {
+                    (async () => {
+                        this.saveableState.variadicHandles![groupId].handleIds = handleIds;
+                        await this.setStateAsync(prev => {
+                            const entries = Object.entries(prev.handles).filter(([handleId]) => !handleId.startsWith(variadicInHandleIdPrefix) || handleIds.includes(handleId));
+                            return { handles: Object.fromEntries(entries) as { [Id in keyof Defs]?: TypeOfHandle<Defs[Id]> | undefined } };
+                        });
+                        this.transformInput();
+                    })();
+                }
+
+                const addHandle = (groupId: string) => {
+                    const variadicId = this.generateVariadicId(groupId);
+                    this.setInput(variadicId, this.variadicHandleDefaults[groupId]);
+                    return variadicId;
+                }
+
+                return (
+                    <VaridicHandleGroup
+                        key={handleId}
+                        nodeId={this.id}
+                        handleGroupId={handleId}
+                        initialHandles={handleIds}
+                        onHandlesChange={onChange}
+                        generateHandleId={addHandle}
+                        getHandleElement={(id, index) => this.getHandleElement(id, index)}
+                    />
+                );
+            }
+            return this.getHandleElement(handleId);
+        });
         const outputs: ReactNode[] = [];
         if (mainOutputHandleId in this.handleDefs) outputs.push(this.getHandleElement(mainOutputHandleId));
         const leftBang = this._isBangable && this.getHandleElement(bangInHandleId);
         const rightBang = this._isBangable && this.getHandleElement(bangOutHandleId);
         const extraOuts = this.getExtraOutIds().map(handleId => (this.getHandleElement(handleId)));
         return (
-            <div className={this.state[isActiveHandleId] ? '' : 'disabled'} style={{ width: '100%' }} ref={this.ref}>
+            <div className={this.state.handles[isActiveHandleId] ? '' : 'disabled'} style={{ width: '100%' }} ref={this.ref}>
                 <div
                     className='header'
                     style={{
@@ -437,7 +532,7 @@ stateId:`, this.saveableState?.initialGraphState);
                     </div>
                     <button
                         className='action'
-                        disabled={!this.state[isActiveHandleId]}
+                        disabled={!this.state.handles[isActiveHandleId]}
                         style={{
                             width: '100%',
                             borderTopLeftRadius: 0,

@@ -4,7 +4,8 @@ import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
 import { OperationSelector } from '../../OperationSelector';
 import { Operator, opMap, type CountOp } from '../../../const/opDefines';
-import { defineHandles, isBangInHandleId, NodeBase } from '../NodeBase';
+import { NodeBase } from '../NodeBase';
+import { defineHandles, isBangInHandleId } from '../../../const/utils';
 import { Tags } from '../../../const/tags';
 
 const handles = defineHandles({
@@ -22,13 +23,15 @@ export class CounterNode extends NodeBase<typeof handles> {
     static defNodeName = 'Counter';
     static isBangable: boolean = true;
     static tags = [Tags.Operation];
-    protected handleDefs = handles;
+    protected get handleDefs() { return handles };
     declare saveableState: { operator: CountOp };
 
     protected setDefaults(): void {
         this.state = {
-            step: 1,
-            [mainOutputHandleId]: 0
+            handles: {
+                step: 1,
+                [mainOutputHandleId]: 0
+            }
         };
 
         this.saveableState = {
@@ -36,10 +39,10 @@ export class CounterNode extends NodeBase<typeof handles> {
         };
     }
 
-    protected transform(id: string): number | null | undefined {
+    protected transform(id: string | null): number | null | undefined {
         if (isBangInHandleId(id)) {
-            const step = this.state.step;
-            const accum = this.state[mainOutputHandleId];
+            const step = this.state.handles.step;
+            const accum = this.state.handles[mainOutputHandleId];
             if (step === undefined || accum === undefined) return;
             return opMap[this.saveableState.operator].operation(accum, step);
         }
