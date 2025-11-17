@@ -1,4 +1,4 @@
-import { seqOutHandleIdPrefix } from '../../../const/const';
+import { isActiveHandleId, seqOutHandleIdPrefix } from '../../../const/const';
 import { registerNodeType } from '../../../const/nodeTypes';
 import { DataTypeNames } from '../../../types/types';
 import { NodeBase } from '../NodeBase';
@@ -29,6 +29,6 @@ export class SignalNode extends NodeBase<typeof handles> {
         if (!isBangInHandleId(id)) return null;
 
         const delay = this.state.handles.delaySec ?? 0;
-        if (delay >= 0) this.timeoutId = setTimeout(() => this.exeTargetCallbacks(delayedSignalOutKey), delay * 1000);
+        if (delay >= 0) this.timeoutId = setTimeout(() => this.state.handles[isActiveHandleId] && this.exeTargetCallbacks(delayedSignalOutKey), delay * 1000);
     }
 }

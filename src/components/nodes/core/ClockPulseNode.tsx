@@ -36,7 +36,7 @@ export class ClockPulseNode extends NodeBase<typeof handles> {
         const interval = this.state.handles.interval;
         if (interval && interval > 0) {
             this.actionButtonText = 'Stop';
-            this.intervalId = setInterval(() => this.exeTargetCallbacks(pulseSignalOutKey), interval * 1000);
+            this.intervalId = setInterval(() => this.state.handles[isActiveHandleId] && this.exeTargetCallbacks(pulseSignalOutKey), interval * 1000);
             this.running = true;
         }
     }
