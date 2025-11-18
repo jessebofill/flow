@@ -13,5 +13,5 @@ export const NodeTitle: FC<NodeTitleProps> = ({ name, label, onChange }) => {
         onChange(title);
     };
 
-    return <NodeTitleEditor title={title} setTitle={onTitleChange} fallback={name} />;
+    return <NodeTitleEditor title={title} setTitle={onTitleChange} fallback={name} requireButton={true}/>;
 };

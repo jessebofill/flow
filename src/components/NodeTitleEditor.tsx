@@ -9,9 +9,10 @@ interface NodeTitleEditorProps {
     animateWidth?: number;
     reverse?: boolean;
     buttonMargin?: string;
+    requireButton?: boolean;
 }
 
-export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fallback, showEditIndicator, animateWidth, reverse, buttonMargin }) => {
+export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fallback, showEditIndicator, animateWidth, reverse, buttonMargin, requireButton }) => {
     const [focused, setFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const spanRef = useRef<HTMLSpanElement>(null);
@@ -72,6 +73,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fal
                     fontWeight: 'inherit',
                     position: 'relative',
                     left: 0,
+                    pointerEvents: focused || !requireButton ? 'auto' : 'none'
                 }}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -136,6 +138,7 @@ export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fal
                     fontWeight: 'inherit',
                     position: 'relative',
                     right: 0,
+                    pointerEvents: focused || !requireButton ? 'auto' : 'none'
                 }}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
