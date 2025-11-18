@@ -23,7 +23,7 @@ export function getConnectedTargets(edges: Edge[], sourceNodeId: string, sourceH
     return edges.filter((edge) => edge.source === sourceNodeId && edge.sourceHandle === sourceHandleId)
         .map((edge) => ({
             nodeId: edge.target,
-            handleId: edge.targetHandle,
+            handleId: edge.targetHandle!,
             edgeId: edge.id
         }));
 }
@@ -31,7 +31,7 @@ export function getConnectedSources(edges: Edge[], targetNodeId: string, targetH
     return edges.filter((edge) => edge.target === targetNodeId && edge.targetHandle === targetHandleId)
         .map((edge) => ({
             nodeId: edge.source,
-            handleId: edge.sourceHandle,
+            handleId: edge.sourceHandle!,
             edgeId: edge.id
         }));
 }
@@ -172,7 +172,7 @@ export async function updateGraphDepIdentifier(graphId: string, oldIdentifier: s
     await appDb.putGraph(graphId, graph);
 }
 
-export function highlight(context: GraphStateContextData, handlesToHighlight: ReturnType<typeof getConnectedSources>, edgesToHighlight: string[]) {
+export function highlight(context: GraphStateContextData, handlesToHighlight: { nodeId: string, handleId: string }[], edgesToHighlight: string[]) {
     const addClass = (className?: string) => (className ?? '').split(' ').concat([connectedHighlightClassName]).join(' ');
     document.querySelector(`.${rfWrapperClassName}`)?.classList.add(wrapperHighlightClassName);
     context.setMasterNodes(nodes => nodes.map(node => {

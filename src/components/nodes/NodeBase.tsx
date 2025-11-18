@@ -588,7 +588,7 @@ stateId:`, this.saveableState?.initialGraphState);
     private highlightConnectedTohandle(handleId: string) {
         const { handles: handlesToHighlight, edges: edgesToHighlight } = this.getConnectionsToHandle(handleId);
         if (!edgesToHighlight.length) return;
-        handlesToHighlight.push({ nodeId: this.id, handleId });
+        (handlesToHighlight as { nodeId: string, handleId: string }[]).push({ nodeId: this.id, handleId });
         highlight(this.context, handlesToHighlight, edgesToHighlight);
     }
 
@@ -599,9 +599,9 @@ stateId:`, this.saveableState?.initialGraphState);
             ...(this._isBangable ? { [bangInHandleId]: 0, [bangOutHandleId]: 0 } : {})
         });
 
-        const { handles: handlesToHighlight, edges: edgesToHighlight } = handleIds.reduce((acc: ReturnType<typeof this.getConnectionsToHandle>, handleId) => {
+        const { handles: handlesToHighlight, edges: edgesToHighlight } = handleIds.reduce((acc: { handles: { nodeId: string, handleId: string }[], edges: string[] }, handleId) => {
             const { handles, edges } = this.getConnectionsToHandle(handleId);
-            const handlesNext = [...acc.handles];
+            const handlesNext: { nodeId: string, handleId: string }[] = [...acc.handles];
             handles.forEach(handle => {
                 if (!handlesNext.some(alreadyHas => alreadyHas.nodeId === handle.nodeId && alreadyHas.handleId === handleId)) {
                     handlesNext.push(handle);
