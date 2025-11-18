@@ -8,21 +8,21 @@ const varaiadicOperandId = `${variadicInHandleIdPrefix}operand`;
 
 const handles = defineHandles({
     [varaiadicOperandId]: {
-        dataType: DataTypeNames.Boolean,
+        dataType: DataTypeNames.Number,
     },
     [mainOutputHandleId]: {
-        dataType: DataTypeNames.Boolean
+        dataType: DataTypeNames.Number
     }
 });
 
 @registerNodeType
-export class LastChangedBoolean extends NodeBase<typeof handles> {
-    static defNodeName = 'Last Changed Boolean';
+export class LastSetNumber extends NodeBase<typeof handles> {
+    static defNodeName = 'Last Set Number';
     protected get handleDefs() { return handles };
 
     protected setDefaults(): void {
         this.variadicHandleDefaults = {
-                [varaiadicOperandId]: false
+            [varaiadicOperandId]: 0
         };
     }
 
