@@ -4,7 +4,7 @@ import { GraphStateContext } from '../../contexts/GraphStateContext';
 import { getConnectedSources, getConnectedTargets, getGraphsAndNodesWithDep, getIslandOfNode, getNodeHandleType } from '../../const/utils';
 import { useNewNodeCreatorState, type NodeCreatorHandleData } from '../../hooks/useNewNodeCreatorState';
 import { DataTypeNames, type CommonNodeData, type HandleData, type HandleDefs } from '../../types/types';
-import { NodeTitleEditor } from '../NodeTitleEditor';
+import { TitleEditor } from '../TitleEditor';
 import { saveUserNode, globalNodeInstanceRegistry, createNodeFromClassDef, allNodeTypes, updateUserNode } from '../../const/nodeTypes';
 import { v4 as uuid } from 'uuid';
 import { NodeCreatorContext, NodeCreatorStatus } from '../../contexts/NodeCreatorContext';
@@ -183,7 +183,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                     borderTopRightRadius: 8,
                 }}
             >
-                <NodeTitleEditor title={title} showEditIndicator={isEditing && title.trim() !== prevName} setTitle={setTitle} />
+                <TitleEditor title={title} showEditIndicator={isEditing && title.trim() !== prevName} setTitle={setTitle} />
                 <div style={{ display: 'flex', height: '100%', gap: '5px' }}>
                     {nodeCreatorStatus === NodeCreatorStatus.Editing &&
                         <div>Editing {prevName}</div>
@@ -236,7 +236,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                                 style={handleStyle}
                             />
                             <div style={{ paddingLeft: '5px', display: 'flex' }}>
-                                <NodeTitleEditor
+                                <TitleEditor
                                     key={handle.id}
                                     animateWidth={50}
                                     buttonMargin='0'
@@ -259,7 +259,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                                 style={handleStyle}
                             />
                             <div style={{ paddingRight: '5px', display: 'flex' }}>
-                                <NodeTitleEditor
+                                <TitleEditor
                                     key={handle.id}
                                     animateWidth={50}
                                     buttonMargin='0'
@@ -303,7 +303,7 @@ export const NodeCreator: FC<NodeProps<NodeCreatorType>> = ({ id: nodeId, data }
                         padding: '5px 15px',
                     }}
                 >
-                    <NodeTitleEditor title={actionName} setTitle={setActionName} />
+                    <TitleEditor title={actionName} setTitle={setActionName} />
                 </div>
             </div>
         </div>

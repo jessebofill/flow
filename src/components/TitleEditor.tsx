@@ -12,7 +12,7 @@ interface NodeTitleEditorProps {
     requireButton?: boolean;
 }
 
-export const NodeTitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fallback, showEditIndicator, animateWidth, reverse, buttonMargin, requireButton }) => {
+export const TitleEditor: FC<NodeTitleEditorProps> = ({ title, setTitle, fallback, showEditIndicator, animateWidth, reverse, buttonMargin, requireButton }) => {
     const [focused, setFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const spanRef = useRef<HTMLSpanElement>(null);

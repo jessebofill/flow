@@ -1,5 +1,5 @@
 import { type FC, useState } from 'react';
-import { NodeTitleEditor } from './NodeTitleEditor';
+import { TitleEditor } from './TitleEditor';
 
 interface NodeTitleProps {
     name: string;
@@ -13,5 +13,5 @@ export const NodeTitle: FC<NodeTitleProps> = ({ name, label, onChange }) => {
         onChange(title);
     };
 
-    return <NodeTitleEditor title={title} setTitle={onTitleChange} fallback={name} requireButton={true}/>;
+    return <TitleEditor title={title} setTitle={onTitleChange} fallback={name} requireButton={true}/>;
 };
