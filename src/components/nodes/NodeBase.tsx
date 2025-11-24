@@ -282,9 +282,9 @@ stateId:`, this.saveableState?.initialGraphState);
     private async setOutput(value: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {
         const prevVal = this.state.handles[mainOutputHandleId];
         await this.setStateAsync(prev => ({ handles: { ...prev.handles, [mainOutputHandleId]: value } }));
+        if (!this.isVirtualInstance) EventNotifier.dispatch(Events.NodeUpdate, { id: this.id });
         await this.executeTargetCallbacks(mainOutputHandleId);
         await this.onOutputChange(prevVal, value);
-        if (!this.isVirtualInstance) EventNotifier.dispatch(Events.NodeUpdate, { id: this.id });
     };
 
     private async executeTargetCallbacks(sourceHandleId: string, withEdges?: Edge[]): Promise<void> {
