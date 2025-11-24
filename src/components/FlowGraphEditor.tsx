@@ -94,8 +94,12 @@ export const FlowGraphEditor: FC<object> = () => {
                 data: { dataType: dataType }
             } as TBasicEdge
 
-            const filtered = edgesSnapshot.filter((e) => !(e === oldEdge || e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle && sourceHandle !== bangInHandleId))
+            const filtered = edgesSnapshot.filter((e) => !(e.id === oldEdge.id || e.source === nodeCreatorNodeId && e.sourceHandle === sourceHandle && sourceHandle !== bangInHandleId))
                 .filter((e) => !(e.target === target && e.targetHandle === targetHandle && targetHandle !== bangInHandleId));
+
+            const sourceNode = globalNodeInstanceRegistry.get(newConnection.source);
+            sourceNode?.onTargetConnected(newConnection.sourceHandle!, newConnection.target!, newConnection.targetHandle!);
+
             return addEdge(edge, filtered);
         });
     }, [setMasterEdges]);
