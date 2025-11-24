@@ -14,6 +14,7 @@ import { NodeContextMenuItems } from '../NodeContextMenuItems';
 import { NodeTitle } from '../NodeTitle';
 import { TbLink } from 'react-icons/tb';
 import { VaridicHandleGroup } from '../VaridicHandleGroup';
+import { EventNotifier, Events } from '../../EventNotifier';
 
 let transformCalls = 0;
 const callLimit = 2000;
@@ -178,6 +179,14 @@ stateId:`, this.saveableState?.initialGraphState);
         };
     }
 
+    onTitleChange(title: string) {
+        const label = title.trim();
+        if (label) {
+            if (label === this.name) this.saveableState.label = undefined;
+            else this.saveableState.label = label;
+        } else this.saveableState.label = undefined;
+    }
+
     /**Execute after output and those outputs connections get called but before onFinish callbacks */
     protected async onOutputChange(prevValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined, nextValue: HandleTypeFromDefs<Defs, typeof mainOutputHandleId> | undefined) {
 
@@ -275,6 +284,7 @@ stateId:`, this.saveableState?.initialGraphState);
         await this.setStateAsync(prev => ({ handles: { ...prev.handles, [mainOutputHandleId]: value } }));
         await this.executeTargetCallbacks(mainOutputHandleId);
         await this.onOutputChange(prevVal, value);
+        if (!this.isVirtualInstance) EventNotifier.dispatch(Events.NodeUpdate, { id: this.id });
     };
 
     private async executeTargetCallbacks(sourceHandleId: string, withEdges?: Edge[]): Promise<void> {
@@ -422,7 +432,6 @@ stateId:`, this.saveableState?.initialGraphState);
                         this.saveableState.variadicHandles![groupId].handleIds = handleIds;
                         await this.setStateAsync(prev => {
                             const entries = Object.entries(prev.handles).filter(([handleId]) => !handleId.startsWith(variadicInHandleIdPrefix) || handleIds.includes(handleId));
-                            console.log('e', entries)
                             return { handles: Object.fromEntries(entries) as { [Id in keyof Defs]?: TypeOfHandle<Defs[Id]> | undefined } };
                         });
                         this.transformInput();
@@ -431,7 +440,6 @@ stateId:`, this.saveableState?.initialGraphState);
 
                 const addHandle = (groupId: string) => {
                     const variadicId = this.generateVariadicId(groupId);
-                    console.log(variadicId, this.variadicHandleDefaults[groupId]);
                     this.setInput(variadicId, this.variadicHandleDefaults[groupId]);
                     return variadicId;
                 }
@@ -473,11 +481,8 @@ stateId:`, this.saveableState?.initialGraphState);
                         name={this.name}
                         label={this.saveableState.label}
                         onChange={title => {
-                            const label = title.trim();
-                            if (label) {
-                                if (label === this.name) this.saveableState.label = undefined;
-                                else this.saveableState.label = label;
-                            }
+                            this.onTitleChange(title);
+                            EventNotifier.dispatch(Events.NodeUpdate, { id: this.id });
                         }}
                     />
                     <div

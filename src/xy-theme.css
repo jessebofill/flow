@@ -25,6 +25,8 @@ body {
     --input-disabled-color: #7b7887;
     --input-disabled-accent-color: #473d6e;
 
+    --alt-text-color: #838087;
+
     --xy-node-boxshadow:
         0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d,
         0px 0.51px 1.01px 0px #0000001a;
@@ -971,6 +973,11 @@ body {
     padding: 3px 8px;
     text-align: left;
     border-radius: 3px;
+}
+
+.sidebar-highlightable,
+.graph-manager .list-row,
+.graph-manager .sort-header {
     transition: background-color .3s;
 }
 
@@ -978,9 +985,10 @@ body {
     font-size: 11px;
     cursor: pointer;
     user-select: none;
-    color: #838087;
+    color: var(--alt-text-color);
 }
 
+.sidebar-highlightable:hover,
 .graph-manager .sort-header:hover,
 .graph-manager .list-row:hover {
     background-color: var(--selection-hover-color);
@@ -1039,4 +1047,8 @@ body {
 .animate.react-flow__edge path {
     animation: edgeAnimation .35s ease-out;
     /* background-color: var(--data-type-color); */
+}
+
+.alt-text {
+    color: var(--alt-text-color);
 }

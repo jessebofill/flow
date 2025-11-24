@@ -6,6 +6,7 @@ import { type TabData, Tabs } from './Tabs';
 import { TbLayoutSidebarRightCollapse, TbLayoutSidebarRightExpand } from 'react-icons/tb';
 import { PiTreeStructure } from 'react-icons/pi';
 import { GraphManager, GraphManagerHeader } from './GraphManager';
+import { WatchView } from './WatchView';
 
 export const SidebarMenu: FC = () => {
     const [width, setWidth] = useState(240);
@@ -33,7 +34,7 @@ export const SidebarMenu: FC = () => {
             id: 'watchlist',
             label: 'Watchlist',
             icon: <IoMdEye />,
-            content: <div />,
+            content: <WatchView />,
             header: <div />
         },
         {

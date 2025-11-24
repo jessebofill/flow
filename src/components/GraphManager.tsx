@@ -93,7 +93,10 @@ export const GraphManager: FC<{}> = () => {
                     <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '5px' }}>
                         {item.name}
                     </div>
-                    <div style={{ fontSize: '10px', color: '#938d9c', width: '60px', textAlign: 'right' }}>
+                    <div
+                        className='alt-text'
+                        style={{ fontSize: '10px', width: '60px', textAlign: 'right' }}
+                    >
                         {item.date && new Date(item.date).toLocaleDateString('en-US', {
                             year: '2-digit',
                             month: '2-digit',

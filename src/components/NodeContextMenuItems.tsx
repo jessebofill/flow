@@ -14,6 +14,7 @@ export const NodeContextMenuItems: FC<NodeContextMenuItemsProps> = ({ nodeId, ty
     const { watched, setWatched } = useContext(WatchViewContext);
 
     const watchNode = useCallback(() => setWatched(prev => [...prev, nodeId]), [nodeId, setWatched]);
+    const unwatchNode = useCallback(() => setWatched(prev => prev.filter(id => id !== nodeId)), [nodeId, setWatched]);
 
     const duplicateNode = useCallback(() => {
         const node = getNode(nodeId);
@@ -38,7 +39,7 @@ export const NodeContextMenuItems: FC<NodeContextMenuItemsProps> = ({ nodeId, ty
     return (
         <>
             <MenuHeader>{type}</MenuHeader>
-            {!watched.includes(nodeId) && <button onClick={watchNode}>Watch Output</button>}
+            <MenuItem onClick={!watched.includes(nodeId) ? watchNode : unwatchNode}>{!watched.includes(nodeId) ? 'Watch Output' : 'Unwatch'}</MenuItem>
             <MenuItem onClick={duplicateNode}>Duplicate</MenuItem>
             <MenuItem onClick={deleteNode}>Delete</MenuItem>
             <SubMenu label='Node Id'>
