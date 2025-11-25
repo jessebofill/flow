@@ -1,4 +1,4 @@
-import { getBezierPath, Position, type ConnectionLineComponentProps, type Edge } from '@xyflow/react';
+import { getBezierPath, useViewport, type ConnectionLineComponentProps, type Edge } from '@xyflow/react';
 import type { FC } from 'react';
 import { DataTypeNames, type DataTypeName } from '../types/types';
 import { globalNodeInstanceRegistry } from '../const/nodeTypes';
@@ -8,24 +8,36 @@ export type TBasicEdge = Edge<{
     dataType: DataTypeName;
 }>
 
-export const ConnectionLine: FC<ConnectionLineComponentProps> = ({ fromNode, fromHandle, fromX, fromY, toX, toY }) => {
-    const isFromSource = fromHandle.type === 'source';
+export const ConnectionLine: FC<ConnectionLineComponentProps> = ({
+    fromNode,
+    toNode,
+    fromHandle,
+    fromX,
+    fromY,
+    toX,
+    toY,
+    fromPosition,
+    toPosition
+}) => {
+    const { zoom } = useViewport();
+    if (fromNode.id === nodeCreatorNodeId) {
+        fromX = correctCoord(fromX, zoom);
+        fromY = correctCoord(fromY, zoom);
+    }
+    if (toNode?.id === nodeCreatorNodeId) {
+        toX = correctCoord(toX, zoom);
+        toY = correctCoord(toY, zoom);
+    }
 
-    const [edgePath] = getBezierPath(isFromSource ? {
+    const [edgePath] = getBezierPath({
         sourceX: fromX,
         sourceY: fromY,
-        sourcePosition: Position.Right,
+        sourcePosition: fromPosition,
         targetX: toX,
         targetY: toY,
-        targetPosition: Position.Left,
-    } : {
-        sourceX: toX,
-        sourceY: toY,
-        sourcePosition: Position.Right,
-        targetX: fromX,
-        targetY: fromY,
-        targetPosition: Position.Left,
+        targetPosition: toPosition,
     });
+
     const type = fromNode.id === nodeCreatorNodeId && fromHandle.id === bangInHandleId ? DataTypeNames.Bang :
         globalNodeInstanceRegistry.get(fromNode.id)?.getHandleType(fromHandle.id!);
 
@@ -41,3 +53,5 @@ export const ConnectionLine: FC<ConnectionLineComponentProps> = ({ fromNode, fro
         </g>
     );
 };
+
+const correctCoord = (value: number, zoom: number) => value + 10 / zoom - 10;

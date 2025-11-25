@@ -1,19 +1,41 @@
-import { BaseEdge, getBezierPath, Position, type Edge, type EdgeProps } from '@xyflow/react';
+import { BaseEdge, getBezierPath, useViewport, type Edge, type EdgeProps } from '@xyflow/react';
 import type { FC } from 'react';
 import type { DataTypeName } from '../types/types';
+import { nodeCreatorNodeId } from '../const/const';
 
 export type TBasicEdge = Edge<{
     dataType: DataTypeName;
 }>
 
-export const BasicEdge: FC<EdgeProps<TBasicEdge>> = ({ id, sourceX, sourceY, targetX, targetY, data }) => {
+export const BasicEdge: FC<EdgeProps<TBasicEdge>> = ({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    source,
+    target,
+    data
+}) => {
+    const { zoom } = useViewport();
+    if (source === nodeCreatorNodeId) {
+        sourceX = correctCoord(sourceX, zoom);
+        sourceY = correctCoord(sourceY, zoom);
+    }
+    if (target === nodeCreatorNodeId) {
+        targetX = correctCoord(targetX, zoom);
+        targetY = correctCoord(targetY, zoom);
+    }
+
     const [edgePath] = getBezierPath({
         sourceX,
         sourceY,
-        sourcePosition: Position.Right,
+        sourcePosition,
         targetX,
         targetY,
-        targetPosition: Position.Left,
+        targetPosition,
     });
 
     return (
@@ -22,3 +44,5 @@ export const BasicEdge: FC<EdgeProps<TBasicEdge>> = ({ id, sourceX, sourceY, tar
         </>
     );
 };
+
+const correctCoord = (value: number, zoom: number) => value + 10 / zoom - 10;
