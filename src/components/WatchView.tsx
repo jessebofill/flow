@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { WatchViewContext } from '../contexts/WatchViewContext';
 import { mainOutputHandleId } from '../const/const';
 import { globalNodeInstanceRegistry } from '../const/nodeTypes';
@@ -10,11 +10,14 @@ import { useReactFlow } from '@xyflow/react';
 
 export const WatchView = () => {
     const { watched, setWatched } = useContext(WatchViewContext);
+    const watchedRef = useRef(watched);
     const graphState = useContext(GraphStateContext);
     const { fitView } = useReactFlow();
     const { masterNodes: nodes } = graphState;
     const [_, setUpdate] = useState(0);
-    useEffect(() => EventNotifier.listen(Events.NodeUpdate, ({ id }) => watched.includes(id) && setUpdate(prev => prev + 1)), []);
+
+    useEffect(() => { watchedRef.current = watched }, [watched]);
+    useEffect(() => EventNotifier.listen(Events.NodeUpdate, ({ id }) => watchedRef.current.includes(id) && setUpdate(prev => prev + 1)), []);
     useEffect(() => {
         const removed = watched.filter(watchedId => !nodes.some(node => node.id === watchedId));
         if (removed.length) setWatched(_watched => _watched.filter(watchedId => !removed.includes(watchedId)));
