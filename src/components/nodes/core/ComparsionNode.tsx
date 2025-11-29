@@ -24,6 +24,8 @@ const handles = defineHandles({
 export class ComparisonNode extends NodeBase<typeof handles> {
     static defNodeName = 'Comparison';
     static tags = [Tags.Operation];
+    static description = 'Performs comparsion operations on input numbers and outputs a boolean value.';
+
     protected get handleDefs() { return handles };
     declare saveableState: { operator: ComparisonOp };
 

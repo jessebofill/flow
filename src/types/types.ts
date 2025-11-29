@@ -41,6 +41,7 @@ export interface NodeClass {
     isBangable: boolean;
     tags: Tags[];
     defNodeName: string;
+    description?: string;
 };
 
 // export type GraphState = {

@@ -8,6 +8,7 @@ import { Tags } from '../const/tags';
 import { appDb } from '../database';
 import { ContextMenu } from './ContextMenu';
 import { TbEdit, TbTrashX } from 'react-icons/tb';
+import Tippy from '@tippyjs/react';
 
 type NodeListPreviewProps = {
     nodeClass: NodeClass;
@@ -33,7 +34,17 @@ export const DraggableNodeListPreview: FC<NodeListPreviewProps> = ({ nodeClass, 
 
     return (
         <>
-            <NodeListPreview ref={(elt) => { setNodeRef(elt); ref.current = elt }} nodeClass={nodeClass} {...attributes} {...listeners} {...props} />
+            <Tippy
+                className={nodeClass.description ? '' : 'hidden'}
+                placement="left"
+                arrow={true}
+                animation="fade"
+                duration={[400, 250]}
+                delay={[1000, null]}
+                content={nodeClass.description}
+            >
+                <NodeListPreview ref={(elt) => { setNodeRef(elt); ref.current = elt }} nodeClass={nodeClass} {...attributes} {...listeners} {...props} />
+            </Tippy>
             <ContextMenu elementContextMenuRef={ref} >
                 <MenuHeader>
                     {nodeClass.defNodeName}

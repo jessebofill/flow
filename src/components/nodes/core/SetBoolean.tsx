@@ -17,6 +17,8 @@ const handles = defineHandles({
 export class SetBooleanNode extends NodeBase<typeof handles> {
     static defNodeName = 'Set Boolean';
     static isBangable = true;
+    static description = 'Sets the output to the input boolean value.';
+
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Set';
     protected setDefaults(): void {

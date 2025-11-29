@@ -14,6 +14,8 @@ const handles = defineHandles({
 export class ToggleNode extends NodeBase<typeof handles> {
     static defNodeName = 'Toggle';
     static isBangable: boolean = true;
+    static description = 'Inverts the output boolean value.';
+
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Toggle';
 

@@ -68,6 +68,7 @@ type VariadicHandleState = {
  */
 export abstract class NodeBase<Defs extends HandleDefs> extends Component<NodeBaseProps, State<Defs>> {
     declare static tags: Tags[];
+    declare static description?: string;
     static contextType = GraphStateContext;
     declare context: ContextType<typeof GraphStateContext>;
     id: string;

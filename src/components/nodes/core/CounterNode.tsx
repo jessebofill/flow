@@ -23,6 +23,8 @@ export class CounterNode extends NodeBase<typeof handles> {
     static defNodeName = 'Counter';
     static isBangable: boolean = true;
     static tags = [Tags.Operation];
+    static description = 'Increments or decrements output value by a given amount.';
+
     protected get handleDefs() { return handles };
     declare saveableState: { operator: CountOp };
 

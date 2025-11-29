@@ -18,6 +18,8 @@ const handles = defineHandles({
 @registerNodeType
 export class TrueCount extends NodeBase<typeof handles> {
     static defNodeName = 'True Count';
+    static description = 'Outputs the number of input boolean values that are true.';
+
     protected get handleDefs() { return handles };
 
     protected setDefaults(): void {

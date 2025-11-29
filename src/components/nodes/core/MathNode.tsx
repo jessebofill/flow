@@ -24,6 +24,8 @@ const handles = defineHandles({
 export class MathNode extends NodeBase<typeof handles> {
     static defNodeName = 'Math';
     static tags = [Tags.Operation];
+    static description = 'Performs the basic math operations on a variable number of operands.';
+
     protected get handleDefs() { return handles };
     declare saveableState: { operator: MathOp };
 

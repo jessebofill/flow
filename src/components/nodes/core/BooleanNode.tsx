@@ -32,6 +32,8 @@ const handles = defineHandles({
 export class BooleanNode extends NodeBase<typeof handles> {
     static defNodeName = 'Boolean';
     static tags = [Tags.Operation];
+    static description = 'Performs the basic boolean operations on a variable number of operands. It also dispatches a signal if the result is true.';
+
     protected get handleDefs() { return handles };
     declare saveableState: { operator: BooleanOp };
 

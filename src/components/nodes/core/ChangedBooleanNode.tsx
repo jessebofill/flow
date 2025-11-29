@@ -22,6 +22,8 @@ const handles = defineHandles({
 @registerNodeType
 export class ChangedBooleanNode extends NodeBase<typeof handles> {
     static defNodeName = 'Changed Boolean';
+    static description = 'Updates the output boolean value only if the input value changed. A signal is also dispatched when it does.';
+
     protected get handleDefs() { return handles };
     declare saveableState: { lastValue: boolean };
 

@@ -21,6 +21,8 @@ const handles = defineHandles({
 export class SignalNode extends NodeBase<typeof handles> {
     static defNodeName = 'Signal';
     static isBangable = true;
+    static description = 'Dispatches a signal on action as well a a delayed signal by a given number of seconds.';
+
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Send';
     protected timeoutId = 0;

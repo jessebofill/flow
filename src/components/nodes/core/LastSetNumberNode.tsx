@@ -18,6 +18,8 @@ const handles = defineHandles({
 @registerNodeType
 export class LastSetNumber extends NodeBase<typeof handles> {
     static defNodeName = 'Last Set Number';
+    static description = 'Outputs the number that was last set.';
+
     protected get handleDefs() { return handles };
 
     protected setDefaults(): void {

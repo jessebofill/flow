@@ -22,6 +22,8 @@ const handles = defineHandles({
 export class RNGNode extends NodeBase<typeof handles> {
     static defNodeName = 'RNG'
     static isBangable: boolean = true;
+    static description = 'Generates a random number between a given min and max value.';
+
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Generate';
     protected setDefaults(): void {

@@ -17,6 +17,8 @@ const handles = defineHandles({
 export class SetNumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'Set Number';
     static isBangable = true;
+    static description = 'Sets the output to the input number.';
+
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Set';
     protected setDefaults(): void {

@@ -22,6 +22,8 @@ const handles = defineHandles({
 @registerNodeType
 export class ChangedNumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'Changed Number';
+    static description = 'Updates the output number value only if the input value changed. A signal is also dispatched when it does.';
+
     protected get handleDefs() { return handles };
     declare saveableState: { lastValue: number };
 

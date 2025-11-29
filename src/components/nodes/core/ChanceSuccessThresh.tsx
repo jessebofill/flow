@@ -26,6 +26,8 @@ const handles = defineHandles({
 export class ChanceSuccessThresh extends NodeBase<typeof handles> {
     static defNodeName = 'Chance Threshold';
     static isBangable = true;
+    static description = 'Outputs a boolean value on action based on a given min, max and passing threshold value.';
+
     protected get handleDefs() { return handles };
     protected actionButtonText: string = 'Try';
 

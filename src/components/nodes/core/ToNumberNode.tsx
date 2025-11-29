@@ -16,6 +16,8 @@ const handles = defineHandles({
 @registerNodeType
 export class ToNumberNode extends NodeBase<typeof handles> {
     static defNodeName = 'To Number';
+    static description = 'Converts a boolean to a number.';
+
     protected get handleDefs() { return handles };
 
     protected setDefaults(): void {

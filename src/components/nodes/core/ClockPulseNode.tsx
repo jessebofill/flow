@@ -21,6 +21,8 @@ const handles = defineHandles({
 export class ClockPulseNode extends NodeBase<typeof handles> {
     static defNodeName = 'Clock Pulse';
     static isBangable = true;
+    static description = 'Disptaches a signal at a given interval in seconds. Clock automatically stops if interval is set to 0';
+
     protected get handleDefs() { return handles };
     protected running = false;
     protected actionButtonText: string = 'Start';

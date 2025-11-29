@@ -28,6 +28,8 @@ const handles = defineHandles({
 @registerNodeType
 export class ModNode extends NodeBase<typeof handles> {
     static defNodeName = 'Modulus';
+    static description = 'Performs modulus operation and allows result to be offset by a given amount.';
+
     static tags = [Tags.Operation];
     protected get handleDefs() { return handles };
 

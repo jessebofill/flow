@@ -35,14 +35,10 @@ export const BasicEdge: FC<EdgeProps<TBasicEdge>> = ({
         sourcePosition,
         targetX,
         targetY,
-        targetPosition,
+        targetPosition
     });
 
-    return (
-        <>
-            <BaseEdge className={data?.dataType ?? ''} id={id} path={edgePath} />
-        </>
-    );
+    return <BaseEdge className={data?.dataType ?? ''} id={id} path={edgePath} />;
 };
 
 const correctCoord = (value: number, zoom: number) => value + 10 / zoom - 10;

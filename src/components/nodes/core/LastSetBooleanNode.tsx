@@ -18,6 +18,8 @@ const handles = defineHandles({
 @registerNodeType
 export class LastSetBoolean extends NodeBase<typeof handles> {
     static defNodeName = 'Last Set Boolean';
+    static description = 'Outputs the boolean value that was last set.';
+
     protected get handleDefs() { return handles };
 
     protected setDefaults(): void {
